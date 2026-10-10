@@ -6,3 +6,5 @@ export const SITE_DESCRIPTION =
 
 /** Microsoft Clarity project (https://clarity.microsoft.com). Loaded in production only. */
 export const CLARITY_PROJECT_ID = "wozedgblvd";
+
+export const AUTHOR = { name: "Suben Saha", url: "https://subensaha.com" };

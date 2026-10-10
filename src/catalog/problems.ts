@@ -210,4 +210,4 @@ export const getProblem = (slug: string) => bySlug.get(slug);
 export const problemsInCategory = (id: CategoryId) =>
   problems.filter((p) => p.categories.includes(id));
 
-export const leetcodeUrl = (slug: string) => `https://leetcode.com/problems/${slug}/`;
+export { leetcodeUrl } from "@/lib/leetcode";

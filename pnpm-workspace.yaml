@@ -1,3 +1,5 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+patchedDependencies:
+  '@microsoft/clarity@1.0.2': patches/@microsoft__clarity@1.0.2.patch

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClarityAnalytics } from "@/components/ClarityAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { CLARITY_PROJECT_ID, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { AUTHOR, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -20,6 +20,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: SITE_NAME,
+  authors: [AUTHOR],
+  creator: AUTHOR.name,
   title: { default: `${SITE_NAME} · See the algorithm run`, template: `%s · ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
@@ -35,19 +37,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       // The theme script sets data-theme before hydration.
       suppressHydrationWarning
     >
+      <head>
+        {/* Runs before first paint; see the Next.js "preventing flash before hydration" guide. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-full flex-col">
-        <Script id="theme" strategy="beforeInteractive">
-          {themeScript}
-        </Script>
-        {process.env.NODE_ENV === "production" && (
-          <Script id="clarity" strategy="afterInteractive">
-            {`(function(c,l,a,r,i,t,y){
-              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`}
-          </Script>
-        )}
+        <ClarityAnalytics />
         <header className="border-b border-fg/10">
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
             <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -65,6 +60,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">{children}</main>
+        <footer className="border-fg/10 border-t">
+          <div className="text-fg/50 mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm sm:flex-row">
+            <p>
+              Built by{" "}
+              <a
+                href={AUTHOR.url}
+                rel="author"
+                className="text-fg/80 font-medium underline decoration-amber-500/50 underline-offset-4 transition-colors hover:text-amber-600 dark:hover:text-amber-400"
+              >
+                {AUTHOR.name}
+              </a>
+            </p>
+            <p className="text-fg/40 text-xs">
+              Problems from LeetCode · Blind 75 · Grind 75 · NeetCode 150
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );

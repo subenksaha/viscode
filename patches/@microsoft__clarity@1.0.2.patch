@@ -1,0 +1,13 @@
+diff --git a/src/utils.js b/src/utils.js
+index 7e54e1ae252d29bbffa45b17e36487962dbb0d7d..6993934310a8ea52cc3f8aa04f2c00223b631a3b 100644
+--- a/src/utils.js
++++ b/src/utils.js
+@@ -10,7 +10,7 @@ export function injectScript(projectId) {
+         };
+       t = l.createElement(r);
+       t.async = 1;
+-      t.src = "https://www.clarity.ms/tag/" + i + "?ref=npm";
++      t.src = "https://www.clarity.ms/tag/" + i;
+       t.id = "clarity-script"
+       y = l.getElementsByTagName(r)[0];
+       y.parentNode.insertBefore(t, y);

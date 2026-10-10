@@ -1,11 +1,13 @@
 "use client";
 
+import { Dices } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { CategoryId } from "@/catalog/categories";
 import type { ProblemMeta } from "@/catalog/problems";
 import type { Difficulty } from "@/core/types";
 import { cn } from "@/lib/cn";
+import { leetcodeUrl } from "@/lib/leetcode";
 import { useDone } from "@/store/progress";
 import { ProblemTable } from "./ProblemRow";
 import { ClearProgress } from "./Progress";
@@ -146,9 +148,29 @@ export function ProblemBrowser({
     (query ? 1 : 0);
   const countDone = (items: BrowserProblem[]) => items.filter((p) => done.has(p.slug)).length;
 
+  // Random pick from what the filters show, preferring problems not yet marked done.
+  // Opens on leetcode.com in a new tab, like the LeetCode links on problem pages.
+  const pickRandom = () => {
+    const todo = filtered.filter((p) => !done.has(p.slug));
+    const pool = todo.length ? todo : filtered;
+    if (!pool.length) return;
+    window.open(leetcodeUrl(pool[Math.floor(Math.random() * pool.length)].slug), "_blank", "noopener");
+  };
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       <aside className="border-fg/10 bg-fg/[0.02] flex flex-col gap-4 rounded-lg border p-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-72 lg:shrink-0 lg:overflow-y-auto">
+        <button
+          type="button"
+          onClick={pickRandom}
+          disabled={!filtered.length}
+          title="Open a random problem from the current filters on LeetCode, preferring ones you haven't done"
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-amber-500/40 bg-amber-400/15 px-3 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-400/25 disabled:cursor-not-allowed disabled:opacity-40 dark:text-amber-200"
+        >
+          <Dices size={16} aria-hidden="true" />
+          Pick a problem for me
+          <span aria-hidden="true">↗</span>
+        </button>
         <div className="flex flex-col gap-2">
           <input
             type="search"
