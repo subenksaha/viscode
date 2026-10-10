@@ -2,6 +2,8 @@
   "name": "viscode",
   "version": "0.1.0",
   "private": true,
+  "description": "Step-by-step visualizations of LeetCode solutions.",
+  "homepage": "https://viscode.subensaha.com",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

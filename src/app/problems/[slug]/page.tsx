@@ -16,8 +16,10 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps<"/problems/[slug]">): Promise<Metadata> {
-  const entry = getProblem((await params).slug);
-  return { title: entry ? `${entry.id}. ${entry.title} · VisCode` : "VisCode" };
+  const { slug } = await params;
+  const entry = getProblem(slug);
+  if (!entry) return {};
+  return { title: `${entry.id}. ${entry.title}`, alternates: { canonical: `/problems/${slug}` } };
 }
 
 // The App Shell is shared by every slug, so params are read inside Suspense.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -17,8 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VisCode",
-  description: "Step-by-step visualizations of LeetCode solutions",
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  title: { default: `${SITE_NAME} · See the algorithm run`, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", siteName: SITE_NAME, url: "/", title: SITE_NAME, description: SITE_DESCRIPTION },
+  twitter: { card: "summary", title: SITE_NAME, description: SITE_DESCRIPTION },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,8 +41,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
         <header className="border-b border-fg/10">
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-            <Link href="/" className="font-mono font-semibold tracking-tight">
-              vis<span className="text-amber-600 dark:text-amber-400">code</span>
+            <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+              {/* Same mark as app/icon.svg. */}
+              <svg viewBox="0 0 32 32" className="size-7" aria-hidden="true">
+                <rect width="32" height="32" rx="7" fill="#18181b" />
+                <path d="M10 10 4.5 16 10 22M22 10l5.5 6-5.5 6" fill="none" stroke="#fbbf24" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.5 11.2v9.6a.8.8 0 0 0 1.2.7l7.6-4.8a.8.8 0 0 0 0-1.4l-7.6-4.8a.8.8 0 0 0-1.2.7Z" fill="#fafafa" />
+              </svg>
+              <span>
+                Vis<span className="text-amber-600 dark:text-amber-400">Code</span>
+              </span>
             </Link>
             <ThemeToggle />
           </div>

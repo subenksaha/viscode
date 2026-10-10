@@ -13,7 +13,8 @@ export async function generateMetadata({
   params,
 }: PageProps<"/categories/[category]">): Promise<Metadata> {
   const category = getCategory((await params).category);
-  return { title: category ? `${category.name} · VisCode` : "VisCode" };
+  if (!category) return {};
+  return { title: category.name, description: category.description, alternates: { canonical: `/categories/${category.id}` } };
 }
 
 export default function CategoryPage({ params }: PageProps<"/categories/[category]">) {
