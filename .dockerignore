@@ -14,3 +14,4 @@ pnpm-debug.log*
 Dockerfile
 .dockerignore
 README.md
+MEDIUM_POST.md

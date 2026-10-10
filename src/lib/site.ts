@@ -3,3 +3,6 @@ export const SITE_NAME = "VisCode";
 export const SITE_URL = "https://viscode.subensaha.com";
 export const SITE_DESCRIPTION =
   "Step through LeetCode solutions line by line. Every approach, from brute force to optimal, is animated on your own input.";
+
+/** Microsoft Clarity project (https://clarity.microsoft.com). Loaded in production only. */
+export const CLARITY_PROJECT_ID = "wozedgblvd";

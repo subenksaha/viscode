@@ -3,7 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CLARITY_PROJECT_ID, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -39,6 +39,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script id="theme" strategy="beforeInteractive">
           {themeScript}
         </Script>
+        {process.env.NODE_ENV === "production" && (
+          <Script id="clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`}
+          </Script>
+        )}
         <header className="border-b border-fg/10">
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
             <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
