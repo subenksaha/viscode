@@ -1,0 +1,112 @@
+import { arr, text, tones, vars } from "@/core/panels";
+import { code, defineProblem, defineSolution } from "@/core/trace";
+
+interface Input {
+  strs: string[];
+}
+
+const lengthPrefix = defineSolution<Input>({
+  id: "length-prefix",
+  name: "Length Prefix",
+  time: "O(n)",
+  space: "O(n)",
+  idea: "Write each string as <length>#<string>. The decoder reads digits up to '#', then takes exactly that many characters, so any character (even '#') is safe inside a string.",
+  code: code(`
+    function encode(strs: string[]): string {
+      return strs.map((s) => s.length + "#" + s).join(""); //@encode
+    }
+    function decode(data: string): string[] {
+      const out: string[] = [];
+      let i = 0;
+      while (i < data.length) { //@loop
+        const hash = data.indexOf("#", i); //@len
+        const len = Number(data.slice(i, hash));
+        out.push(data.slice(hash + 1, hash + 1 + len)); //@take
+        i = hash + 1 + len;
+      }
+      return out; //@ret
+    }
+  `),
+  run({ strs }, t) {
+    let data = "";
+    strs.forEach((s, k) => {
+      data += s.length + "#" + s;
+      t.step("encode", `Encode "${s}" as ${s.length}#${s}.`, [arr("strs", strs, { tones: tones([k, "active"]) }), text("encoded", data)]);
+    });
+    const out: string[] = [];
+    const chars = [...data];
+    let i = 0;
+    while (i < data.length) {
+      t.step("loop", `Read from position ${i}.`, [arr("encoded", chars, { indexLabels: false, pointers: { i } }), arr("decoded", out)]);
+      const hash = data.indexOf("#", i);
+      const len = Number(data.slice(i, hash));
+      const start = i;
+      t.step("len", `Digits before '#': length ${len}.`, [vars({ len }), arr("encoded", chars, { indexLabels: false, window: [start, hash] }), arr("decoded", out)]);
+      out.push(data.slice(hash + 1, hash + 1 + len));
+      t.step("take", `Take the next ${len} characters: "${out.at(-1)}".`, [arr("encoded", chars, { indexLabels: false, tones: tones(...Array.from({ length: len }, (_, k) => [hash + 1 + k, "success"] as [number, "success"])) }), arr("decoded", out)]);
+      i = hash + 1 + len;
+    }
+    t.step("ret", "Decoded every string.", [arr("decoded", out)]);
+    return out;
+  },
+});
+
+const escaping = defineSolution<Input>({
+  id: "escaping",
+  name: "Escape the Delimiter",
+  time: "O(n)",
+  space: "O(n)",
+  idea: "Join with the separator ' # '. Inside strings, double every '#' so a lone '#' surrounded by spaces can only be a separator.",
+  code: code(`
+    function encode(strs: string[]): string {
+      return strs.map((s) => s.replaceAll("#", "##") + " # ").join(""); //@encode
+    }
+    function decode(data: string): string[] {
+      const out: string[] = [];
+      let cur = "";
+      for (let i = 0; i < data.length; i++) { //@loop
+        if (data.startsWith(" # ", i)) { out.push(cur); cur = ""; i += 2; } //@split
+        else if (data.startsWith("##", i)) { cur += "#"; i++; } //@unescape
+        else cur += data[i];
+      }
+      return out; //@ret
+    }
+  `),
+  run({ strs }, t) {
+    let data = "";
+    strs.forEach((s, k) => {
+      data += s.replaceAll("#", "##") + " # ";
+      t.step("encode", `Escape and append "${s}".`, [arr("strs", strs, { tones: tones([k, "active"]) }), text("encoded", data)]);
+    });
+    const out: string[] = [];
+    let cur = "";
+    for (let i = 0; i < data.length; i++) {
+      if (data.startsWith(" # ", i)) {
+        out.push(cur);
+        t.step("split", `Separator at ${i}: finish "${cur}".`, [text("encoded", data), vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+        cur = "";
+        i += 2;
+      } else if (data.startsWith("##", i)) {
+        cur += "#";
+        i++;
+        t.step("unescape", "'##' decodes to a literal '#'.", [vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+      } else {
+        cur += data[i];
+        t.step("loop", `Character '${data[i]}'.`, [vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+      }
+    }
+    t.step("ret", "Decoded every string.", [arr("decoded", out)]);
+    return out;
+  },
+});
+
+export default defineProblem<Input>({
+  description: "Design encode (list of strings → one string) and decode (string → original list) so that decode(encode(strs)) == strs for any strings.",
+  input: { default: 'strs = ["neet","co#de","","you"]', parse: (a) => ({ strs: a.strs("strs") }) },
+  examples: [
+    { input: 'strs = ["neet","code","love","you"]', output: ["neet", "code", "love", "you"] },
+    { input: 'strs = ["we","say",":","yes"]', output: ["we", "say", ":", "yes"] },
+    { input: 'strs = ["a # b","##",""]', output: ["a # b", "##", ""] },
+  ],
+  solutions: [escaping, lengthPrefix],
+});

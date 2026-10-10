@@ -1,0 +1,168 @@
+import { arr, edgeKey, graph, tones, vars } from "@/core/panels";
+import { code, defineProblem, defineSolution } from "@/core/trace";
+import type { Tone } from "@/core/types";
+
+interface Input {
+  numCourses: number;
+  prerequisites: [number, number][];
+}
+
+// Edge b -> a means "take b before a".
+const edgesOf = (pre: [number, number][]) => pre.map(([a, b]) => [b, a] as const);
+const ids = (n: number) => Array.from({ length: n }, (_, i) => i);
+
+const kahn = defineSolution<Input>({
+  id: "kahn",
+  name: "Kahn's Algorithm (BFS Topological Sort)",
+  time: "O(V + E)",
+  space: "O(V + E)",
+  idea: "Repeatedly take a course with no remaining prerequisites and remove its outgoing edges. If every course gets taken, there is no cycle.",
+  code: code(`
+    function canFinish(numCourses: number, prerequisites: number[][]): boolean {
+      const indeg = new Array(numCourses).fill(0), adj: number[][] = Array.from({ length: numCourses }, () => []);
+      for (const [a, b] of prerequisites) { adj[b].push(a); indeg[a]++; } //@build
+      const queue = indeg.flatMap((d, i) => (d === 0 ? [i] : [])); //@seed
+      let taken = 0;
+      while (queue.length) { //@loop
+        const c = queue.shift()!; taken++; //@take
+        for (const next of adj[c]) //@edge
+          if (--indeg[next] === 0) queue.push(next); //@ready
+      }
+      return taken === numCourses; //@ret
+    }
+  `),
+  run({ numCourses, prerequisites }, t) {
+    const indeg = new Array(numCourses).fill(0),
+      adj: number[][] = Array.from({ length: numCourses }, () => []);
+    for (const [a, b] of prerequisites) {
+      adj[b].push(a);
+      indeg[a]++;
+    }
+    const done = new Set<number>();
+    const queue = indeg.flatMap((d, i) => (d === 0 ? [i] : []));
+    let taken = 0;
+    const view = (c?: number, next?: number) => {
+      const nodeTones: Record<string, Tone> = {};
+      done.forEach((d) => (nodeTones[d] = "success"));
+      queue.forEach((q) => (nodeTones[q] = "compare"));
+      if (c !== undefined) nodeTones[c] = "active";
+      return [
+        vars({ taken }),
+        graph("courses (prereq → course)", ids(numCourses), edgesOf(prerequisites), {
+          directed: true,
+          tones: nodeTones,
+          edgeTones: c !== undefined && next !== undefined ? tones([edgeKey(c, next), "active"]) : {},
+        }),
+        arr("in-degree", indeg, { tones: tones([next, "active"]) }),
+        arr("queue", queue, { indexLabels: false }),
+      ];
+    };
+    t.step("build", "Build the graph and count each course's prerequisites.", view());
+    t.step("seed", `Courses with no prerequisites: [${queue}].`, view());
+    while (queue.length) {
+      t.step("loop", `Queue: [${queue}].`, view());
+      const c = queue.shift()!;
+      taken++;
+      done.add(c);
+      t.step("take", `Take course ${c}. taken = ${taken}.`, view(c));
+      for (const next of adj[c]) {
+        indeg[next]--;
+        if (indeg[next] === 0) {
+          queue.push(next);
+          t.step("ready", `${next} has no prerequisites left. Enqueue it.`, view(c, next));
+        } else t.step("edge", `${next} still needs ${indeg[next]} more.`, view(c, next));
+      }
+    }
+    const ok = taken === numCourses;
+    t.step("ret", ok ? "All courses taken. Return true." : `Only ${taken} of ${numCourses} taken: a cycle blocks the rest.`, view());
+    return ok;
+  },
+});
+
+const dfsColors = defineSolution<Input>({
+  id: "dfs-cycle",
+  name: "DFS Cycle Detection (3 Colors)",
+  time: "O(V + E)",
+  space: "O(V + E)",
+  idea: "Mark nodes white (new), gray (on the current path) or black (done). Reaching a gray node means a back edge, which is a cycle.",
+  code: code(`
+    function canFinish(numCourses: number, prerequisites: number[][]): boolean {
+      const adj: number[][] = Array.from({ length: numCourses }, () => []);
+      for (const [a, b] of prerequisites) adj[b].push(a); //@build
+      const state = new Array(numCourses).fill(0); // 0 white, 1 gray, 2 black
+      function hasCycle(u: number): boolean {
+        if (state[u] === 1) return true; //@gray
+        if (state[u] === 2) return false; //@black
+        state[u] = 1; //@enter
+        for (const v of adj[u]) if (hasCycle(v)) return true; //@visit
+        state[u] = 2; //@exit
+        return false;
+      }
+      for (let i = 0; i < numCourses; i++) if (hasCycle(i)) return false; //@start
+      return true; //@ret
+    }
+  `),
+  run({ numCourses, prerequisites }, t) {
+    const adj: number[][] = Array.from({ length: numCourses }, () => []);
+    for (const [a, b] of prerequisites) adj[b].push(a);
+    const state = new Array(numCourses).fill(0);
+    const view = (u?: number, edge?: [number, number], bad = false) => {
+      const nodeTones: Record<string, Tone> = {};
+      state.forEach((s, i) => s && (nodeTones[i] = s === 1 ? "active" : "success"));
+      if (bad && u !== undefined) nodeTones[u] = "danger";
+      return [
+        graph("courses (prereq → course)", ids(numCourses), edgesOf(prerequisites), {
+          directed: true,
+          tones: nodeTones,
+          edgeTones: edge ? tones([edgeKey(...edge), bad ? "danger" : "active"]) : {},
+        }),
+        arr("state", state.map((s) => ["white", "gray", "black"][s]), { tones: tones([u, "active"]) }),
+      ];
+    };
+    t.step("build", "Build the adjacency list.", view());
+    const hasCycle = (u: number, from?: number): boolean => {
+      const edge = from !== undefined ? ([from, u] as [number, number]) : undefined;
+      if (state[u] === 1) {
+        t.step("gray", `${u} is gray (already on the current path). Cycle!`, () => view(u, edge, true));
+        return true;
+      }
+      if (state[u] === 2) {
+        t.step("black", `${u} is already finished.`, () => view(u, edge));
+        return false;
+      }
+      state[u] = 1;
+      t.step("enter", `Enter ${u}: mark it gray.`, () => view(u, edge));
+      for (const v of adj[u]) {
+        t.step("visit", `Follow ${u} → ${v}.`, () => view(u, [u, v]));
+        if (hasCycle(v, u)) return true;
+      }
+      state[u] = 2;
+      t.step("exit", `All of ${u}'s dependents are done: mark it black.`, () => view(u));
+      return false;
+    };
+    for (let i = 0; i < numCourses; i++) {
+      if (state[i] !== 0) continue;
+      t.step("start", `Start DFS at ${i}.`, () => view(i));
+      if (hasCycle(i)) {
+        t.step("start", "Cycle found. Return false.", view());
+        return false;
+      }
+    }
+    t.step("ret", "No cycle. Return true.", view());
+    return true;
+  },
+});
+
+export default defineProblem<Input>({
+  description: "There are numCourses courses. prerequisites[i] = [a, b] means you must take b before a. Return true if you can finish all courses.",
+  input: {
+    default: "numCourses = 5, prerequisites = [[1,0],[2,1],[3,1],[4,2],[4,3]]",
+    parse: (a) => ({ numCourses: a.int("numCourses"), prerequisites: a.pairs("prerequisites") }),
+  },
+  examples: [
+    { input: "numCourses = 2, prerequisites = [[1,0]]", output: true },
+    { input: "numCourses = 2, prerequisites = [[1,0],[0,1]]", output: false },
+    { input: "numCourses = 4, prerequisites = [[1,0],[2,1],[3,2],[1,3]]", output: false },
+  ],
+  solutions: [kahn, dfsColors],
+});

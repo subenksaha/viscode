@@ -1,0 +1,107 @@
+import { tree, vars } from "@/core/panels";
+import { buildTree, type TreeNode } from "@/core/structures";
+import { code, defineProblem, defineSolution } from "@/core/trace";
+import type { Tone } from "@/core/types";
+
+interface Input {
+  root: TreeNode | null;
+}
+
+const depth = (n: TreeNode | null): number => (n ? 1 + Math.max(depth(n.left), depth(n.right)) : 0);
+
+const naive = defineSolution<Input>({
+  id: "depth-per-node",
+  name: "Depth at Every Node",
+  time: "O(n²)",
+  space: "O(h)",
+  idea: "The longest path through a node is depth(left) + depth(right). Compute that from scratch for every node and keep the max.",
+  code: code(`
+    function depth(n: TreeNode | null): number {
+      return n ? 1 + Math.max(depth(n.left), depth(n.right)) : 0;
+    }
+    function diameterOfBinaryTree(root: TreeNode | null): number {
+      if (!root) return 0; //@base
+      const through = depth(root.left) + depth(root.right); //@through
+      return Math.max(through, diameterOfBinaryTree(root.left), diameterOfBinaryTree(root.right)); //@max
+    }
+  `),
+  run({ root }, t) {
+    let best = 0;
+    const seen: [TreeNode, Tone][] = [];
+    const go = (n: TreeNode | null): number => {
+      if (!n) return 0;
+      const l = depth(n.left),
+        r = depth(n.right);
+      best = Math.max(best, l + r);
+      seen.push([n, "success"]);
+      t.step("through", `Through ${n.val}: ${l} + ${r} = ${l + r}. best = ${best}.`, () => [
+        vars({ "depth(left)": l, "depth(right)": r, best }),
+        tree("tree", root, { tones: [...seen, [n, "active"]] }),
+      ]);
+      return Math.max(l + r, go(n.left), go(n.right));
+    };
+    if (!root) t.step("base", "Empty tree: 0.");
+    const res = go(root);
+    t.step("max", `Return ${res}.`, () => [vars({ best: res }), tree("tree", root, { tones: seen })]);
+    return res;
+  },
+});
+
+const onePass = defineSolution<Input>({
+  id: "one-pass-dfs",
+  name: "One-pass DFS",
+  time: "O(n)",
+  space: "O(h)",
+  idea: "A post-order DFS returns each subtree's depth. On the way up, update the best diameter with left + right at that node.",
+  code: code(`
+    function diameterOfBinaryTree(root: TreeNode | null): number {
+      let best = 0; //@init
+      function dfs(n: TreeNode | null): number {
+        if (!n) return 0; //@base
+        const l = dfs(n.left), r = dfs(n.right); //@children
+        best = Math.max(best, l + r); //@best
+        return 1 + Math.max(l, r); //@ret
+      }
+      dfs(root);
+      return best; //@answer
+    }
+  `),
+  run({ root }, t) {
+    let best = 0;
+    let bestAt: TreeNode | null = null;
+    const done: [TreeNode, Tone][] = [];
+    const notes: [TreeNode, string][] = [];
+    const view = (n: TreeNode | null) => [vars({ best }), tree("tree (d = depth)", root, { tones: [...done, [bestAt, "compare"], [n, "active"]], notes })];
+    t.step("init", "best = 0.", view(null));
+    const dfs = (n: TreeNode | null): number => {
+      if (!n) return 0;
+      t.step("children", `At ${n.val}: get both subtree depths.`, () => view(n));
+      const l = dfs(n.left),
+        r = dfs(n.right);
+      if (l + r > best) {
+        best = l + r;
+        bestAt = n;
+        t.step("best", `Path through ${n.val} has ${l} + ${r} = ${best} edges. New best.`, () => view(n));
+      } else t.step("best", `Path through ${n.val} has ${l + r} edges. best stays ${best}.`, () => view(n));
+      const d = 1 + Math.max(l, r);
+      done.push([n, "success"]);
+      notes.push([n, `d=${d}`]);
+      t.step("ret", `Depth of ${n.val} = ${d}.`, () => view(n));
+      return d;
+    };
+    if (!root) t.step("base", "Empty tree.", view(null));
+    dfs(root);
+    t.step("answer", `Return ${best}.`, view(null));
+    return best;
+  },
+});
+
+export default defineProblem<Input>({
+  description: "Return the diameter of a binary tree: the number of edges on the longest path between any two nodes. The path may or may not pass through the root.",
+  input: { default: "root = [1,2,3,4,5,null,null,6,null,null,7]", parse: (a) => ({ root: buildTree(a.nullableInts("root")) }) },
+  examples: [
+    { input: "root = [1,2,3,4,5]", output: 3 },
+    { input: "root = [1,2]", output: 1 },
+  ],
+  solutions: [naive, onePass],
+});

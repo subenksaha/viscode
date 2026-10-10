@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
+/* Theme is chosen by `data-theme` on <html> (set before paint by the script in layout.tsx). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fafaf9;
+  --fg: #18181b;
+  --code-bg: #ffffff;
+  color-scheme: light;
+
+  /* SVG node colors per tone (fill / stroke / text) and edge colors. */
+  --tone-default-fill: #ffffff;
+  --tone-default-stroke: rgba(24, 24, 27, 0.3);
+  --tone-default-text: #27272a;
+  --tone-active-fill: #fef3c7;
+  --tone-active-stroke: #d97706;
+  --tone-active-text: #78350f;
+  --tone-compare-fill: #e0f2fe;
+  --tone-compare-stroke: #0284c7;
+  --tone-compare-text: #0c4a6e;
+  --tone-success-fill: #d1fae5;
+  --tone-success-stroke: #059669;
+  --tone-success-text: #064e3b;
+  --tone-danger-fill: #fee2e2;
+  --tone-danger-stroke: #dc2626;
+  --tone-danger-text: #7f1d1d;
+  --tone-visited-fill: #ede9fe;
+  --tone-visited-stroke: #7c3aed;
+  --tone-visited-text: #4c1d95;
+  --tone-window-fill: #fffbeb;
+  --tone-window-stroke: rgba(217, 119, 6, 0.45);
+  --tone-window-text: #27272a;
+  --tone-muted-fill: #f4f4f5;
+  --tone-muted-stroke: rgba(24, 24, 27, 0.1);
+  --tone-muted-text: rgba(24, 24, 27, 0.35);
+  --edge-default: rgba(24, 24, 27, 0.3);
+  --edge-muted: rgba(24, 24, 27, 0.08);
+  --pointer: #b45309;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --fg: #ededed;
+  --code-bg: #0d1117;
+  color-scheme: dark;
+
+  --tone-default-fill: #1c1c1f;
+  --tone-default-stroke: rgba(255, 255, 255, 0.25);
+  --tone-default-text: #e5e5e5;
+  --tone-active-fill: #4a3a10;
+  --tone-active-stroke: #fbbf24;
+  --tone-active-text: #fef3c7;
+  --tone-compare-fill: #0c3a52;
+  --tone-compare-stroke: #38bdf8;
+  --tone-compare-text: #e0f2fe;
+  --tone-success-fill: #0b4030;
+  --tone-success-stroke: #34d399;
+  --tone-success-text: #d1fae5;
+  --tone-danger-fill: #4a1616;
+  --tone-danger-stroke: #f87171;
+  --tone-danger-text: #fee2e2;
+  --tone-visited-fill: #2e2150;
+  --tone-visited-stroke: #a78bfa;
+  --tone-visited-text: #ede9fe;
+  --tone-window-fill: #2a2410;
+  --tone-window-stroke: rgba(251, 191, 36, 0.4);
+  --tone-window-text: #e5e5e5;
+  --tone-muted-fill: #111113;
+  --tone-muted-stroke: rgba(255, 255, 255, 0.08);
+  --tone-muted-text: rgba(255, 255, 255, 0.3);
+  --edge-default: rgba(255, 255, 255, 0.22);
+  --edge-muted: rgba(255, 255, 255, 0.06);
+  --pointer: #fcd34d;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-code: var(--code-bg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }

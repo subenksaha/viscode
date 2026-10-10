@@ -1,0 +1,199 @@
+import { arr, edgeKey, graph, map, tones, vars } from "@/core/panels";
+import { code, defineProblem, defineSolution } from "@/core/trace";
+import type { Tone } from "@/core/types";
+
+interface Input {
+  accounts: string[][];
+}
+
+const short = (e: string) => e.split("@")[0];
+
+/** Graph whose nodes are emails, with edges from each account's first email to the rest. */
+function emailGraph(accounts: string[][]) {
+  const nodes = new Set<string>();
+  const edges: [string, string][] = [];
+  for (const [, first, ...rest] of accounts) {
+    nodes.add(short(first));
+    for (const e of rest) {
+      nodes.add(short(e));
+      edges.push([short(first), short(e)]);
+    }
+  }
+  return { nodes: [...nodes], edges };
+}
+
+const dfs = defineSolution<Input>({
+  id: "email-graph-dfs",
+  name: "Email Graph + DFS",
+  time: "O(N log N)",
+  space: "O(N)",
+  idea: "Link every email in an account to that account's first email. Connected components of this graph are the merged accounts; find them with DFS and sort each.",
+  code: code(`
+    function accountsMerge(accounts: string[][]): string[][] {
+      const adj = new Map<string, string[]>(), name = new Map<string, string>();
+      const link = (a: string, b: string) => { if (!adj.has(a)) adj.set(a, []); adj.get(a)!.push(b); };
+      for (const [n, first, ...rest] of accounts) { //@build
+        name.set(first, n); link(first, first);
+        for (const e of rest) { link(first, e); link(e, first); name.set(e, n); }
+      }
+      const seen = new Set<string>(), res: string[][] = [];
+      for (const start of adj.keys()) { //@start
+        if (seen.has(start)) continue;
+        const comp: string[] = [], stack = [start];
+        seen.add(start);
+        while (stack.length) { //@visit
+          const e = stack.pop()!; comp.push(e);
+          for (const f of adj.get(e)!) if (!seen.has(f)) { seen.add(f); stack.push(f); }
+        }
+        res.push([name.get(start)!, ...comp.sort()]); //@emit
+      }
+      return res; //@ret
+    }
+  `),
+  run({ accounts }, t) {
+    const adj = new Map<string, string[]>(),
+      name = new Map<string, string>();
+    const link = (a: string, b: string) => {
+      if (!adj.has(a)) adj.set(a, []);
+      adj.get(a)!.push(b);
+    };
+    for (const [n, first, ...rest] of accounts) {
+      name.set(first, n);
+      link(first, first);
+      for (const e of rest) {
+        link(first, e);
+        link(e, first);
+        name.set(e, n);
+      }
+    }
+    const g = emailGraph(accounts);
+    const seen = new Set<string>(),
+      res: string[][] = [];
+    const nodeTones: Record<string, Tone> = {};
+    const view = (cur?: string) => [
+      graph("emails (user part)", g.nodes, g.edges, { tones: { ...nodeTones, ...(cur ? { [short(cur)]: "active" as Tone } : {}) } }),
+      arr("merged", res.map((r) => `${r[0]}: ${r.slice(1).map(short).join(", ")}`), { indexLabels: false, tones: tones([res.length - 1, "success"]) }),
+    ];
+    t.step("build", "Connect each email to the first email of its account.", view());
+    const palette: Tone[] = ["success", "compare", "visited", "window", "danger"];
+    for (const start of adj.keys()) {
+      if (seen.has(start)) continue;
+      const tone = palette[res.length % palette.length];
+      t.step("start", `New component from ${start}.`, () => view(start));
+      const comp: string[] = [],
+        stack = [start];
+      seen.add(start);
+      while (stack.length) {
+        const e = stack.pop()!;
+        comp.push(e);
+        nodeTones[short(e)] = tone;
+        for (const f of adj.get(e)!)
+          if (!seen.has(f)) {
+            seen.add(f);
+            stack.push(f);
+          }
+        t.step("visit", `Visit ${e}.`, () => view(e));
+      }
+      res.push([name.get(start)!, ...comp.sort()]);
+      t.step("emit", `Merged account for ${name.get(start)} with ${comp.length} email(s).`, () => view());
+    }
+    t.step("ret", `${res.length} merged account(s).`, view());
+    return res;
+  },
+});
+
+const unionFind = defineSolution<Input>({
+  id: "union-find",
+  name: "Union-Find over Accounts",
+  time: "O(N α(N) + N log N)",
+  space: "O(N)",
+  idea: "Give each account an id. When an email was already seen in another account, union the two accounts. Finally group emails by their account's root.",
+  code: code(`
+    function accountsMerge(accounts: string[][]): string[][] {
+      const parent = accounts.map((_, i) => i);
+      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+      const owner = new Map<string, number>(); //@init
+      accounts.forEach(([, ...emails], i) => {
+        for (const e of emails) { //@email
+          if (owner.has(e)) parent[find(i)] = find(owner.get(e)!); //@union
+          else owner.set(e, i); //@own
+        }
+      });
+      const groups = new Map<number, string[]>();
+      for (const [e, i] of owner) { //@group
+        const r = find(i);
+        if (!groups.has(r)) groups.set(r, []);
+        groups.get(r)!.push(e);
+      }
+      return [...groups].map(([r, es]) => [accounts[r][0], ...es.sort()]); //@ret
+    }
+  `),
+  run({ accounts }, t) {
+    const parent = accounts.map((_, i) => i);
+    const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+    const owner = new Map<string, number>();
+    const unions: [number, number][] = [];
+    const view = (i?: number, email?: string, tone: Tone = "active") => [
+      vars({ account: i !== undefined ? `#${i} ${accounts[i][0]}` : undefined }),
+      graph("accounts (edges = shared email)", accounts.map((_, k) => k), unions, {
+        tones: tones(...accounts.map((_, k) => [k, find(k) === k ? "compare" : "muted"] as [number, Tone]), [i, "active"]),
+        edgeTones: tones([unions.length && tone === "success" ? edgeKey(...unions.at(-1)!) : null, "success"]),
+      }),
+      arr("parent", parent, { tones: tones([i, "active"]) }),
+      map("owner (email → account)", [...owner].map(([e, k]) => [short(e), k]), tones([email ? short(email) : null, tone])),
+    ];
+    t.step("init", "Each account is its own set.", view());
+    accounts.forEach(([, ...emails], i) => {
+      for (const e of emails) {
+        if (owner.has(e)) {
+          const j = owner.get(e)!;
+          const ri = find(i),
+            rj = find(j);
+          if (ri !== rj) {
+            parent[ri] = rj;
+            unions.push([i, j]);
+          }
+          t.step("union", ri !== rj ? `${e} is also in account #${j}: union #${i} with #${j}.` : `${e} is in #${j}, already in the same set.`, () => view(i, e, "success"));
+        } else {
+          owner.set(e, i);
+          t.step("own", `First time seeing ${e}: owned by #${i}.`, () => view(i, e));
+        }
+      }
+    });
+    const groups = new Map<number, string[]>();
+    for (const [e, i] of owner) {
+      const r = find(i);
+      if (!groups.has(r)) groups.set(r, []);
+      groups.get(r)!.push(e);
+    }
+    t.step("group", "Group emails by their account's root.", () => [map("groups (root → emails)", [...groups].map(([r, es]) => [r, es.map(short).join(", ")]))]);
+    const res = [...groups].map(([r, es]) => [accounts[r][0], ...es.sort()]);
+    t.step("ret", `${res.length} merged account(s).`, () => [arr("merged", res.map((r) => `${r[0]}: ${r.slice(1).map(short).join(", ")}`), { indexLabels: false })]);
+    return res;
+  },
+});
+
+export default defineProblem<Input>({
+  description: "Each account is [name, ...emails]. Two accounts belong to the same person if they share any email. Merge them and return each person's name followed by their emails in sorted order.",
+  input: {
+    default:
+      'accounts = [["John","js@mail.com","jn@mail.com"],["John","js@mail.com","jo@mail.com"],["Mary","m@mail.com"],["John","jx@mail.com"],["John","jx@mail.com","jo@mail.com"]]',
+    parse: (a) => {
+      const accounts = a.matrix<string>("accounts");
+      if (accounts.some((acc) => acc.length < 2)) throw new Error("each account needs a name and at least one email");
+      return { accounts };
+    },
+  },
+  examples: [
+    {
+      input: 'accounts = [["John","johnsmith@mail.com","john_newyork@mail.com"],["John","johnsmith@mail.com","john00@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]',
+      output: [["John", "john00@mail.com", "john_newyork@mail.com", "johnsmith@mail.com"], ["Mary", "mary@mail.com"], ["John", "johnnybravo@mail.com"]],
+    },
+    {
+      input: 'accounts = [["Gabe","Gabe0@m.co","Gabe3@m.co","Gabe1@m.co"],["Kevin","Kevin3@m.co","Kevin5@m.co","Kevin0@m.co"],["Ethan","Ethan5@m.co","Ethan4@m.co","Ethan0@m.co"],["Hanzo","Hanzo3@m.co","Hanzo1@m.co","Hanzo0@m.co"],["Fern","Fern5@m.co","Fern1@m.co","Fern0@m.co"]]',
+      output: [["Ethan", "Ethan0@m.co", "Ethan4@m.co", "Ethan5@m.co"], ["Gabe", "Gabe0@m.co", "Gabe1@m.co", "Gabe3@m.co"], ["Hanzo", "Hanzo0@m.co", "Hanzo1@m.co", "Hanzo3@m.co"], ["Kevin", "Kevin0@m.co", "Kevin3@m.co", "Kevin5@m.co"], ["Fern", "Fern0@m.co", "Fern1@m.co", "Fern5@m.co"]],
+    },
+  ],
+  normalize: (v) => (v as string[][]).map((acc) => acc.join()).sort(),
+  solutions: [dfs, unionFind],
+});

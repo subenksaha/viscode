@@ -1,0 +1,122 @@
+import type { ProblemList } from "./types";
+
+// Source: https://github.com/jaimin-bariya/blind-75-leetcode (71 problems as listed there).
+export const blind75: ProblemList = {
+  id: "blind-75",
+  name: "Blind 75",
+  description: "The classic curated list of LeetCode problems for coding interviews.",
+  source: "https://github.com/jaimin-bariya/blind-75-leetcode",
+  sections: [
+    {
+      category: "array",
+      problems: [
+        "two-sum",
+        "best-time-to-buy-and-sell-stock",
+        "contains-duplicate",
+        "product-of-array-except-self",
+        "maximum-subarray",
+        "maximum-product-subarray",
+        "find-minimum-in-rotated-sorted-array",
+        "search-in-rotated-sorted-array",
+        "3sum",
+        "container-with-most-water",
+      ],
+    },
+    {
+      category: "binary",
+      problems: [
+        "sum-of-two-integers",
+        "number-of-1-bits",
+        "counting-bits",
+        "missing-number",
+        "reverse-bits",
+      ],
+    },
+    {
+      category: "dynamic-programming",
+      problems: [
+        "climbing-stairs",
+        "coin-change",
+        "longest-increasing-subsequence",
+        "longest-common-subsequence",
+        "word-break",
+        "combination-sum-iv",
+        "house-robber",
+        "house-robber-ii",
+        "decode-ways",
+        "unique-paths",
+        "jump-game",
+      ],
+    },
+    {
+      category: "graph",
+      problems: [
+        "clone-graph",
+        "course-schedule",
+        "pacific-atlantic-water-flow",
+        "number-of-islands",
+        "longest-consecutive-sequence",
+        "alien-dictionary",
+        "graph-valid-tree",
+        "number-of-connected-components-in-an-undirected-graph",
+      ],
+    },
+    {
+      category: "interval",
+      problems: [
+        "insert-interval",
+        "merge-intervals",
+        "non-overlapping-intervals",
+        "meeting-rooms",
+        "meeting-rooms-ii",
+      ],
+    },
+    {
+      category: "linked-list",
+      problems: [
+        "reverse-linked-list",
+        "linked-list-cycle",
+        "merge-two-sorted-lists",
+        "merge-k-sorted-lists",
+        "remove-nth-node-from-end-of-list",
+        "reorder-list",
+      ],
+    },
+    {
+      category: "matrix",
+      problems: ["set-matrix-zeroes", "spiral-matrix", "rotate-image", "word-search"],
+    },
+    {
+      category: "string",
+      problems: [
+        "longest-substring-without-repeating-characters",
+        "longest-repeating-character-replacement",
+        "minimum-window-substring",
+        "valid-anagram",
+        "group-anagrams",
+        "valid-parentheses",
+        "valid-palindrome",
+        "longest-palindromic-substring",
+        "palindromic-substrings",
+        "encode-and-decode-strings",
+      ],
+    },
+    {
+      category: "tree",
+      problems: [
+        "maximum-depth-of-binary-tree",
+        "same-tree",
+        "invert-binary-tree",
+        "binary-tree-maximum-path-sum",
+        "binary-tree-level-order-traversal",
+        "serialize-and-deserialize-binary-tree",
+        "subtree-of-another-tree",
+        "construct-binary-tree-from-preorder-and-inorder-traversal",
+        "validate-binary-search-tree",
+        "kth-smallest-element-in-a-bst",
+        "lowest-common-ancestor-of-a-binary-search-tree",
+        "implement-trie-prefix-tree",
+      ],
+    },
+  ],
+};

@@ -1,0 +1,164 @@
+import { arr, grid, map, rc, tones, vars } from "@/core/panels";
+import { code, defineProblem, defineSolution } from "@/core/trace";
+
+interface Input {
+  text1: string;
+  text2: string;
+}
+
+const memo = defineSolution<Input>({
+  id: "memo",
+  name: "Top-down Memoization",
+  time: "O(m·n)",
+  space: "O(m·n)",
+  idea: "lcs(i, j): if the characters match, take 1 + lcs(i+1, j+1); otherwise skip one character from either string and take the better result.",
+  code: code(`
+    function longestCommonSubsequence(a: string, b: string): number {
+      const memo = new Map<string, number>();
+      function lcs(i: number, j: number): number {
+        if (i === a.length || j === b.length) return 0; //@base
+        const key = i + "," + j;
+        if (memo.has(key)) return memo.get(key)!; //@hit
+        const res = a[i] === b[j] //@cmp
+          ? 1 + lcs(i + 1, j + 1)
+          : Math.max(lcs(i + 1, j), lcs(i, j + 1));
+        memo.set(key, res); //@store
+        return res;
+      }
+      return lcs(0, 0); //@ret
+    }
+  `),
+  run({ text1: a, text2: b }, t) {
+    const cache = new Map<string, number>();
+    const view = (i: number, j: number, key?: string) => [
+      arr("text1", [...a], { tones: tones([i, "active"]), pointers: { i } }),
+      arr("text2", [...b], { tones: tones([j, "active"]), pointers: { j } }),
+      map("memo (i,j → lcs)", cache, tones([key, "success"])),
+    ];
+    const lcs = (i: number, j: number): number => {
+      if (i === a.length || j === b.length) {
+        t.step("base", "One string is exhausted: 0.", () => view(i, j));
+        return 0;
+      }
+      const key = `${i},${j}`;
+      if (cache.has(key)) {
+        t.step("hit", `lcs(${key}) cached = ${cache.get(key)}.`, () => view(i, j, key));
+        return cache.get(key)!;
+      }
+      const match = a[i] === b[j];
+      t.step("cmp", match ? `'${a[i]}' matches: 1 + lcs(${i + 1},${j + 1}).` : `'${a[i]}' ≠ '${b[j]}': try skipping either one.`, () => view(i, j));
+      const res = match ? 1 + lcs(i + 1, j + 1) : Math.max(lcs(i + 1, j), lcs(i, j + 1));
+      cache.set(key, res);
+      t.step("store", `lcs(${key}) = ${res}.`, () => view(i, j, key));
+      return res;
+    };
+    const res = lcs(0, 0);
+    t.step("ret", `Return ${res}.`, view(0, 0, "0,0"));
+    return res;
+  },
+});
+
+const table = defineSolution<Input>({
+  id: "table",
+  name: "Bottom-up 2D Table",
+  time: "O(m·n)",
+  space: "O(m·n)",
+  idea: "dp[i][j] = LCS of the first i chars of text1 and the first j chars of text2. On a match take the diagonal + 1, otherwise the max of the cell above and the cell to the left.",
+  code: code(`
+    function longestCommonSubsequence(a: string, b: string): number {
+      const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0)); //@init
+      for (let i = 1; i <= a.length; i++) //@i
+        for (let j = 1; j <= b.length; j++) //@j
+          dp[i][j] = a[i - 1] === b[j - 1] //@cell
+            ? dp[i - 1][j - 1] + 1
+            : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      return dp[a.length][b.length]; //@ret
+    }
+  `),
+  run({ text1: a, text2: b }, t) {
+    const dp: (number | null)[][] = Array.from({ length: a.length + 1 }, (_, i) =>
+      Array.from({ length: b.length + 1 }, (_, j) => (i === 0 || j === 0 ? 0 : null)),
+    );
+    const view = (i?: number, j?: number, match?: boolean) => [
+      grid("dp", dp, {
+        rowLabels: ["∅", ...a],
+        colLabels: ["∅", ...b],
+        tones:
+          i === undefined || j === undefined
+            ? {}
+            : match
+              ? tones([rc(i - 1, j - 1), "compare"], [rc(i, j), "success"])
+              : tones([rc(i - 1, j), "compare"], [rc(i, j - 1), "compare"], [rc(i, j), "active"]),
+      }),
+    ];
+    t.step("init", "Row 0 and column 0 are 0: an empty string has no common subsequence.", view());
+    for (let i = 1; i <= a.length; i++) {
+      t.step("i", `Row for '${a[i - 1]}'.`, () => view());
+      for (let j = 1; j <= b.length; j++) {
+        const match = a[i - 1] === b[j - 1];
+        dp[i][j] = match ? dp[i - 1][j - 1]! + 1 : Math.max(dp[i - 1][j]!, dp[i][j - 1]!);
+        t.step("cell", match ? `'${a[i - 1]}' = '${b[j - 1]}': diagonal + 1 = ${dp[i][j]}.` : `'${a[i - 1]}' ≠ '${b[j - 1]}': max(up, left) = ${dp[i][j]}.`, () => view(i, j, match));
+      }
+    }
+    const res = dp[a.length][b.length]!;
+    t.step("ret", `Return dp[${a.length}][${b.length}] = ${res}.`, [grid("dp", dp, { rowLabels: ["∅", ...a], colLabels: ["∅", ...b], tones: tones([rc(a.length, b.length), "success"]) })]);
+    return res;
+  },
+});
+
+const rolling = defineSolution<Input>({
+  id: "rolling-row",
+  name: "1D Rolling Row",
+  time: "O(m·n)",
+  space: "O(n)",
+  idea: "Each row only needs the row above it. Keep one row and remember the old diagonal value in a variable.",
+  code: code(`
+    function longestCommonSubsequence(a: string, b: string): number {
+      const dp = new Array(b.length + 1).fill(0); //@init
+      for (let i = 1; i <= a.length; i++) { //@i
+        let diag = 0;
+        for (let j = 1; j <= b.length; j++) { //@j
+          const up = dp[j];
+          dp[j] = a[i - 1] === b[j - 1] ? diag + 1 : Math.max(up, dp[j - 1]); //@cell
+          diag = up; //@diag
+        }
+      }
+      return dp[b.length]; //@ret
+    }
+  `),
+  run({ text1: a, text2: b }, t) {
+    const dp = new Array(b.length + 1).fill(0);
+    const view = (i?: number, j?: number, diag?: number) => [
+      vars({ char: i !== undefined ? a[i - 1] : undefined, diag }),
+      arr("dp (current row)", dp, { indexLabels: ["∅", ...b], tones: tones([j, "active"]) }),
+    ];
+    t.step("init", "One row of zeros.", view());
+    for (let i = 1; i <= a.length; i++) {
+      let diag = 0;
+      t.step("i", `Row for '${a[i - 1]}'.`, () => view(i, undefined, diag));
+      for (let j = 1; j <= b.length; j++) {
+        const up = dp[j];
+        const match = a[i - 1] === b[j - 1];
+        dp[j] = match ? diag + 1 : Math.max(up, dp[j - 1]);
+        t.step("cell", match ? `Match: diag + 1 = ${dp[j]}.` : `No match: max(up ${up}, left ${dp[j - 1]}) = ${dp[j]}.`, () => view(i, j, diag));
+        diag = up;
+      }
+    }
+    t.step("ret", `Return ${dp[b.length]}.`, view());
+    return dp[b.length];
+  },
+});
+
+export default defineProblem<Input>({
+  description: "Return the length of the longest common subsequence of text1 and text2, or 0 if there is none.",
+  input: {
+    default: 'text1 = "abcde", text2 = "ace"',
+    parse: (a) => ({ text1: a.str("text1"), text2: a.str("text2") }),
+  },
+  examples: [
+    { input: 'text1 = "abcde", text2 = "ace"', output: 3 },
+    { input: 'text1 = "abc", text2 = "abc"', output: 3 },
+    { input: 'text1 = "abc", text2 = "def"', output: 0 },
+  ],
+  solutions: [memo, table, rolling],
+});
