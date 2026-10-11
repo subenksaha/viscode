@@ -13,6 +13,23 @@ const minHeap = defineSolution<Input>({
   time: "O(n log k)",
   space: "O(k)",
   idea: "Stream the numbers through a min-heap capped at k entries. After the pass it holds the k largest, and its top is the kth largest.",
+  approach: [
+    {
+      title: "Stream through a size-k heap",
+      detail: "Push every number.",
+      at: "push",
+    },
+    {
+      title: "Drop the smallest beyond k",
+      detail: "What's left is always the k largest seen so far.",
+      at: "evict",
+    },
+    {
+      title: "Top is kth largest",
+      detail: "O(n log k).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findKthLargest(nums: number[], k: number): number {
       // Min-heap holding the k largest values seen so far.
@@ -52,6 +69,33 @@ const quickselect = defineSolution<Input>({
   time: "O(n) average",
   space: "O(1)",
   idea: "The kth largest sits at index n − k in sorted order. Partition around a pivot like quicksort, then continue only in the side that contains that index.",
+  approach: [
+    {
+      title: "Target index",
+      detail: "In ascending order, the kth largest sits at index n − k.",
+      at: "init",
+    },
+    {
+      title: "Partition around the pivot",
+      detail: "Move values ≤ pivot to the left part.",
+      at: "swap",
+    },
+    {
+      title: "Place the pivot",
+      detail: "The pivot lands in its final sorted position.",
+      at: "place",
+    },
+    {
+      title: "Recurse into one side",
+      detail: "Continue only in the side that contains the target index.",
+      at: "right",
+    },
+    {
+      title: "Done",
+      detail: "O(n) on average, O(n²) with consistently bad pivots.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findKthLargest(nums: number[], k: number): number {
       const target = nums.length - k; // index of the answer if nums were sorted

@@ -36,6 +36,28 @@ const scanList = defineSolution<Input>({
   time: "O(n²) per count",
   space: "O(n)",
   idea: "Treat every stored point as the corner diagonal to the query. A valid diagonal forms a square with equal, non-zero side lengths; count the other two corners by scanning the list.",
+  approach: [
+    {
+      title: "Store points",
+      detail: "Duplicates count separately.",
+      at: "add",
+    },
+    {
+      title: "Pick a diagonal",
+      detail: "A stored point that differs from the query by the same non-zero amount in x and y is a diagonal corner.",
+      at: "diag",
+    },
+    {
+      title: "Count the other corners",
+      detail: "Count (x, cornerY) and (cornerX, y) by scanning. Multiply the counts.",
+      at: "corners",
+    },
+    {
+      title: "Total",
+      detail: "O(n²) per query.",
+      at: "ret",
+    },
+  ],
   code: code(`
     class DetectSquares {
       points: number[][] = []; //@ctor
@@ -91,6 +113,23 @@ const countMap = defineSolution<Input>({
   time: "O(n) per count",
   space: "O(n)",
   idea: "Store how many times each point was added. For a query, loop over distinct points as the diagonal and multiply the three corner counts: diagonal × (x, py) × (px, y).",
+  approach: [
+    {
+      title: "Count per point",
+      detail: "A map from \"x,y\" to how many times it was added.",
+      at: "add",
+    },
+    {
+      title: "Diagonals over distinct points",
+      detail: "For each diagonal: count × count(x, py) × count(px, y).",
+      at: "corners",
+    },
+    {
+      title: "Total",
+      detail: "O(distinct points) per query.",
+      at: "ret",
+    },
+  ],
   code: code(`
     class DetectSquares {
       pointCount = new Map<string, number>(); // "x,y" -> how many times it was added //@ctor

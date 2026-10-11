@@ -11,6 +11,22 @@ const hashCount = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Count each value. The first one whose count exceeds n/2 is the answer.",
+  approach: [
+    {
+      title: "Count occurrences",
+      detail: "Increment the value's count as you go.",
+      at: "count",
+    },
+    {
+      title: "Stop past n/2",
+      detail: "The majority element is the only value that can exceed half.",
+      at: "found",
+    },
+    {
+      title: "Space",
+      detail: "O(n) for the map, in exchange for an early exit.",
+    },
+  ],
   code: code(`
     function majorityElement(nums: number[]): number {
       const count = new Map<number, number>(); //@init
@@ -49,6 +65,22 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)",
   idea: "After sorting, a value that fills more than half the array must cover the middle index.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Equal values form one contiguous run.",
+      at: "sort",
+    },
+    {
+      title: "Middle index",
+      detail: "A run longer than n/2 must cover index ⌊n/2⌋ wherever it starts.",
+      at: "ret",
+    },
+    {
+      title: "Cost",
+      detail: "O(n log n) for the sort and no extra memory.",
+    },
+  ],
   code: code(`
     function majorityElement(nums: number[]): number {
       nums.sort((a, b) => a - b); //@sort
@@ -77,6 +109,29 @@ const boyerMoore = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Keep a candidate and a counter. Matching values vote for it, others vote against. When the counter hits zero, pick the current value. The majority survives all cancellations.",
+  approach: [
+    {
+      title: "Candidate and counter",
+      detail: "Think of pairing each majority vote against a different value. The majority has more votes than everything else combined.",
+      at: "init",
+    },
+    {
+      title: "Pick when the count is 0",
+      detail: "A zero count means every vote so far has cancelled out, so the current value becomes the candidate.",
+      at: "pick",
+    },
+    {
+      title: "Vote",
+      detail: "A match adds 1 and a mismatch subtracts 1.",
+      at: "vote",
+      nth: 3,
+    },
+    {
+      title: "The survivor is the majority",
+      detail: "The cancellations can never use up all the majority's votes. O(n) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function majorityElement(nums: number[]): number {
       let candidate = 0; //@init

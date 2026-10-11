@@ -15,6 +15,23 @@ const byLength = defineSolution<Input>({
   time: "O(n·L) per search",
   space: "O(total chars)",
   idea: "Store words grouped by length. A search compares the pattern with every stored word of the same length, letting '.' match anything.",
+  approach: [
+    {
+      title: "Bucket by length",
+      detail: "Only words with the pattern's length can match, so group words by length.",
+      at: "add",
+    },
+    {
+      title: "Compare letter by letter",
+      detail: "'.' matches anything. Any other letter must be equal.",
+      at: "cmp",
+    },
+    {
+      title: "Match or miss",
+      detail: "Return on the first match. Otherwise every word of that length gets checked: O(n·L).",
+      at: "hit",
+    },
+  ],
   code: code(`
     class WordDictionary {
       wordsByLength = new Map<number, string[]>(); //@ctor
@@ -95,6 +112,33 @@ const trie = defineSolution<Input>({
   time: "O(L) add, O(26^dots · L) search",
   space: "O(total chars)",
   idea: "Insert words into a trie. Searching follows one child per letter; at a '.', it tries every child and succeeds if any branch matches the rest.",
+  approach: [
+    {
+      title: "Insert into a trie",
+      detail: "Shared prefixes share nodes.",
+      at: "add",
+    },
+    {
+      title: "Mark word ends",
+      detail: "search must land on a flagged node.",
+      at: "end",
+    },
+    {
+      title: "Plain letters follow one child",
+      detail: "A missing child ends that branch.",
+      at: "letter",
+    },
+    {
+      title: "'.' branches to every child",
+      detail: "Try each child for the rest of the pattern and succeed if any branch does.",
+      at: "dot",
+    },
+    {
+      title: "End of the pattern",
+      detail: "Match only if the node is a word end.",
+      at: "leaf",
+    },
+  ],
   code: code(`
     class TrieNode {
       children = new Map<string, TrieNode>();

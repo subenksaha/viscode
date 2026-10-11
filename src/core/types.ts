@@ -116,6 +116,8 @@ export type Panel =
   | TextPanel;
 
 export interface Step {
+  /** Code marker the step was recorded at. */
+  label: string;
   /** 1-based line in the solution's code. */
   line: number;
   note: string;
@@ -130,6 +132,17 @@ export interface CompiledCode {
   lines: Record<string, number>;
 }
 
+/** One stage of a solution's walkthrough. */
+export interface ApproachStep {
+  title: string;
+  /** What happens at this stage and why it works. */
+  detail: string;
+  /** Code marker of the critical moment to visualize for this stage. */
+  at?: string;
+  /** Which trace step at `at` to show: 1-based, negative counts from the end. Defaults to 1. */
+  nth?: number;
+}
+
 export interface Solution<I> {
   id: string;
   name: string;
@@ -137,6 +150,8 @@ export interface Solution<I> {
   space: string;
   /** One or two sentences on the approach. */
   idea: string;
+  /** Detailed walkthrough, in order; stages with `at` get a snapshot of that step. */
+  approach: ApproachStep[];
   code: CompiledCode;
   /** Run the algorithm on `input`, recording steps on `t`. Returns the answer. */
   run: (input: I, t: Tracer) => unknown;

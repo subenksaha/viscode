@@ -13,6 +13,28 @@ const iterative = defineSolution<Input>({
   time: "O(4ⁿ · n)",
   space: "O(4ⁿ · n)",
   idea: "Start with [\"\"]. For each digit, replace the list with every existing prefix extended by each of the digit's letters.",
+  approach: [
+    {
+      title: "Start with one empty prefix",
+      detail: "The list grows one digit at a time.",
+      at: "init",
+    },
+    {
+      title: "For each digit",
+      detail: "Look up its letters.",
+      at: "digit",
+    },
+    {
+      title: "Expand every prefix",
+      detail: "Every prefix is extended by every letter of the digit. Up to 4ⁿ strings.",
+      at: "expand",
+    },
+    {
+      title: "Result",
+      detail: "All combinations.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function letterCombinations(digits: string): string[] {
       if (digits.length === 0) return []; //@empty
@@ -53,6 +75,23 @@ const backtrack = defineSolution<Input>({
   time: "O(4ⁿ · n)",
   space: "O(n)",
   idea: "Pick a letter for the current digit, recurse on the next digit, then undo. When every digit has a letter, record the string.",
+  approach: [
+    {
+      title: "Pick a letter",
+      detail: "Choose one letter for digit i and recurse on i + 1.",
+      at: "choose",
+    },
+    {
+      title: "Record full strings",
+      detail: "When every digit has a letter, join the path.",
+      at: "found",
+    },
+    {
+      title: "Undo",
+      detail: "Pop and try the next letter. Only O(n) extra space besides the output.",
+      at: "undo",
+    },
+  ],
   code: code(`
     function letterCombinations(digits: string): string[] {
       if (digits.length === 0) return []; //@empty

@@ -11,6 +11,25 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Fix each start and extend the end while keeping a running product.",
+  approach: [
+    {
+      title: "Fix a start",
+      detail: "Try every starting index i.",
+      at: "i",
+    },
+    {
+      title: "Extend with a running product",
+      detail: "Multiply in nums[j] as the end moves right, so every subarray starting at i gets its product in O(1).",
+      at: "prod",
+      nth: 3,
+    },
+    {
+      title: "Keep the max",
+      detail: "Compare every product with best. All O(n²) subarrays are checked.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxProduct(nums: number[]): number {
       let best = -Infinity; //@init
@@ -52,6 +71,30 @@ const minMax = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "A negative number turns the smallest product into the largest. Keep both the max and min product ending at each index.",
+  approach: [
+    {
+      title: "Track both extremes",
+      detail: "Multiplying by a negative flips order: the most negative product becomes the largest. So keep the max and the min product ending at each index.",
+      at: "init",
+    },
+    {
+      title: "Three candidates per element",
+      detail: "The best product ending at i is num alone, maxEndingHere × num, or minEndingHere × num.",
+      at: "cand",
+    },
+    {
+      title: "Update the max and the min",
+      detail: "Take the max and min of the candidates. These are the extremes of every product ending at i.",
+      at: "hi",
+      nth: 2,
+    },
+    {
+      title: "Record the best",
+      detail: "best tracks the largest maxEndingHere seen. In the example, the final −1 flips the min (−48) into 48.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxProduct(nums: number[]): number {
       // Track both the biggest and smallest product ending here:
@@ -101,6 +144,31 @@ const prefixSuffix = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "The answer is always a prefix or suffix product of some zero-free segment. Scan both directions and restart the product after a zero.",
+  approach: [
+    {
+      title: "Two running products",
+      detail: "A zero-free segment with an even count of negatives has a positive full product. With an odd count, the best product drops either everything up to the first negative or everything after the last one. That is always a prefix or a suffix.",
+      at: "init",
+    },
+    {
+      title: "Multiply from the left",
+      detail: "prefix covers the elements from the left. After a zero it restarts at 1, because a product through a zero is 0.",
+      at: "pre",
+      nth: 3,
+    },
+    {
+      title: "Multiply from the right",
+      detail: "suffix does the same from the right end. It catches the case where the leading negative should be dropped.",
+      at: "suf",
+      nth: 3,
+    },
+    {
+      title: "Take the best of both",
+      detail: "At each step the best candidate is max(best, prefix, suffix). Both directions are covered in one loop.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxProduct(nums: number[]): number {
       const n = nums.length;

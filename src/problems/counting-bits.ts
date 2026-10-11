@@ -11,6 +11,25 @@ const perNumber = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)",
   idea: "Count the set bits of every i from 0 to n independently: check the last bit, then halve the number, until it reaches 0.",
+  approach: [
+    {
+      title: "Handle each i separately",
+      detail: "For every i in 0..n, count its 1s from scratch.",
+      at: "loop",
+    },
+    {
+      title: "Count by halving",
+      detail: "value % 2 gives the last bit, and halving drops it. Repeat until 0. This takes about log i steps.",
+      at: "count",
+      nth: -1,
+    },
+    {
+      title: "Store the count",
+      detail: "Push the count into result. Total cost is O(n log n), since nothing is reused between numbers.",
+      at: "push",
+      nth: -1,
+    },
+  ],
   code: code(`
     function countBits(n: number): number[] {
       const result: number[] = []; //@init
@@ -53,6 +72,25 @@ const shiftDp = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Halving i (rounding down) drops its last bit, and the result is smaller, so its answer is already known: dp[i] = dp[⌊i / 2⌋] + (i % 2).",
+  approach: [
+    {
+      title: "Base case",
+      detail: "dp[0] = 0: zero has no set bits.",
+      at: "init",
+    },
+    {
+      title: "Halving drops the last bit",
+      detail: "i >> 1 is i without its last bit, and it is smaller than i, so dp[i >> 1] is already computed.",
+      at: "loop",
+      nth: 5,
+    },
+    {
+      title: "Recurrence",
+      detail: "dp[i] = dp[i / 2] + (i % 2): the bits of i are the bits of i/2 plus the bit that was dropped. O(1) per number.",
+      at: "dp",
+      nth: -1,
+    },
+  ],
   code: code(`
     function countBits(n: number): number[] {
       // dp[i] = number of 1 bits in i
@@ -91,6 +129,25 @@ const lowBitDp = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "i & (i − 1) is i with its lowest 1 removed, so dp[i] = dp[i & (i − 1)] + 1.",
+  approach: [
+    {
+      title: "Base case",
+      detail: "dp[0] = 0.",
+      at: "init",
+    },
+    {
+      title: "Strip the lowest set bit",
+      detail: "i & (i − 1) removes exactly one 1 from i and gives a smaller number with a known answer.",
+      at: "loop",
+      nth: 6,
+    },
+    {
+      title: "One more than the stripped number",
+      detail: "dp[i] = dp[i & (i − 1)] + 1. Each entry costs O(1), so the whole table is O(n).",
+      at: "dp",
+      nth: -1,
+    },
+  ],
   code: code(`
     function countBits(n: number): number[] {
       // dp[i] = number of 1 bits in i

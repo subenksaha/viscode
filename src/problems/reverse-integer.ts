@@ -14,6 +14,23 @@ const viaString = defineSolution<Input>({
   time: "O(log |x|)",
   space: "O(log |x|)",
   idea: "Reverse the digits of |x| as a string, reapply the sign, and return 0 if the result leaves the 32-bit range.",
+  approach: [
+    {
+      title: "Digits of |x|",
+      detail: "Reverse them as a string.",
+      at: "split",
+    },
+    {
+      title: "Reapply the sign",
+      detail: "Trailing zeros become leading zeros and disappear.",
+      at: "join",
+    },
+    {
+      title: "Range check",
+      detail: "Return 0 if outside the 32-bit range.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverse(x: number): number {
       const digits = String(Math.abs(x)).split("").reverse(); //@split
@@ -41,6 +58,28 @@ const popPush = defineSolution<Input>({
   time: "O(log |x|)",
   space: "O(1)",
   idea: "Pop the last digit with % 10 and push it onto the result with ×10 +. Before pushing, check that the result can grow by one more digit without leaving the 32-bit range.",
+  approach: [
+    {
+      title: "Start at 0",
+      detail: "Build the reversed number digit by digit.",
+      at: "init",
+    },
+    {
+      title: "Pop the last digit",
+      detail: "x % 10, which keeps the sign in JavaScript.",
+      at: "pop",
+    },
+    {
+      title: "Check, then push",
+      detail: "Before reversed·10 + digit, make sure reversed is within MAX/10 and MIN/10, or the result would overflow.",
+      at: "push",
+    },
+    {
+      title: "Result",
+      detail: "O(log |x|), O(1).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverse(x: number): number {
       const MAX_BEFORE_PUSH = Math.trunc((2 ** 31 - 1) / 10);

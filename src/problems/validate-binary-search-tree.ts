@@ -15,6 +15,23 @@ const bounds = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Each node must lie strictly inside an open interval (low, high). Going left caps high at the node's value; going right raises low.",
+  approach: [
+    {
+      title: "The root may be anything",
+      detail: "Start with the bounds (−∞, ∞).",
+      at: "check",
+    },
+    {
+      title: "Pass tighter bounds down",
+      detail: "The left child must be less than the node and the right child greater. Every ancestor's limit is inherited too, so checking only the parent is not enough.",
+      at: "recurse",
+    },
+    {
+      title: "Fail on a violation",
+      detail: "Any value at or outside its (low, high) bounds breaks the BST rule.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isValidBST(root: TreeNode | null): boolean {
       // Every value in this subtree must be strictly between low and high.
@@ -50,6 +67,28 @@ const inorder = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "An in-order walk of a BST visits values in strictly increasing order. Walk iteratively with a stack and compare each value with the previous one.",
+  approach: [
+    {
+      title: "In-order is sorted for a BST",
+      detail: "Visiting left subtree, node, right subtree yields strictly increasing values exactly when the tree is a valid BST.",
+      at: "init",
+    },
+    {
+      title: "Push the left spine",
+      detail: "Go as far left as possible, stacking nodes.",
+      at: "left",
+    },
+    {
+      title: "Visit and compare",
+      detail: "The popped node must be greater than the previous value visited.",
+      at: "visit",
+    },
+    {
+      title: "Move right",
+      detail: "Then process the right subtree the same way. O(n) time, O(h) space.",
+      at: "right",
+    },
+  ],
   code: code(`
     function isValidBST(root: TreeNode | null): boolean {
       // An in-order walk of a valid BST visits values in strictly increasing order.

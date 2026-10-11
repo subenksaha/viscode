@@ -13,6 +13,23 @@ const cleanReverse = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Keep only letters and digits, lowercase them, and compare the result with its reverse.",
+  approach: [
+    {
+      title: "Normalize",
+      detail: "Lowercase everything and strip anything that isn't a letter or digit. Only these characters count.",
+      at: "clean",
+    },
+    {
+      title: "Reverse",
+      detail: "Build the reversed string.",
+      at: "reverse",
+    },
+    {
+      title: "Compare",
+      detail: "A palindrome equals its reverse. Simple, but it uses O(n) extra space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isPalindrome(s: string): boolean {
       // Keep only letters and digits, all lowercase.
@@ -37,6 +54,28 @@ const twoPointers = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Move left and right toward each other, skipping non-alphanumeric characters, and compare lowercase characters.",
+  approach: [
+    {
+      title: "Pointers at both ends",
+      detail: "left starts at the front and right at the back.",
+      at: "init",
+    },
+    {
+      title: "Skip characters that don't count",
+      detail: "Move a pointer past punctuation and spaces without comparing.",
+      at: "skipLo",
+    },
+    {
+      title: "Compare case-insensitively",
+      detail: "If the two characters differ, it is not a palindrome.",
+      at: "cmp",
+    },
+    {
+      title: "Move inward",
+      detail: "Advance both pointers. Meeting in the middle means every pair matched. O(1) space.",
+      at: "move",
+    },
+  ],
   code: code(`
     function isPalindrome(s: string): boolean {
       const isLetterOrDigit = (char: string) => /[a-z0-9]/i.test(char);

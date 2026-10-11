@@ -11,6 +11,23 @@ const dp = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "jumps[i] = fewest jumps to reach i. From each reachable i, every index up to i + nums[i] can be reached with jumps[i] + 1.",
+  approach: [
+    {
+      title: "jumps[0] = 0",
+      detail: "Every other index starts at ∞.",
+      at: "init",
+    },
+    {
+      title: "Relax reachable indices",
+      detail: "From i, every index up to i + nums[i] can be reached with jumps[i] + 1.",
+      at: "relax",
+    },
+    {
+      title: "Answer",
+      detail: "O(n²) worst case.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function jump(nums: number[]): number {
       // jumps[i] = fewest jumps needed to reach index i
@@ -53,6 +70,28 @@ const greedyBfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Indices reachable with exactly k jumps form a contiguous window. Scan the current window, track the farthest index reachable from it, and when the window ends, take a jump: the next window ends at that farthest point.",
+  approach: [
+    {
+      title: "Windows of equal jump count",
+      detail: "Indices reachable with k jumps form a contiguous range.",
+      at: "init",
+    },
+    {
+      title: "Track the farthest reach",
+      detail: "Scan the current window to find the farthest index the next jump can reach.",
+      at: "far",
+    },
+    {
+      title: "Jump at the window's end",
+      detail: "That farthest index ends the next window. Count a jump.",
+      at: "jump",
+    },
+    {
+      title: "Answer",
+      detail: "One pass, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function jump(nums: number[]): number {
       let jumps = 0; //@init

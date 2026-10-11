@@ -13,6 +13,28 @@ const bruteForce = defineSolution<Input>({
   time: "O(n³)",
   space: "O(k)",
   idea: "Sort first so equal triplets look identical, then try every triple and dedupe with a set of keys.",
+  approach: [
+    {
+      title: "Sort first",
+      detail: "Sorting makes equal triplets look identical (always ascending), so a string key can dedupe them.",
+      at: "sort",
+    },
+    {
+      title: "Try every triple",
+      detail: "Three nested loops cover every i < j < k: O(n³) combinations.",
+      at: "k",
+    },
+    {
+      title: "Record zero-sum triplets once",
+      detail: "When the sum is 0, build a key like \"-1,-1,2\". Add the triplet only if that key hasn't been seen.",
+      at: "add",
+    },
+    {
+      title: "Duplicates are filtered",
+      detail: "A second [-1,0,1] built from a different −1 has the same key, so it is skipped.",
+      at: "check",
+    },
+  ],
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
@@ -70,6 +92,33 @@ const hashSet = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Fix nums[i], then run Two Sum with a hash set on the rest for target −nums[i]. Sorting lets us skip duplicates.",
+  approach: [
+    {
+      title: "Sort to group duplicates",
+      detail: "Sorting puts equal anchors next to each other so they can be skipped, and makes triplets come out in order.",
+      at: "sort",
+    },
+    {
+      title: "Fix an anchor, reset the set",
+      detail: "Each distinct nums[i] becomes the anchor. The rest is Two Sum with target −nums[i], solved with a fresh hash set.",
+      at: "reset",
+    },
+    {
+      title: "Look up the complement",
+      detail: "For each j, need = −nums[i] − nums[j]. If need is already in the set, [nums[i], need, nums[j]] sums to 0.",
+      at: "add",
+    },
+    {
+      title: "Skip repeats",
+      detail: "After a hit, skip equal nums[j] values, and later skip an anchor equal to the previous one. This keeps every triplet unique.",
+      at: "skip-j",
+    },
+    {
+      title: "Store and continue",
+      detail: "Values that didn't complete a triplet go into the set as possible partners for later j. O(n) per anchor, O(n²) total.",
+      at: "store",
+    },
+  ],
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
@@ -135,6 +184,33 @@ const twoPointers = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Sort, fix nums[i], then move left and right inward on the rest: a small sum moves left forward, a big sum moves right back. Skip equal values to avoid duplicates.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Sorting gives order, which lets two pointers decide which way to move and makes duplicates adjacent.",
+      at: "sort",
+    },
+    {
+      title: "Fix the anchor and open the pointers",
+      detail: "For anchor nums[i], put left just after it and right at the end. If nums[i] > 0, no triplet can sum to 0 and we stop early.",
+      at: "init",
+    },
+    {
+      title: "Steer by the sum",
+      detail: "A negative sum needs a bigger value: move left forward. A positive sum needs a smaller one: move right back.",
+      at: "lo",
+    },
+    {
+      title: "Record and skip duplicates",
+      detail: "On a zero sum, record the triplet, then move both pointers past equal values so the same triplet isn't added again.",
+      at: "dedupe",
+    },
+    {
+      title: "Skip duplicate anchors",
+      detail: "An anchor equal to the previous one would only reproduce the same triplets. O(n²) time, O(1) extra space.",
+      at: "skip",
+    },
+  ],
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort

@@ -13,6 +13,24 @@ const sortByCount = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Count each value with a hash map, sort the distinct values by count (descending) and take the first k.",
+  approach: [
+    {
+      title: "Count",
+      detail: "A hash map counts each value's frequency.",
+      at: "count",
+      nth: -1,
+    },
+    {
+      title: "Sort distinct values by count",
+      detail: "Most frequent first.",
+      at: "sort",
+    },
+    {
+      title: "Take k",
+      detail: "O(n log n) from the sort.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function topKFrequent(nums: number[], k: number): number[] {
       const count = new Map<number, number>();
@@ -44,6 +62,29 @@ const bucket = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "A frequency is at most n, so drop each value into bucket[frequency]. Walk the buckets from the highest frequency down until k values are collected.",
+  approach: [
+    {
+      title: "Count",
+      detail: "Count every value's frequency.",
+      at: "count",
+    },
+    {
+      title: "Bucket by frequency",
+      detail: "A frequency is between 1 and n, so bucket[f] lists the values seen exactly f times. No comparison sort is needed.",
+      at: "bucket",
+    },
+    {
+      title: "Scan from the highest frequency",
+      detail: "Walk down from n, skipping empty buckets.",
+      at: "scan",
+    },
+    {
+      title: "Collect k",
+      detail: "Stop once k values are taken. O(n) overall.",
+      at: "take",
+      nth: 2,
+    },
+  ],
   code: code(`
     function topKFrequent(nums: number[], k: number): number[] {
       const count = new Map<number, number>();

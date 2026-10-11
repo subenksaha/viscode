@@ -12,6 +12,33 @@ const columnAdd = defineSolution<Input>({
   time: "O(max(m, n))",
   space: "O(max(m, n))",
   idea: "Add like on paper: walk both strings from the right, sum the two digits and the carry, write sum % 2 and carry sum >> 1.",
+  approach: [
+    {
+      title: "Start at the rightmost digits",
+      detail: "Just like adding on paper.",
+      at: "init",
+    },
+    {
+      title: "Sum the column",
+      detail: "digitA + digitB + carry is between 0 and 3. A missing digit counts as 0.",
+      at: "sum",
+    },
+    {
+      title: "Write and carry",
+      detail: "Prepend sum % 2 to the result.",
+      at: "write",
+    },
+    {
+      title: "Next carry",
+      detail: "carry = ⌊sum / 2⌋. The loop continues while there are digits or a carry left.",
+      at: "carry",
+    },
+    {
+      title: "Result",
+      detail: "O(max(m, n)) work.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function addBinary(a: string, b: string): string {
       let i = a.length - 1; //@init
@@ -66,6 +93,29 @@ const bitwise = defineSolution<Input>({
   time: "O(n) word ops per round",
   space: "O(n)",
   idea: "Treat both strings as big integers. XOR adds without carrying; AND shifted left is the carry. Repeat until there is no carry.",
+  approach: [
+    {
+      title: "Parse as integers",
+      detail: "BigInt handles arbitrarily long binary strings.",
+      at: "init",
+    },
+    {
+      title: "XOR adds without carries",
+      detail: "Bitwise, 1 + 0 = 1 and 1 + 1 = 0 (carry pending), which is exactly XOR.",
+      at: "xor",
+    },
+    {
+      title: "AND finds the carries",
+      detail: "Positions where both bits are 1 produce a carry, which moves one place left.",
+      at: "and",
+    },
+    {
+      title: "Repeat until the carry is 0",
+      detail: "Add the carry back in. Each round pushes the carries further left until none remain.",
+      at: "swap",
+      nth: -1,
+    },
+  ],
   code: code(`
     function addBinary(a: string, b: string): string {
       let sum = BigInt("0b" + a); //@init

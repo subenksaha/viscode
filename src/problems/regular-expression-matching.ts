@@ -12,6 +12,28 @@ const memo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "match(i, j): does s[i..] match p[j..]? If p[j+1] is '*', either skip 'x*' entirely or, when s[i] matches x, consume one char of s and stay on the star. Otherwise match one char and move both.",
+  approach: [
+    {
+      title: "Does the first character match?",
+      detail: "'.' matches any character.",
+      at: "first",
+    },
+    {
+      title: "Star: zero or more",
+      detail: "Skip 'x*' entirely (j + 2), or if the first character matches, consume one character and stay on the star (i + 1, j).",
+      at: "star",
+    },
+    {
+      title: "Plain character",
+      detail: "Must match, then advance both.",
+      at: "single",
+    },
+    {
+      title: "End of pattern",
+      detail: "Matches only if s is also used up.",
+      at: "end",
+    },
+  ],
   code: code(`
     function isMatch(s: string, p: string): boolean {
       const memo = new Map<string, boolean>();
@@ -76,6 +98,24 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dp[i][j] = do the first i chars of s match the first j of p? For 'x*' at p[j−2..j−1]: zero copies (dp[i][j−2]) or one more copy (dp[i−1][j] if s[i−1] matches x). Otherwise match the single char diagonally.",
+  approach: [
+    {
+      title: "Empty matches empty",
+      detail: "dp[0][0] = true.",
+      at: "init",
+    },
+    {
+      title: "Fill",
+      detail: "For '*': dp[i][j−2] (zero copies) or (match && dp[i−1][j]) (one more copy). Otherwise match the single character diagonally.",
+      at: "cell",
+      nth: 2,
+    },
+    {
+      title: "Answer",
+      detail: "dp[m][n].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isMatch(s: string, p: string): boolean {
       const m = s.length;

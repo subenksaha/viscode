@@ -12,6 +12,28 @@ const memo = defineSolution<Input>({
   time: "O(n³)",
   space: "O(n)",
   idea: "can(i): does s[i..] split into dictionary words? Try every word that matches at i and recurse on the rest. Cache each start index.",
+  approach: [
+    {
+      title: "Try every word at position i",
+      detail: "canBreak(i) asks whether s[i..] splits into words. For every dictionary word that matches at i, recurse after it.",
+      at: "try",
+    },
+    {
+      title: "Reaching the end succeeds",
+      detail: "If i reaches s.length, every character has been covered by words.",
+      at: "base",
+    },
+    {
+      title: "Propagate success",
+      detail: "A successful recursive call means s[i..] can be split, so record true and return.",
+      at: "match",
+    },
+    {
+      title: "Memoize start indices",
+      detail: "Each start index is resolved once, so repeated prefixes don't cause exponential blowup.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
       const memo = new Map<number, boolean>();
@@ -75,6 +97,28 @@ const bottomUp = defineSolution<Input>({
   time: "O(n² · k)",
   space: "O(n)",
   idea: "dp[i] = s[0..i) can be segmented. dp[i] is true if some j < i has dp[j] true and s[j..i) is a dictionary word.",
+  approach: [
+    {
+      title: "Empty prefix is segmentable",
+      detail: "dp[0] = true. dp[i] means the first i characters can be split into words.",
+      at: "init",
+    },
+    {
+      title: "For each end i, try every cut j",
+      detail: "dp[i] is true if some j has dp[j] true and s[j..i) is a word.",
+      at: "j",
+    },
+    {
+      title: "A valid cut marks dp[i]",
+      detail: "\"apple\" ends at 5 and dp[0] is true, so dp[5] = true. Later \"pen\" and \"apple\" build on it.",
+      at: "hit",
+    },
+    {
+      title: "Answer",
+      detail: "dp[n] says whether the whole string splits.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
       const words = new Set(wordDict);
@@ -127,6 +171,28 @@ const bfs = defineSolution<Input>({
   time: "O(n² · k)",
   space: "O(n)",
   idea: "Treat each index as a node with an edge i → i + len(w) when word w matches at i. Is index n reachable from 0?",
+  approach: [
+    {
+      title: "Indices are nodes",
+      detail: "Position 0 is the start. A word matching at position i is an edge to i + word.length.",
+      at: "init",
+    },
+    {
+      title: "Visit a start position",
+      detail: "Pop an index and try every word that matches there.",
+      at: "pop",
+    },
+    {
+      title: "Enqueue new positions",
+      detail: "Each reachable position is enqueued once, thanks to the visited set.",
+      at: "push",
+    },
+    {
+      title: "Reach the end",
+      detail: "If an edge lands exactly on s.length, the string can be segmented.",
+      at: "done",
+    },
+  ],
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
       // Each queue entry is a position where a new word can start.

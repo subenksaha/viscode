@@ -11,6 +11,28 @@ const sortedKey = defineSolution<Input>({
   time: "O(n · k log k)",
   space: "O(n · k)",
   idea: "All anagrams sort to the same string. Use it as a hash-map key and collect the words.",
+  approach: [
+    {
+      title: "Map from key to group",
+      detail: "Words that are anagrams of each other must share one key.",
+      at: "init",
+    },
+    {
+      title: "Sorted letters as the key",
+      detail: "\"eat\", \"tea\" and \"ate\" all sort to \"aet\".",
+      at: "key",
+    },
+    {
+      title: "Append to the group",
+      detail: "Create the group on first sight, then push the word.",
+      at: "add",
+    },
+    {
+      title: "Return the groups",
+      detail: "Sorting each word costs O(k log k), so O(n · k log k) in total.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function groupAnagrams(strs: string[]): string[][] {
       const groups = new Map<string, string[]>(); //@init
@@ -45,6 +67,28 @@ const countKey = defineSolution<Input>({
   time: "O(n · k)",
   space: "O(n · k)",
   idea: "Anagrams also share the same 26 letter counts. Encoding the counts as a key avoids sorting each word.",
+  approach: [
+    {
+      title: "Map from key to group",
+      detail: "Same grouping, different key.",
+      at: "init",
+    },
+    {
+      title: "Letter counts as the key",
+      detail: "Count the 26 letters and join the counts with '#'. Anagrams have identical counts. The separator stops \"1,11\" and \"11,1\" from colliding.",
+      at: "key",
+    },
+    {
+      title: "Append",
+      detail: "Push the word into its group.",
+      at: "add",
+    },
+    {
+      title: "Linear per word",
+      detail: "O(k) per word, with no sorting.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function groupAnagrams(strs: string[]): string[][] {
       const groups = new Map<string, string[]>(); //@init

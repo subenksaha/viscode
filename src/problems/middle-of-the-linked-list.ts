@@ -12,6 +12,25 @@ const countTwice = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "First pass counts the nodes. Second pass walks ⌊n / 2⌋ steps from the head.",
+  approach: [
+    {
+      title: "Count",
+      detail: "The first pass finds the length n.",
+      at: "count",
+      nth: -1,
+    },
+    {
+      title: "Walk ⌊n/2⌋ steps",
+      detail: "For even n this lands on the second middle, as required.",
+      at: "walk",
+      nth: -1,
+    },
+    {
+      title: "Return",
+      detail: "Two passes, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function middleNode(head: ListNode | null): ListNode | null {
       let length = 0;
@@ -45,6 +64,24 @@ const fastSlow = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Move slow one step and fast two steps at a time. When fast runs off the end, slow is in the middle.",
+  approach: [
+    {
+      title: "Two pointers at head",
+      detail: "fast moves twice as fast as slow.",
+      at: "init",
+    },
+    {
+      title: "Advance",
+      detail: "Each loop moves slow 1 step and fast 2 steps.",
+      at: "fast",
+      nth: 2,
+    },
+    {
+      title: "slow is in the middle",
+      detail: "When fast can't move two more steps, slow has covered half the list. One pass.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function middleNode(head: ListNode | null): ListNode | null {
       // fast moves two steps for each step of slow, so slow ends in the middle.

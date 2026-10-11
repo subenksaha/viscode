@@ -28,6 +28,28 @@ const dfs = defineSolution<Input>({
   time: "O(N log N)",
   space: "O(N)",
   idea: "Link every email in an account to that account's first email. Connected components of this graph are the merged accounts; find them with DFS and sort each.",
+  approach: [
+    {
+      title: "Build an email graph",
+      detail: "Connect every email to its account's first email. Accounts that share an email become connected.",
+      at: "build",
+    },
+    {
+      title: "New component",
+      detail: "Each unvisited email starts a new person.",
+      at: "start",
+    },
+    {
+      title: "DFS collects the component",
+      detail: "Everything reachable belongs to the same person.",
+      at: "visit",
+    },
+    {
+      title: "Emit sorted",
+      detail: "Sort the emails and prefix the owner's name.",
+      at: "emit",
+    },
+  ],
   code: code(`
     function accountsMerge(accounts: string[][]): string[][] {
       const neighbors = new Map<string, string[]>();
@@ -128,6 +150,28 @@ const unionFind = defineSolution<Input>({
   time: "O(N α(N) + N log N)",
   space: "O(N)",
   idea: "Give each account an id. When an email was already seen in another account, union the two accounts. Finally group emails by their account's root.",
+  approach: [
+    {
+      title: "One set per account",
+      detail: "Accounts are the elements. Emails decide which ones to merge.",
+      at: "init",
+    },
+    {
+      title: "First owner of an email",
+      detail: "Remember which account first claimed it.",
+      at: "own",
+    },
+    {
+      title: "Shared email → union",
+      detail: "Seeing the same email again in another account merges the two accounts' sets.",
+      at: "union",
+    },
+    {
+      title: "Group by root",
+      detail: "Bucket every email under its account's representative, then sort each bucket.",
+      at: "group",
+    },
+  ],
   code: code(`
     function accountsMerge(accounts: string[][]): string[][] {
       // parent[i] points toward the representative account of i's group.

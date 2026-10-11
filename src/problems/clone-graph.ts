@@ -63,6 +63,28 @@ const dfs = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V)",
   idea: "Recursively clone each node, recording old → new in a map before visiting neighbors so cycles reuse the existing copy.",
+  approach: [
+    {
+      title: "Clone on first visit",
+      detail: "Create the copy and record original → copy before visiting neighbors, so cycles find it.",
+      at: "create",
+    },
+    {
+      title: "Recurse into neighbors",
+      detail: "Each neighbor is cloned (or found in the map) and linked into the copy's list.",
+      at: "link",
+    },
+    {
+      title: "Reuse existing clones",
+      detail: "Reaching an already-cloned node returns its copy, which breaks cycles and keeps shared nodes shared.",
+      at: "hit",
+    },
+    {
+      title: "Done",
+      detail: "Every node and edge is copied once: O(V + E).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function cloneGraph(node: _Node | null): _Node | null {
       const clones = new Map<_Node, _Node>();
@@ -109,6 +131,28 @@ const bfs = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V)",
   idea: "Clone the start node, then BFS. When a neighbor is first seen, clone it and enqueue it. Always wire the edge from the current copy.",
+  approach: [
+    {
+      title: "Clone the start",
+      detail: "Map the start node to its copy and enqueue it.",
+      at: "init",
+    },
+    {
+      title: "Process a node",
+      detail: "Look at each neighbor of the popped original.",
+      at: "pop",
+    },
+    {
+      title: "First sight: clone and enqueue",
+      detail: "A neighbor not in the map gets a copy and joins the queue.",
+      at: "new",
+    },
+    {
+      title: "Wire the edge",
+      detail: "Always link copy(original) → copy(neighbor), whether the neighbor is new or not.",
+      at: "link",
+    },
+  ],
   code: code(`
     function cloneGraph(node: _Node | null): _Node | null {
       if (node === null) return null;

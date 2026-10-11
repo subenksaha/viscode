@@ -14,6 +14,28 @@ const hashSet = defineSolution<Input>({
   time: "O(log n)",
   space: "O(log n)",
   idea: "Keep replacing n by the sum of the squares of its digits. Either it reaches 1, or it repeats a number and loops forever; a set detects the repeat.",
+  approach: [
+    {
+      title: "Track seen numbers",
+      detail: "The sequence either reaches 1 or enters a cycle.",
+      at: "init",
+    },
+    {
+      title: "Check",
+      detail: "Stop if we hit 1 or a repeat.",
+      at: "check",
+    },
+    {
+      title: "Next",
+      detail: "Sum of the squares of the digits.",
+      at: "next",
+    },
+    {
+      title: "Happy if 1",
+      detail: "A repeat without 1 means an endless loop.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isHappy(n: number): boolean {
       const seen = new Set<number>(); //@init
@@ -57,6 +79,29 @@ const floyd = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "The sequence is a linked list of numbers. Move slow one step and fast two steps; they meet inside the cycle. The number is happy exactly when that cycle is 1 → 1.",
+  approach: [
+    {
+      title: "Slow and fast",
+      detail: "Treat the sequence as a linked list.",
+      at: "init",
+    },
+    {
+      title: "Advance",
+      detail: "slow takes 1 step and fast takes 2.",
+      at: "move",
+    },
+    {
+      title: "Meet or reach 1",
+      detail: "In a cycle they must meet. Reaching 1 (which maps to itself) means happy.",
+      at: "check",
+      nth: 2,
+    },
+    {
+      title: "Answer",
+      detail: "O(1) extra space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isHappy(n: number): boolean {
       let slow = n; //@init

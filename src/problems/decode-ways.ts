@@ -11,6 +11,28 @@ const memo = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "ways(i) = ways(i+1) if s[i] is 1–9, plus ways(i+2) if s[i..i+1] is 10–26. A leading '0' decodes to nothing.",
+  approach: [
+    {
+      title: "Decode one digit",
+      detail: "Any digit 1–9 maps to a letter, so ways(i) includes ways(i+1).",
+      at: "one",
+    },
+    {
+      title: "Decode two digits",
+      detail: "If s[i..i+1] is between 10 and 26, it is one letter too, so add ways(i+2).",
+      at: "two",
+    },
+    {
+      title: "A '0' can't start a letter",
+      detail: "A leading 0 gives 0 ways. Reaching the end gives 1 complete decoding.",
+      at: "end",
+    },
+    {
+      title: "Memoize",
+      detail: "Each index is solved once, so the time is O(n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function numDecodings(s: string): number {
       const memo = new Map<number, number>();
@@ -70,6 +92,28 @@ const bottomUp = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "dp[i] = number of ways to decode the first i characters. Add dp[i−1] if the last digit is valid alone, and dp[i−2] if the last two form 10–26.",
+  approach: [
+    {
+      title: "Empty prefix",
+      detail: "dp[0] = 1: one way to decode nothing.",
+      at: "init",
+    },
+    {
+      title: "Last digit alone",
+      detail: "If s[i−1] isn't '0', every decoding of the first i−1 characters extends by one letter: dp[i] += dp[i−1].",
+      at: "one",
+    },
+    {
+      title: "Last two digits together",
+      detail: "If s[i−2..i) is in 10..26, add dp[i−2].",
+      at: "two",
+    },
+    {
+      title: "Answer",
+      detail: "dp[n] counts every decoding.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function numDecodings(s: string): number {
       // dp[i] = number of ways to decode the first i characters
@@ -117,6 +161,28 @@ const constant = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "The bottom-up recurrence only looks two steps back, so keep two counters.",
+  approach: [
+    {
+      title: "Two counters",
+      detail: "twoBack = dp[i−2] and oneBack = dp[i−1].",
+      at: "init",
+    },
+    {
+      title: "Single digit contributes oneBack",
+      detail: "Unless the digit is 0.",
+      at: "one",
+    },
+    {
+      title: "Pair contributes twoBack",
+      detail: "When the two-digit number is 10–26.",
+      at: "two",
+    },
+    {
+      title: "Shift",
+      detail: "Move the counters forward one character. O(1) space.",
+      at: "shift",
+    },
+  ],
   code: code(`
     function numDecodings(s: string): number {
       let twoBack = 1; // ways to decode s[0..i-2) //@init

@@ -12,6 +12,28 @@ const sortedCounts = defineSolution<Input>({
   time: "O(n log n + n·k)",
   space: "O(n)",
   idea: "The smallest card left must start a group. Count the cards, walk the distinct values in increasing order, and for each value still in hand, consume that many runs of k consecutive cards.",
+  approach: [
+    {
+      title: "Count cards",
+      detail: "The smallest remaining card can only be the start of a group.",
+      at: "count",
+    },
+    {
+      title: "Start groups at the smallest card",
+      detail: "Start as many groups there as there are copies.",
+      at: "start",
+    },
+    {
+      title: "Consume runs",
+      detail: "Each of the next k values must have at least that many copies.",
+      at: "take",
+    },
+    {
+      title: "All placed",
+      detail: "O(n log n + n·k).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isNStraightHand(hand: number[], k: number): boolean {
       if (hand.length % k !== 0) return false;
@@ -70,6 +92,28 @@ const sortGreedy = defineSolution<Input>({
   time: "O(n log n + n·k)",
   space: "O(n)",
   idea: "Sort the hand. Repeatedly take the smallest unused card and pull the next k − 1 consecutive values out of the remaining cards; fail if one is missing.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Process cards in ascending order.",
+      at: "sort",
+    },
+    {
+      title: "Start a group",
+      detail: "The smallest unused card begins a straight.",
+      at: "group",
+    },
+    {
+      title: "Find each next value",
+      detail: "Pull hand[i] + 1, + 2, … from the unused cards. Fail if one is missing.",
+      at: "use",
+    },
+    {
+      title: "Done",
+      detail: "Every card is in a straight.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isNStraightHand(hand: number[], k: number): boolean {
       if (hand.length % k !== 0) return false;

@@ -13,6 +13,33 @@ const preorder = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Write values in pre-order and write '#' for every null child. The decoder reads tokens in the same order and rebuilds the tree recursively.",
+  approach: [
+    {
+      title: "Write the value first",
+      detail: "Pre-order puts each subtree root before its children, so the decoder always meets a parent first.",
+      at: "write",
+    },
+    {
+      title: "Mark null children",
+      detail: "Writing '#' for empty spots makes the string unambiguous. Without the markers, different shapes could produce the same sequence.",
+      at: "null",
+    },
+    {
+      title: "Read tokens in the same order",
+      detail: "The decoder consumes tokens from left to right with a shared position.",
+      at: "read",
+    },
+    {
+      title: "Rebuild recursively",
+      detail: "A value token creates a node, then builds its left subtree and then its right. A '#' returns null and ends that branch.",
+      at: "node",
+    },
+    {
+      title: "Tree restored",
+      detail: "Each node is written and read once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     // Preorder: value, then left subtree, then right subtree. "#" marks an empty spot.
     function serialize(root: TreeNode | null): string {
@@ -90,6 +117,28 @@ const levelOrder = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Write nodes in BFS order with '#' for null children (the LeetCode format). Decode by handing out children to queued parents two tokens at a time.",
+  approach: [
+    {
+      title: "BFS serialization",
+      detail: "Write nodes level by level and enqueue both children, even nulls, so every empty spot gets a '#'.",
+      at: "ser",
+    },
+    {
+      title: "Parents take children in order",
+      detail: "Decoding replays the BFS. Each queued parent takes the next two tokens as its left and right child.",
+      at: "parent",
+    },
+    {
+      title: "Attach and enqueue",
+      detail: "Non-null tokens become nodes and join the queue to receive their own children later.",
+      at: "children",
+    },
+    {
+      title: "Tree restored",
+      detail: "Same format LeetCode uses for tree input.",
+      at: "ret",
+    },
+  ],
   code: code(`
     // Level order (BFS). "#" marks an empty spot.
     function serialize(root: TreeNode | null): string {

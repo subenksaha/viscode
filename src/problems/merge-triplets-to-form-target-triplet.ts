@@ -13,6 +13,28 @@ const mergeUsable = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "A triplet with any value above the target can never be used (merging only takes maxima). Merging all the other triplets is always safe; check whether that merge equals the target.",
+  approach: [
+    {
+      title: "Start from zeros",
+      detail: "Merging takes element-wise maxima.",
+      at: "init",
+    },
+    {
+      title: "Skip unsafe triplets",
+      detail: "A value above the target can never be removed by later merges, so such triplets are useless.",
+      at: "skip",
+    },
+    {
+      title: "Merge the safe ones",
+      detail: "Merging every safe triplet can't overshoot, and only moves closer to the target.",
+      at: "merge",
+    },
+    {
+      title: "Compare",
+      detail: "The target is reachable exactly when this merge equals it.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function mergeTriplets(triplets: number[][], target: number[]): boolean {
       const merged = [0, 0, 0]; //@init
@@ -58,6 +80,28 @@ const coverFlags = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Only the three target values matter. Among safe triplets (nothing above the target), note which positions hit the target value exactly. All three must be covered.",
+  approach: [
+    {
+      title: "Nothing covered yet",
+      detail: "Only the three target positions matter.",
+      at: "init",
+    },
+    {
+      title: "Skip unsafe triplets",
+      detail: "Any value above the target poisons a merge.",
+      at: "skip",
+    },
+    {
+      title: "Mark exact hits",
+      detail: "A safe triplet whose k-th value equals target[k] covers that position.",
+      at: "cover",
+    },
+    {
+      title: "All three covered",
+      detail: "Merging the covering triplets would produce the target exactly.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function mergeTriplets(triplets: number[][], target: number[]): boolean {
       const covered = [false, false, false]; // can we reach target[k] exactly? //@init

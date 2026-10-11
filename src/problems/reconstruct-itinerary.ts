@@ -14,6 +14,28 @@ const backtrack = defineSolution<Input>({
   time: "O(E^d)",
   space: "O(E)",
   idea: "Sort each airport's destinations. From JFK, try the smallest unused ticket first and recurse; if the path gets stuck before using every ticket, undo and try the next one. The first complete path is the lexically smallest.",
+  approach: [
+    {
+      title: "Sort destinations",
+      detail: "Grouping tickets by departure, with destinations in alphabetical order, means the first complete itinerary found is the lexically smallest.",
+      at: "build",
+    },
+    {
+      title: "Fly the smallest unused ticket",
+      detail: "Remove it from the options and extend the path.",
+      at: "fly",
+    },
+    {
+      title: "Done when every ticket is used",
+      detail: "A path of tickets + 1 airports uses each ticket exactly once.",
+      at: "done",
+    },
+    {
+      title: "Undo dead ends",
+      detail: "If a branch gets stuck, give the ticket back and try the next destination. This can be exponential in the worst case.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findItinerary(tickets: string[][]): string[] {
       // destinations.get(airport) = airports we can fly to, in alphabetical order
@@ -93,6 +115,28 @@ const hierholzer = defineSolution<Input>({
   time: "O(E log E)",
   space: "O(E)",
   idea: "The itinerary is an Eulerian path. Greedily follow the smallest unused ticket; when an airport has no tickets left, add it to the route. The route comes out reversed, and dead-end detours are naturally placed at the end.",
+  approach: [
+    {
+      title: "Reverse-sorted stacks",
+      detail: "pop() then hands out the smallest destination.",
+      at: "build",
+    },
+    {
+      title: "Follow tickets greedily",
+      detail: "Recurse along the smallest unused ticket until stuck.",
+      at: "fly",
+    },
+    {
+      title: "Add on the way out",
+      detail: "An airport joins the route only once all its tickets are used. A dead-end detour finishes first, so it ends up at the end of the itinerary.",
+      at: "finish",
+    },
+    {
+      title: "Reverse",
+      detail: "Post-order reversed is the Eulerian path. O(E log E).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findItinerary(tickets: string[][]): string[] {
       // Store destinations in reverse order so pop() gives the alphabetically smallest.

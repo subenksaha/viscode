@@ -11,6 +11,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Compare every pair of elements.",
+  approach: [
+    {
+      title: "Pick each element",
+      detail: "Fix index i and compare it with everything after it.",
+      at: "i",
+    },
+    {
+      title: "Compare against later elements",
+      detail: "For every j > i, check nums[i] === nums[j]. Without sorting or memory, this is the only way, so it costs O(n²).",
+      at: "j",
+    },
+    {
+      title: "Stop at the first equal pair",
+      detail: "One duplicate is enough to answer true. If no pair matches, the answer is false.",
+      at: "found",
+    },
+  ],
   code: code(`
     function containsDuplicate(nums: number[]): boolean {
       for (let i = 0; i < nums.length; i++) { //@i
@@ -49,6 +66,23 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "After sorting, duplicates sit next to each other, so compare neighbors.",
+  approach: [
+    {
+      title: "Sort so equal values touch",
+      detail: "After sorting, equal values must be next to each other. Sorting is O(n log n) and is done in place.",
+      at: "sort",
+    },
+    {
+      title: "Compare neighbors",
+      detail: "Walk once and compare each element with the one before it. This replaces the all-pairs check with n − 1 comparisons.",
+      at: "loop",
+    },
+    {
+      title: "Equal neighbors mean a duplicate",
+      detail: "The first pair of equal neighbors proves a duplicate exists.",
+      at: "found",
+    },
+  ],
   code: code(`
     function containsDuplicate(nums: number[]): boolean {
       nums.sort((a, b) => a - b); //@sort
@@ -85,6 +119,23 @@ const hashSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Remember every value seen. Seeing one again means a duplicate.",
+  approach: [
+    {
+      title: "Start with an empty set",
+      detail: "The set records every value seen so far, with O(1) lookup.",
+      at: "init",
+    },
+    {
+      title: "Add unseen values",
+      detail: "If the current value is new, add it and continue.",
+      at: "add",
+    },
+    {
+      title: "A repeat lookup ends it",
+      detail: "If the value is already in the set, it appeared before, so return true. One pass, O(n) time and O(n) space.",
+      at: "found",
+    },
+  ],
   code: code(`
     function containsDuplicate(nums: number[]): boolean {
       const seen = new Set<number>(); //@init

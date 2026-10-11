@@ -12,6 +12,29 @@ const memo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "lcs(i, j): if the characters match, take 1 + lcs(i+1, j+1); otherwise skip one character from either string and take the better result.",
+  approach: [
+    {
+      title: "Compare the current characters",
+      detail: "lcs(i, j) is the LCS of the suffixes text1[i..] and text2[j..]. On a match, use that character and move both indices forward.",
+      at: "cmp",
+    },
+    {
+      title: "On a mismatch, skip one side",
+      detail: "One of the two characters can't be in the LCS, so try dropping either and take the better result.",
+      at: "cmp",
+      nth: 2,
+    },
+    {
+      title: "Base case: a string runs out",
+      detail: "An empty suffix has no common subsequence, so the result is 0.",
+      at: "base",
+    },
+    {
+      title: "Memoize (i, j)",
+      detail: "There are only m·n distinct (i, j) pairs, so caching keeps the total work at O(m·n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function longestCommonSubsequence(text1: string, text2: string): number {
       const memo = new Map<string, number>();
@@ -68,6 +91,29 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dp[i][j] = LCS of the first i chars of text1 and the first j chars of text2. On a match take the diagonal + 1, otherwise the max of the cell above and the cell to the left.",
+  approach: [
+    {
+      title: "Zero border",
+      detail: "Row 0 and column 0 stand for an empty prefix, so their LCS is 0.",
+      at: "init",
+    },
+    {
+      title: "Match: diagonal + 1",
+      detail: "If text1[i−1] === text2[j−1], extend the LCS of both shorter prefixes: dp[i−1][j−1] + 1.",
+      at: "cell",
+    },
+    {
+      title: "Mismatch: best neighbor",
+      detail: "Otherwise drop one character: dp[i][j] = max(dp[i−1][j], dp[i][j−1]).",
+      at: "cell",
+      nth: 2,
+    },
+    {
+      title: "Bottom-right is the answer",
+      detail: "dp[m][n] covers both full strings.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function longestCommonSubsequence(text1: string, text2: string): number {
       // dp[i][j] = LCS length of the first i letters of text1 and the first j of text2
@@ -121,6 +167,29 @@ const rolling = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(n)",
   idea: "Each row only needs the row above it. Keep one row and remember the old diagonal value in a variable.",
+  approach: [
+    {
+      title: "One row is enough",
+      detail: "Each cell needs only the cell above, the one to the left, and the upper-left diagonal. Keep a single row and overwrite it.",
+      at: "init",
+    },
+    {
+      title: "Match uses the saved diagonal",
+      detail: "Before overwriting dp[j], the old value is the \"above\" cell. The diagonal variable holds the old dp[j−1] from the previous row.",
+      at: "cell",
+    },
+    {
+      title: "Mismatch",
+      detail: "dp[j] = max(above, dp[j−1]), where dp[j−1] is already the current row's value.",
+      at: "cell",
+      nth: 2,
+    },
+    {
+      title: "Same answer, O(n) memory",
+      detail: "dp[n] after the last row equals the full table's bottom-right cell.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function longestCommonSubsequence(text1: string, text2: string): number {
       // One row of the 2D table. Before updating, dp[j] still holds the row above.

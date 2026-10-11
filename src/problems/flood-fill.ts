@@ -29,6 +29,29 @@ const dfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Remember the starting color. Recolor the start pixel, then recurse into each 4-directional neighbor that still has the starting color.",
+  approach: [
+    {
+      title: "Remember the original color",
+      detail: "Only pixels with this color that are connected to the start get repainted. If it already equals the new color, return immediately to avoid infinite recursion.",
+      at: "start",
+    },
+    {
+      title: "Paint and spread",
+      detail: "Recolor the pixel, then recurse in four directions. Painting first doubles as the \"visited\" mark.",
+      at: "paint",
+    },
+    {
+      title: "Stop at other colors and edges",
+      detail: "Out-of-bounds or differently colored pixels end a branch.",
+      at: "paint",
+      nth: -1,
+    },
+    {
+      title: "Done",
+      detail: "Each pixel is painted at most once: O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function floodFill(image: number[][], sr: number, sc: number, color: number): number[][] {
       const originalColor = image[sr][sc]; //@start
@@ -73,6 +96,28 @@ const bfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Same idea, iteratively: paint a pixel as soon as it is queued so it is never queued twice.",
+  approach: [
+    {
+      title: "Paint the start, queue it",
+      detail: "Same visited trick: painted pixels no longer match the original color.",
+      at: "init",
+    },
+    {
+      title: "Expand a pixel",
+      detail: "Look at its four neighbors.",
+      at: "pop",
+    },
+    {
+      title: "Paint when queuing",
+      detail: "Painting on enqueue guarantees no pixel enters the queue twice.",
+      at: "push",
+    },
+    {
+      title: "Done",
+      detail: "The queue empties once the connected region is fully painted.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function floodFill(image: number[][], sr: number, sc: number, color: number): number[][] {
       const originalColor = image[sr][sc];

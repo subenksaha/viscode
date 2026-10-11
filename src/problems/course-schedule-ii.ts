@@ -17,6 +17,33 @@ const kahn = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V + E)",
   idea: "Take courses whose prerequisites are all done, in the order they become available. If some course never becomes available, there is a cycle.",
+  approach: [
+    {
+      title: "Build the graph and in-degrees",
+      detail: "Count each course's unfinished prerequisites.",
+      at: "build",
+    },
+    {
+      title: "Ready courses",
+      detail: "Courses with in-degree 0 can be taken.",
+      at: "seed",
+    },
+    {
+      title: "Take and unlock",
+      detail: "Append to the order and decrement each dependent's in-degree.",
+      at: "take",
+    },
+    {
+      title: "Newly ready",
+      detail: "At 0 they join the queue.",
+      at: "relax",
+    },
+    {
+      title: "Valid order or []",
+      detail: "If not every course was taken, there is a cycle.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findOrder(numCourses: number, prerequisites: number[][]): number[] {
       // unlocks[c] = courses that need c first; inDegree[c] = how many courses c still waits on
@@ -85,6 +112,28 @@ const dfsPost = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V + E)",
   idea: "A course finishes in DFS only after everything that depends on it has finished. Reversing the finish order gives a valid schedule; reaching a node still on the path means a cycle.",
+  approach: [
+    {
+      title: "Adjacency",
+      detail: "Edges go from a prerequisite to its dependent.",
+      at: "build",
+    },
+    {
+      title: "Enter",
+      detail: "Mark visiting. Reaching a visiting node again means a cycle.",
+      at: "enter",
+    },
+    {
+      title: "Finish after the dependents",
+      detail: "A course finishes only after every course it unlocks has finished.",
+      at: "finish",
+    },
+    {
+      title: "Reverse",
+      detail: "Reversed finish order puts every prerequisite before its dependents.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findOrder(numCourses: number, prerequisites: number[][]): number[] {
       const unlocks: number[][] = Array.from({ length: numCourses }, () => []);

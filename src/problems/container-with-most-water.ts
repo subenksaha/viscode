@@ -11,6 +11,24 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Try every pair of lines. Area = width × the shorter height.",
+  approach: [
+    {
+      title: "Pick a left line",
+      detail: "Every container is defined by two lines i < j.",
+      at: "i",
+    },
+    {
+      title: "Compute every area",
+      detail: "The water level is limited by the shorter line, so area = (j − i) × min(h[i], h[j]).",
+      at: "area",
+    },
+    {
+      title: "Keep the max",
+      detail: "Checking all n²/2 pairs guarantees the answer, at quadratic cost.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxArea(height: number[]): number {
       let best = 0; //@init
@@ -51,6 +69,34 @@ const twoPointers = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Start with the widest container. The shorter line limits the area, and moving the taller one inward can never help, so always move the shorter line.",
+  approach: [
+    {
+      title: "Start widest",
+      detail: "left = 0 and right = n − 1 give the maximum possible width.",
+      at: "init",
+    },
+    {
+      title: "Measure the current container",
+      detail: "The area is the width times the shorter of the two lines.",
+      at: "area",
+    },
+    {
+      title: "Record the best",
+      detail: "Compare it with the best so far.",
+      at: "best",
+    },
+    {
+      title: "Move the shorter line",
+      detail: "Any container that keeps the shorter line is narrower and no taller, so it can't do better. Discard that line by moving it inward.",
+      at: "lo",
+    },
+    {
+      title: "Converge",
+      detail: "Each step permanently rules out one line, so the scan finishes in O(n) and still visits the optimal pair.",
+      at: "hi",
+      nth: 3,
+    },
+  ],
   code: code(`
     function maxArea(height: number[]): number {
       let left = 0; //@init

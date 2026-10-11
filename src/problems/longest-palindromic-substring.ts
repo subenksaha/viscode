@@ -16,6 +16,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(n³)",
   space: "O(1)",
   idea: "Check every substring with a two-pointer palindrome test and keep the longest.",
+  approach: [
+    {
+      title: "Start with one character",
+      detail: "Any single character is a palindrome.",
+      at: "init",
+    },
+    {
+      title: "Only test longer substrings",
+      detail: "For each i, start j at i + best.length. Shorter substrings can't improve the answer.",
+      at: "check",
+    },
+    {
+      title: "Two-pointer check",
+      detail: "Compare from both ends inward. A full match replaces best. Worst case O(n³).",
+      at: "best",
+    },
+  ],
   code: code(`
     function longestPalindrome(s: string): string {
       function isPalindrome(start: number, end: number): boolean {
@@ -57,6 +74,24 @@ const expand = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Every palindrome mirrors around a center: a character (odd length) or a gap between two characters (even length). Expand outward from each of the 2n − 1 centers.",
+  approach: [
+    {
+      title: "2n − 1 centers",
+      detail: "Every palindrome mirrors around a character (odd length) or a gap between two characters (even length).",
+      at: "center",
+    },
+    {
+      title: "Expand while the ends match",
+      detail: "Push left and right outward as long as s[left] === s[right].",
+      at: "grow",
+      nth: 2,
+    },
+    {
+      title: "Record the longest",
+      detail: "The palindrome found is s[left+1..right−1]. Keep the longest. O(n²) time, O(1) space.",
+      at: "best",
+    },
+  ],
   code: code(`
     function longestPalindrome(s: string): string {
       let bestStart = 0; //@init
@@ -120,6 +155,29 @@ const dp = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n²)",
   idea: "dp[i][j] is true when s[i..j] is a palindrome: the ends match and the inside s[i+1..j−1] is a palindrome (or has length < 2). Fill by increasing length.",
+  approach: [
+    {
+      title: "Single characters",
+      detail: "isPal[i][i] = true.",
+      at: "diag",
+    },
+    {
+      title: "Grow by length",
+      detail: "Process substrings in increasing length so the inner substring s[i+1..j−1] is always already decided.",
+      at: "len",
+    },
+    {
+      title: "Ends match and the inside is a palindrome",
+      detail: "isPal[i][j] = s[i] === s[j] && (length 2 || isPal[i+1][j−1]).",
+      at: "cell",
+      nth: 4,
+    },
+    {
+      title: "Track the longest",
+      detail: "Remember the start and length of the longest true cell. O(n²) time and space.",
+      at: "best",
+    },
+  ],
   code: code(`
     function longestPalindrome(s: string): string {
       const n = s.length;

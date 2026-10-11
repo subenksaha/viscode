@@ -11,6 +11,28 @@ const resort = defineSolution<Input>({
   time: "O(n² log n)",
   space: "O(1)",
   idea: "Each round, sort the stones and smash the two heaviest. Put the difference back if it is not zero.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "The two heaviest stones end up at the end.",
+      at: "sort",
+    },
+    {
+      title: "Smash",
+      detail: "Pop the two heaviest.",
+      at: "smash",
+    },
+    {
+      title: "Return the remainder",
+      detail: "If they differ, push y − x. O(n log n) per round.",
+      at: "rest",
+    },
+    {
+      title: "Last stone",
+      detail: "Return 0 if none remain.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lastStoneWeight(stones: number[]): number {
       while (stones.length > 1) {
@@ -47,6 +69,28 @@ const maxHeap = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "A max-heap hands out the two heaviest stones in O(log n) each round and takes back the leftover just as fast.",
+  approach: [
+    {
+      title: "Heapify",
+      detail: "The heaviest stone is always on top.",
+      at: "build",
+    },
+    {
+      title: "Pop the two heaviest",
+      detail: "O(log n) each.",
+      at: "smash",
+    },
+    {
+      title: "Push the remainder",
+      detail: "If the weights differ.",
+      at: "rest",
+    },
+    {
+      title: "Answer",
+      detail: "O(n log n) total.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lastStoneWeight(stones: number[]): number {
       const heap = new MaxPriorityQueue<number>();

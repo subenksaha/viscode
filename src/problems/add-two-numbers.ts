@@ -13,6 +13,28 @@ const iterative = defineSolution<Input>({
   time: "O(max(m, n))",
   space: "O(1) extra",
   idea: "The digits are stored least-significant first, so add them like on paper: sum the two digits plus the carry, write sum mod 10, carry ⌊sum / 10⌋.",
+  approach: [
+    {
+      title: "Dummy head, carry 0",
+      detail: "Digits come least significant first, the same order we add in.",
+      at: "init",
+    },
+    {
+      title: "Column sum",
+      detail: "digit1 + digit2 + carry. A missing digit counts as 0.",
+      at: "sum",
+    },
+    {
+      title: "Write the digit, keep the carry",
+      detail: "Append sum % 10 and carry ⌊sum / 10⌋.",
+      at: "write",
+    },
+    {
+      title: "Final carry",
+      detail: "Keep going while there are digits or a carry left.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function addTwoNumbers(l1: ListNode | null, l2: ListNode | null): ListNode | null {
       const dummyHead = new ListNode(0);
@@ -66,6 +88,23 @@ const recursive = defineSolution<Input>({
   time: "O(max(m, n))",
   space: "O(max(m, n))",
   idea: "add(a, b, carry) builds one digit node and recursively adds the rest of both lists with the new carry.",
+  approach: [
+    {
+      title: "Sum this position",
+      detail: "Add the two digits and the carry.",
+      at: "sum",
+    },
+    {
+      title: "Recurse on the rest",
+      detail: "Pass the new carry along and link the returned list after this digit.",
+      at: "link",
+    },
+    {
+      title: "Base case",
+      detail: "No digits and no carry: null.",
+      at: "base",
+    },
+  ],
   code: code(`
     function addTwoNumbers(l1: ListNode | null, l2: ListNode | null, carry = 0): ListNode | null {
       if (l1 === null && l2 === null && carry === 0) return null; //@base

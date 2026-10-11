@@ -14,6 +14,28 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "For each index, multiply every other element.",
+  approach: [
+    {
+      title: "Initialize answers to 1",
+      detail: "1 is the multiplicative identity, so each answer can be built up by multiplication.",
+      at: "init",
+    },
+    {
+      title: "Fix the target index",
+      detail: "answer[i] needs the product of every element except nums[i].",
+      at: "i",
+    },
+    {
+      title: "Multiply every other element",
+      detail: "Loop over all j and skip j === i. With n elements per answer, the total cost is O(n²).",
+      at: "mul",
+    },
+    {
+      title: "Return the filled array",
+      detail: "Each slot now holds the product of all the other numbers.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
       const answer = new Array(nums.length).fill(1); //@init
@@ -52,6 +74,30 @@ const prefixSuffix = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "out[i] = (product of everything left of i) × (product of everything right of i). Build both arrays, then multiply.",
+  approach: [
+    {
+      title: "Two helper arrays",
+      detail: "before[i] holds the product of everything left of i and after[i] everything right of i. Both start at 1 (the empty product).",
+      at: "init",
+    },
+    {
+      title: "Build left products",
+      detail: "Left to right: before[i] = before[i−1] × nums[i−1]. Each entry extends the previous prefix by one element.",
+      at: "pre",
+      nth: -1,
+    },
+    {
+      title: "Build right products",
+      detail: "Right to left: after[i] = after[i+1] × nums[i+1], the mirror of the prefix pass.",
+      at: "suf",
+      nth: -1,
+    },
+    {
+      title: "Combine",
+      detail: "answer[i] = before[i] × after[i]: everything on the left times everything on the right, which is exactly \"all except i\". No division needed.",
+      at: "combine",
+    },
+  ],
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
       const n = nums.length;
@@ -98,6 +144,29 @@ const constantSpace = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Store prefix products in the output, then sweep right to left with a running suffix product.",
+  approach: [
+    {
+      title: "Reuse the output array",
+      detail: "The output array doesn't count as extra space, so it holds the prefix products and saves the separate before array.",
+      at: "init",
+    },
+    {
+      title: "Store prefix products",
+      detail: "After this pass, answer[i] = product of nums[0..i−1].",
+      at: "pre",
+      nth: -1,
+    },
+    {
+      title: "Sweep back with a running suffix",
+      detail: "Going right to left, productAfter is the product of everything right of i. Multiply it into answer[i] to finish that slot.",
+      at: "mul",
+    },
+    {
+      title: "Grow the suffix",
+      detail: "After using it, fold nums[i] into productAfter so it is ready for index i−1. This gives O(n) time and O(1) extra space.",
+      at: "grow",
+    },
+  ],
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
       const n = nums.length;
@@ -147,6 +216,23 @@ const division = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Multiply all non-zero values and count zeros. Two or more zeros make everything 0; exactly one zero leaves only that index non-zero. (LeetCode asks you not to use division, but it is a valid approach to know.)",
+  approach: [
+    {
+      title: "Multiply the non-zeros, count the zeros",
+      detail: "Zeros are the only hazard in \"total ÷ self\". Keep the product of the non-zero values and count the zeros separately.",
+      at: "scan",
+    },
+    {
+      title: "Build each answer",
+      detail: "Two or more zeros make every answer 0. Exactly one zero leaves only that slot non-zero (it equals the product). With no zeros, answer[i] = product / nums[i].",
+      at: "map",
+    },
+    {
+      title: "Divide out each element",
+      detail: "With no zeros in the input, each answer is just the total product divided by that element. O(n) time, O(1) extra space.",
+      at: "div",
+    },
+  ],
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
       let product = 1; // product of all non-zero numbers //@init

@@ -13,6 +13,29 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "The depth of a tree is 1 + the deeper of its two subtrees. An empty tree has depth 0.",
+  approach: [
+    {
+      title: "Ask the left subtree",
+      detail: "Depth of a tree = 1 + the deeper of its subtrees.",
+      at: "left",
+    },
+    {
+      title: "Null is depth 0",
+      detail: "The recursion bottoms out at empty children.",
+      at: "base",
+    },
+    {
+      title: "Then the right subtree",
+      detail: "Compute it the same way.",
+      at: "right",
+    },
+    {
+      title: "Combine",
+      detail: "Return 1 + max(left, right). Each node is visited once, and the stack depth is the tree height.",
+      at: "ret",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxDepth(root: TreeNode | null): number {
       if (root === null) return 0; //@base
@@ -53,6 +76,29 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Process the tree level by level with a queue. The number of levels is the depth.",
+  approach: [
+    {
+      title: "Start with the root's level",
+      detail: "Process one full level per round.",
+      at: "init",
+    },
+    {
+      title: "Count levels",
+      detail: "Each round increments depth.",
+      at: "level",
+      nth: 2,
+    },
+    {
+      title: "Queue the children",
+      detail: "The children of the current level form the next level.",
+      at: "node",
+    },
+    {
+      title: "Depth",
+      detail: "The number of rounds is the maximum depth.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxDepth(root: TreeNode | null): number {
       if (root === null) return 0;
@@ -103,6 +149,29 @@ const iterativeDfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Push (node, depth) pairs onto a stack and track the largest depth seen.",
+  approach: [
+    {
+      title: "Push (root, 1)",
+      detail: "Each stack entry carries its node's depth.",
+      at: "init",
+    },
+    {
+      title: "Pop and record",
+      detail: "Update best with each node's depth.",
+      at: "best",
+      nth: 3,
+    },
+    {
+      title: "Push children at depth + 1",
+      detail: "Nulls are pushed too and skipped when popped.",
+      at: "push",
+    },
+    {
+      title: "Deepest wins",
+      detail: "best ends at the maximum depth.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxDepth(root: TreeNode | null): number {
       const stack: [TreeNode | null, number][] = [[root, 1]]; // [node, its depth]

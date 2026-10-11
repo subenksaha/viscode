@@ -13,6 +13,28 @@ const staircase = defineSolution<Input>({
   time: "O(m + n)",
   space: "O(1)",
   idea: "Start at the top-right corner. If the value is too big, everything below it in that column is bigger too, so move left; if too small, move down.",
+  approach: [
+    {
+      title: "Top-right corner",
+      detail: "Moving left decreases the value and moving down increases it, which gives a clear decision at every step.",
+      at: "init",
+    },
+    {
+      title: "Too small: go down",
+      detail: "The rest of this row is even smaller, so drop the row.",
+      at: "down",
+    },
+    {
+      title: "Too big: go left",
+      detail: "The rest of this column is even bigger, so drop the column.",
+      at: "left",
+    },
+    {
+      title: "Found",
+      detail: "At most m + n moves.",
+      at: "found",
+    },
+  ],
   code: code(`
     function searchMatrix(matrix: number[][], target: number): boolean {
       // Start at the top-right corner: left is smaller, down is bigger.
@@ -68,6 +90,28 @@ const flatBinary = defineSolution<Input>({
   time: "O(log(m·n))",
   space: "O(1)",
   idea: "Rows are sorted and each row starts after the previous ends, so the matrix is one sorted array of m·n values. Index k maps to (⌊k/n⌋, k mod n).",
+  approach: [
+    {
+      title: "One sorted array",
+      detail: "Read row by row, the matrix is sorted, so search indices 0..m·n−1.",
+      at: "init",
+    },
+    {
+      title: "Map index to cell",
+      detail: "k → (⌊k / cols⌋, k mod cols).",
+      at: "mid",
+    },
+    {
+      title: "Halve",
+      detail: "Standard binary search on the virtual array.",
+      at: "right",
+    },
+    {
+      title: "Found",
+      detail: "O(log(m·n)).",
+      at: "found",
+    },
+  ],
   code: code(`
     function searchMatrix(matrix: number[][], target: number): boolean {
       const rows = matrix.length;

@@ -12,6 +12,23 @@ const brute = defineSolution<Input>({
   time: "O(n·k)",
   space: "O(1)",
   idea: "For every window of size k, scan its k values and record the largest.",
+  approach: [
+    {
+      title: "Each window",
+      detail: "Look at every window of size k.",
+      at: "window",
+    },
+    {
+      title: "Scan it",
+      detail: "Find the max of its k values.",
+      at: "scan",
+    },
+    {
+      title: "Record",
+      detail: "O(n·k).",
+      at: "push",
+    },
+  ],
   code: code(`
     function maxSlidingWindow(nums: number[], k: number): number[] {
       const result: number[] = [];
@@ -51,6 +68,28 @@ const deque = defineSolution<Input>({
   time: "O(n)",
   space: "O(k)",
   idea: "Keep a deque of indices whose values are strictly decreasing. A new value evicts smaller values from the back (they can never be a max again). The front is the window max; drop it once it slides out.",
+  approach: [
+    {
+      title: "Pop smaller values from the back",
+      detail: "Anything ≤ the new value, and older than it, can never be a window max again.",
+      at: "pop",
+    },
+    {
+      title: "Push the new index",
+      detail: "The deque stays strictly decreasing from front to back.",
+      at: "push",
+    },
+    {
+      title: "The front is the max",
+      detail: "Once the window is full, the front index holds the window maximum. Indices that slid out are dropped from the front.",
+      at: "record",
+    },
+    {
+      title: "Linear",
+      detail: "Each index is pushed and popped at most once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxSlidingWindow(nums: number[], k: number): number[] {
       // Indices whose values are decreasing from front to back. The front is the window max.

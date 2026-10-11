@@ -11,6 +11,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(2²ⁿ · n)",
   space: "O(n)",
   idea: "Build every string of 2n parentheses and keep the ones whose running balance never drops below zero and ends at zero.",
+  approach: [
+    {
+      title: "Branch on both characters",
+      detail: "Generate all 2²ⁿ strings of '(' and ')'.",
+      at: "branch",
+    },
+    {
+      title: "Validate full strings",
+      detail: "Track the balance. It must never go negative and must end at 0.",
+      at: "full",
+    },
+    {
+      title: "Keep valid ones",
+      detail: "Only 5 of 64 survive for n = 3. Lots of wasted work.",
+      at: "keep",
+    },
+  ],
   code: code(`
     function generateParenthesis(n: number): string[] {
       const result: string[] = [];
@@ -66,6 +83,23 @@ const backtrack = defineSolution<Input>({
   time: "O(4ⁿ / √n)",
   space: "O(n)",
   idea: "Only build valid prefixes: add '(' while fewer than n are open, and add ')' only when it would close an open one.",
+  approach: [
+    {
+      title: "Add '(' if any remain",
+      detail: "At most n opens.",
+      at: "open",
+    },
+    {
+      title: "Add ')' only to close an open",
+      detail: "close < open guarantees the prefix stays valid.",
+      at: "close",
+    },
+    {
+      title: "Record complete strings",
+      detail: "Every leaf is valid by construction. The count is the Catalan number.",
+      at: "done",
+    },
+  ],
   code: code(`
     function generateParenthesis(n: number): string[] {
       const result: string[] = [];

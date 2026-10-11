@@ -17,6 +17,29 @@ const bellmanFord = defineSolution<Input>({
   time: "O(V·E)",
   space: "O(V)",
   idea: "Relax every edge n − 1 times. After round r, every shortest path with at most r edges is known, and no shortest path needs more than n − 1 edges.",
+  approach: [
+    {
+      title: "Source at 0",
+      detail: "Every other node starts at ∞.",
+      at: "init",
+    },
+    {
+      title: "Relax every edge",
+      detail: "If dist[u] + w < dist[v], improve dist[v].",
+      at: "relax",
+    },
+    {
+      title: "n − 1 rounds",
+      detail: "After round r, every shortest path with at most r edges is correct. A shortest path never needs more than n − 1 edges.",
+      at: "round",
+      nth: 2,
+    },
+    {
+      title: "Slowest arrival",
+      detail: "The max distance, or −1 if some node is unreachable. O(V·E).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function networkDelayTime(times: number[][], n: number, k: number): number {
       // dist[node] = fastest known time for the signal to reach node (nodes are 1..n)
@@ -65,6 +88,33 @@ const dijkstra = defineSolution<Input>({
   time: "O(E log V)",
   space: "O(V + E)",
   idea: "Always settle the closest unsettled node next; its distance is final because all weights are non-negative. Then relax its outgoing edges. The answer is the largest settled distance.",
+  approach: [
+    {
+      title: "Heap with (0, k)",
+      detail: "Always expand the closest unsettled node.",
+      at: "init",
+    },
+    {
+      title: "Settle",
+      detail: "With non-negative weights, the first time a node is popped its distance is final.",
+      at: "settle",
+    },
+    {
+      title: "Push neighbors",
+      detail: "Push tentative arrival times for unsettled neighbors.",
+      at: "push",
+    },
+    {
+      title: "Skip stale entries",
+      detail: "Later, slower entries for a settled node are ignored.",
+      at: "stale",
+    },
+    {
+      title: "Answer",
+      detail: "The largest settled time. O(E log V).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function networkDelayTime(times: number[][], n: number, k: number): number {
       const edgesFrom = new Map<number, [number, number][]>(); // node -> [neighbor, time]

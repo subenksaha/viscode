@@ -14,6 +14,28 @@ const memo = defineSolution<Input>({
   time: "O(amount · coins)",
   space: "O(amount)",
   idea: "best(r) = 1 + min over coins c of best(r − c). Cache results so each remainder is solved once.",
+  approach: [
+    {
+      title: "Define the subproblem",
+      detail: "fewestCoins(r) is the fewest coins that make exactly r. Try every coin as the first one, then solve the rest: 1 + fewestCoins(r − coin).",
+      at: "try",
+    },
+    {
+      title: "Base cases",
+      detail: "Remainder 0 needs 0 coins. A negative remainder overshot, so it is impossible (∞).",
+      at: "zero",
+    },
+    {
+      title: "Memoize each remainder",
+      detail: "The minimum over all coins is stored for r. There are only amount + 1 distinct remainders.",
+      at: "store",
+    },
+    {
+      title: "Cache hits prune the tree",
+      detail: "Different coin orders reach the same remainder, and the cache answers them at once. Total work is O(amount · coins).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function coinChange(coins: number[], amount: number): number {
       const memo = new Map<number, number>();
@@ -77,6 +99,30 @@ const bottomUp = defineSolution<Input>({
   time: "O(amount · coins)",
   space: "O(amount)",
   idea: "dp[a] = fewest coins that make a. For each a, try every coin: dp[a] = min(dp[a], dp[a − c] + 1).",
+  approach: [
+    {
+      title: "Base case and ∞",
+      detail: "dp[0] = 0. Every other total starts at ∞, meaning not yet achievable.",
+      at: "init",
+    },
+    {
+      title: "Build totals in increasing order",
+      detail: "For each total, dp of every smaller total is already final.",
+      at: "a",
+      nth: 6,
+    },
+    {
+      title: "Relax with each coin",
+      detail: "If coin ≤ total, then dp[total − coin] + 1 is a candidate: use that coin last. Keep the minimum.",
+      at: "relax",
+      nth: -1,
+    },
+    {
+      title: "Read the answer",
+      detail: "dp[amount] is the fewest coins, or −1 if it stayed ∞.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function coinChange(coins: number[], amount: number): number {
       // dp[total] = fewest coins that add up to total
@@ -122,6 +168,29 @@ const bfs = defineSolution<Input>({
   time: "O(amount · coins)",
   space: "O(amount)",
   idea: "Each coin is an edge from remainder r to r − c. The first time BFS reaches 0, the depth is the fewest coins.",
+  approach: [
+    {
+      title: "Remainders are nodes",
+      detail: "Start at amount. Each coin is an edge from r to r − coin. The fewest coins is the shortest path to 0.",
+      at: "init",
+    },
+    {
+      title: "Expand level by level",
+      detail: "Level k holds every remainder reachable with exactly k coins.",
+      at: "level",
+      nth: 2,
+    },
+    {
+      title: "Only enqueue new remainders",
+      detail: "The seen set makes each remainder enter the queue once, so the search is O(amount · coins).",
+      at: "push",
+    },
+    {
+      title: "First time we hit 0",
+      detail: "BFS explores in order of coin count, so the first time a remainder reaches 0 gives the minimum.",
+      at: "found",
+    },
+  ],
   code: code(`
     function coinChange(coins: number[], amount: number): number {
       if (amount === 0) return 0;

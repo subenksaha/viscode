@@ -12,6 +12,28 @@ const binary = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)",
   idea: "Values are in [1, n]. If more than mid values are ≤ mid, the duplicate is in [1, mid] (pigeonhole); otherwise it is above mid.",
+  approach: [
+    {
+      title: "Search over values",
+      detail: "The duplicate is in [1, n].",
+      at: "init",
+    },
+    {
+      title: "Count values ≤ mid",
+      detail: "With no duplicate in [1, mid], at most mid values could be ≤ mid.",
+      at: "count",
+    },
+    {
+      title: "Too many: it's in the low half",
+      detail: "If the count exceeds mid, pigeonhole says the duplicate is ≤ mid.",
+      at: "low",
+    },
+    {
+      title: "Otherwise the high half",
+      detail: "O(n) counting per step × log n steps.",
+      at: "high",
+    },
+  ],
   code: code(`
     function findDuplicate(nums: number[]): number {
       // Binary search on the answer: the duplicate is somewhere in [low, high].
@@ -61,6 +83,28 @@ const floyd = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Treat i → nums[i] as a linked list. Two indices point to the duplicate value, so the list has a cycle whose entrance is the duplicate. Find it with tortoise and hare.",
+  approach: [
+    {
+      title: "Index → value is a linked list",
+      detail: "Follow i → nums[i]. Two indices point to the duplicate value, so the list has a cycle whose entrance is the duplicate.",
+      at: "meet",
+    },
+    {
+      title: "Phase 1: meet inside the cycle",
+      detail: "slow moves 1 step and fast 2 steps until they meet.",
+      at: "phase2",
+    },
+    {
+      title: "Phase 2: find the entrance",
+      detail: "A pointer from the start and one from the meeting point, both moving 1 step at a time, meet at the cycle entrance.",
+      at: "walk",
+    },
+    {
+      title: "Duplicate",
+      detail: "O(n) time, O(1) space, and the array is untouched.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findDuplicate(nums: number[]): number {
       // Treat index i as a node pointing to nums[i]. The duplicate value is where the cycle starts.

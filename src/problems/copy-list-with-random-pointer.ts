@@ -35,6 +35,28 @@ const hashMap = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "First pass: create a copy of every node and remember old → new. Second pass: wire each copy's next and random through the map.",
+  approach: [
+    {
+      title: "Clone every node",
+      detail: "Create an unlinked copy of each node and map original → copy.",
+      at: "clone",
+    },
+    {
+      title: "Wire next",
+      detail: "copy.next = map(original.next).",
+      at: "next",
+    },
+    {
+      title: "Wire random",
+      detail: "copy.random = map(original.random). The map resolves pointers to nodes that come later in the list.",
+      at: "random",
+    },
+    {
+      title: "Return",
+      detail: "Two passes, O(n) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function copyRandomList(head: Node | null): Node | null {
       const copyOf = new Map<Node | null, Node | null>();
@@ -88,6 +110,28 @@ const interleave = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Insert each copy right after its original (A → A' → B → B'). Then A'.random = A.random.next. Finally unzip the two lists.",
+  approach: [
+    {
+      title: "Weave the copies in",
+      detail: "Put each copy right after its original: A → A' → B → B'.",
+      at: "weave",
+    },
+    {
+      title: "Random through the weave",
+      detail: "A'.random = A.random.next, because each node's copy is the node right after it.",
+      at: "random",
+    },
+    {
+      title: "Unzip",
+      detail: "Restore the original list and extract the copy list.",
+      at: "unzip",
+    },
+    {
+      title: "Return",
+      detail: "No map needed, O(1) extra space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function copyRandomList(head: Node | null): Node | null {
       // Step 1: put each copy right after its original: A -> A' -> B -> B' ...

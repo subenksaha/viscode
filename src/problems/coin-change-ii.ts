@@ -12,6 +12,24 @@ const table = defineSolution<Input>({
   time: "O(n · amount)",
   space: "O(n · amount)",
   idea: "dp[i][a] = ways to make a using only the first i coin types. Either skip coin i (dp[i−1][a]) or use it at least once more (dp[i][a − coin]).",
+  approach: [
+    {
+      title: "Base column",
+      detail: "One way to make 0 with any set of coins: use nothing.",
+      at: "init",
+    },
+    {
+      title: "Skip or use coin i",
+      detail: "dp[i][a] = dp[i−1][a] (never use this coin) + dp[i][a − coin] (use it at least once more).",
+      at: "cell",
+      nth: 8,
+    },
+    {
+      title: "Answer",
+      detail: "dp[n][amount]. Coins are added in a fixed order, so combinations are counted, not permutations.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function change(amount: number, coins: number[]): number {
       // dp[i][total] = ways to make total using only the first i coins
@@ -55,6 +73,29 @@ const oneD = defineSolution<Input>({
   time: "O(n · amount)",
   space: "O(amount)",
   idea: "Process one coin type at a time and add its ways into dp[a] += dp[a − coin]. Putting coins in the outer loop counts each combination once, regardless of order.",
+  approach: [
+    {
+      title: "dp[0] = 1",
+      detail: "Only one row is needed.",
+      at: "init",
+    },
+    {
+      title: "Coins in the outer loop",
+      detail: "Every combination is then built with coins in the same order, so it is counted once.",
+      at: "coin",
+    },
+    {
+      title: "Add ways",
+      detail: "dp[a] += dp[a − coin]. Looping upward allows unlimited copies.",
+      at: "add",
+      nth: -1,
+    },
+    {
+      title: "Answer",
+      detail: "dp[amount].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function change(amount: number, coins: number[]): number {
       // dp[total] = ways to make total with the coins seen so far

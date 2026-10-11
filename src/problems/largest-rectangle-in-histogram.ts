@@ -11,6 +11,24 @@ const expand = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Use each bar as the rectangle's height. Extend left and right while the neighbors are at least as tall; width × height is the candidate.",
+  approach: [
+    {
+      title: "Each bar as the height",
+      detail: "Use bar i as the rectangle's height. Stretch left and right while the neighbors are at least as tall.",
+      at: "area",
+    },
+    {
+      title: "Width × height",
+      detail: "Bar 5 at index 2 stretches over [2, 3]: 5 × 2 = 10.",
+      at: "area",
+      nth: 3,
+    },
+    {
+      title: "Max over all bars",
+      detail: "Stretching can take O(n) per bar, so O(n²) worst case.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function largestRectangleArea(heights: number[]): number {
       let best = 0;
@@ -51,6 +69,29 @@ const monoStack = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Keep indices of increasing heights on a stack. When a shorter bar arrives, every taller bar on the stack has found its right edge; its left edge is the index below it on the stack. Pop and measure.",
+  approach: [
+    {
+      title: "Increasing stack of indices",
+      detail: "Bars on the stack are still waiting for a shorter bar on their right.",
+      at: "init",
+    },
+    {
+      title: "Push while heights rise",
+      detail: "A taller or equal bar extends the rectangles of the bars below it.",
+      at: "push",
+    },
+    {
+      title: "A shorter bar closes rectangles",
+      detail: "Pop the taller bars. Each one's right edge is i − 1, and its left edge is just after the new stack top, the nearest shorter bar to its left.",
+      at: "area",
+      nth: 2,
+    },
+    {
+      title: "Flush with a final 0",
+      detail: "The sentinel height 0 at the end pops everything. Each index is pushed and popped once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function largestRectangleArea(heights: number[]): number {
       const stack: number[] = []; // indices of bars with increasing heights //@init

@@ -12,6 +12,24 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(26)",
   idea: "For each start, extend the end while tracking letter counts. A window works if its length minus its most frequent letter count is at most k.",
+  approach: [
+    {
+      title: "Fix a start",
+      detail: "Try every left edge.",
+      at: "i",
+    },
+    {
+      title: "Check each extension",
+      detail: "A window can be made uniform if length − (count of its most frequent letter) ≤ k. Those are the letters you'd change.",
+      at: "check",
+      nth: 4,
+    },
+    {
+      title: "Track the best",
+      detail: "Every window is tested, so this is O(n²) with an O(26) count.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function characterReplacement(s: string, k: number): number {
       let best = 0; //@init
@@ -56,6 +74,30 @@ const slidingWindow = defineSolution<Input>({
   time: "O(n)",
   space: "O(26)",
   idea: "Grow the window on the right. If it would need more than k replacements (length − max count > k), slide the left edge forward. maxCount never has to decrease: only a larger maxCount can produce a longer answer.",
+  approach: [
+    {
+      title: "Grow on the right",
+      detail: "Add s[right] to the counts.",
+      at: "hi",
+      nth: 5,
+    },
+    {
+      title: "Track the max frequency",
+      detail: "maxCount is the most frequent letter count seen in any window. Only a larger maxCount can produce a longer valid window.",
+      at: "max",
+      nth: 4,
+    },
+    {
+      title: "Slide when invalid",
+      detail: "If length − maxCount > k, move left forward by one. The window keeps its size and never shrinks, because the best length so far is all we need.",
+      at: "slide",
+    },
+    {
+      title: "Answer",
+      detail: "best is the largest valid window. O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function characterReplacement(s: string, k: number): number {
       const count = new Map<string, number>();
@@ -107,6 +149,30 @@ const perLetter = defineSolution<Input>({
   time: "O(26 · n)",
   space: "O(1)",
   idea: "Fix the letter the window should become. Then it is a plain window: count characters that differ from it and shrink whenever there are more than k.",
+  approach: [
+    {
+      title: "Fix the target letter",
+      detail: "Choose which letter the whole window should become.",
+      at: "target",
+    },
+    {
+      title: "Count mismatches",
+      detail: "Every character that isn't the target costs one change.",
+      at: "hi",
+      nth: 3,
+    },
+    {
+      title: "Shrink when over budget",
+      detail: "If changes exceed k, slide left until the window is affordable again.",
+      at: "shrink",
+    },
+    {
+      title: "Best window",
+      detail: "Repeat for every distinct letter, at most 26. O(26·n).",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function characterReplacement(s: string, k: number): number {
       let best = 0;

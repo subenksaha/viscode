@@ -20,6 +20,23 @@ const sorted = defineSolution<Input>({
   time: "O(n) per add",
   space: "O(n)",
   idea: "Keep every value in a sorted array. The kth largest is k positions from the end.",
+  approach: [
+    {
+      title: "Sort once",
+      detail: "Keep every value in ascending order.",
+      at: "ctor",
+    },
+    {
+      title: "Insert in place",
+      detail: "Find the position and splice: O(n).",
+      at: "insert",
+    },
+    {
+      title: "Read k from the end",
+      detail: "sorted[n − k] is the kth largest.",
+      at: "ret",
+    },
+  ],
   code: code(`
     class KthLargest {
       sorted: number[];
@@ -67,6 +84,28 @@ const minHeap = defineSolution<Input>({
   time: "O(log k) per add",
   space: "O(k)",
   idea: "Keep only the k largest values in a min-heap. Its smallest element is exactly the kth largest overall; anything smaller can be thrown away.",
+  approach: [
+    {
+      title: "Keep only the top k",
+      detail: "Values smaller than the current kth largest can never matter again.",
+      at: "ctor",
+    },
+    {
+      title: "Push",
+      detail: "Add the new value.",
+      at: "push",
+    },
+    {
+      title: "Evict the smallest beyond k",
+      detail: "The heap shrinks back to k values.",
+      at: "evict",
+    },
+    {
+      title: "Top is the answer",
+      detail: "The smallest of the k largest is the kth largest. O(log k) per add.",
+      at: "ret",
+    },
+  ],
   code: code(`
     class KthLargest {
       // Min-heap holding the k largest values. Its top is the k-th largest.

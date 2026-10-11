@@ -13,6 +13,23 @@ const sortWindows = defineSolution<Input>({
   time: "O(n · m log m)",
   space: "O(m)",
   idea: "A permutation of s1 sorts to the same string as s1. Sort each window of length |s1| in s2 and compare.",
+  approach: [
+    {
+      title: "Sort s1",
+      detail: "Every permutation of s1 sorts to the same string.",
+      at: "key",
+    },
+    {
+      title: "Sort each window",
+      detail: "Windows have length |s1|.",
+      at: "window",
+    },
+    {
+      title: "Match",
+      detail: "Sorting each window costs O(m log m).",
+      at: "found",
+    },
+  ],
   code: code(`
     function checkInclusion(s1: string, s2: string): boolean {
       const sortLetters = (word: string) => word.split("").sort().join("");
@@ -49,6 +66,34 @@ const sliding = defineSolution<Input>({
   time: "O(n)",
   space: "O(26)",
   idea: "Keep letter counts for s1 and for the current window, plus how many of the 26 letters have equal counts. Sliding the window changes two letters; when all 26 match, the window is a permutation.",
+  approach: [
+    {
+      title: "Count s1 and the first window",
+      detail: "Two 26-slot arrays.",
+      at: "init",
+    },
+    {
+      title: "Count matching letters",
+      detail: "matches = how many of the 26 letters have equal counts. 26 means a permutation.",
+      at: "matches",
+    },
+    {
+      title: "Slide in",
+      detail: "Adding a letter can make that letter match, or break a match it had.",
+      at: "add",
+    },
+    {
+      title: "Slide out",
+      detail: "Same for the letter leaving. Only two letters change per step, so O(n).",
+      at: "drop",
+    },
+    {
+      title: "Check",
+      detail: "If matches reaches 26 at any point, return true.",
+      at: "check",
+      nth: -1,
+    },
+  ],
   code: code(`
     function checkInclusion(s1: string, s2: string): boolean {
       if (s1.length > s2.length) return false;

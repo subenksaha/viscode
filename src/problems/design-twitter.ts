@@ -85,6 +85,33 @@ const sortAll = defineSolution<Input>({
   time: "O(T log T) per feed",
   space: "O(total tweets)",
   idea: "Store each user's tweets with a global timestamp. For a feed, gather all tweets from the user and their followees, sort by time and take the 10 newest.",
+  approach: [
+    {
+      title: "Global clock",
+      detail: "Every tweet gets an increasing timestamp.",
+      at: "ctor",
+    },
+    {
+      title: "Post",
+      detail: "Append to the user's own list, oldest first.",
+      at: "post",
+    },
+    {
+      title: "Gather everyone's tweets",
+      detail: "The user plus everyone they follow.",
+      at: "collect",
+    },
+    {
+      title: "Sort and take 10",
+      detail: "Newest first. Simple, but it sorts everything each time.",
+      at: "sort",
+    },
+    {
+      title: "Follow and unfollow",
+      detail: "Maintain a followee set per user.",
+      at: "unfollow",
+    },
+  ],
   code: code(`
     type Tweet = { time: number; id: number };
 
@@ -130,6 +157,28 @@ const kWayMerge = defineSolution<Input>({
   time: "O(F + 10 log F) per feed",
   space: "O(total tweets)",
   idea: "Each user's tweets are already in time order. Put the newest tweet of every followed user in a max-heap and pop 10 times, pushing the next older tweet from the same user each time.",
+  approach: [
+    {
+      title: "Post",
+      detail: "Each user's list is already in time order.",
+      at: "post",
+    },
+    {
+      title: "Seed with the newest tweet of each person",
+      detail: "The newest overall tweet must be one of these.",
+      at: "seed",
+    },
+    {
+      title: "Pop and push the next older",
+      detail: "After taking a person's tweet, their next older one becomes a candidate.",
+      at: "pop",
+    },
+    {
+      title: "Stop after 10",
+      detail: "Only about 10 heap operations, however many tweets exist.",
+      at: "feed",
+    },
+  ],
   code: code(`
     type Tweet = { time: number; id: number };
 

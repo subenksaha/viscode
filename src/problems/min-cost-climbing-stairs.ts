@@ -11,6 +11,28 @@ const memo = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "minCost(i) = cost to stand on step i and reach the top: cost[i] + min(minCost(i+1), minCost(i+2)). Start from step 0 or 1, whichever is cheaper.",
+  approach: [
+    {
+      title: "Cost from step i",
+      detail: "costFrom(i) = cost[i] + min(costFrom(i+1), costFrom(i+2)): pay to stand here, then climb 1 or 2.",
+      at: "calc",
+    },
+    {
+      title: "The top is free",
+      detail: "Past the last step, the cost is 0.",
+      at: "top",
+    },
+    {
+      title: "Memoize",
+      detail: "Each step is solved once.",
+      at: "hit",
+    },
+    {
+      title: "Two starts",
+      detail: "min(costFrom(0), costFrom(1)).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minCostClimbingStairs(cost: number[]): number {
       const memo = new Map<number, number>();
@@ -54,6 +76,28 @@ const rolling = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "dp[i] = cheapest way to arrive at step i = min(dp[i−1] + cost[i−1], dp[i−2] + cost[i−2]). Only the last two values are needed.",
+  approach: [
+    {
+      title: "Two ways to reach step i",
+      detail: "From i−1 (paying cost[i−1]) or from i−2 (paying cost[i−2]).",
+      at: "loop",
+    },
+    {
+      title: "Take the cheaper",
+      detail: "current = min(oneBack + cost[i−1], twoBack + cost[i−2]).",
+      at: "calc",
+    },
+    {
+      title: "Slide",
+      detail: "Only two values are kept.",
+      at: "shift",
+    },
+    {
+      title: "Answer",
+      detail: "The cost to reach the top. O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minCostClimbingStairs(cost: number[]): number {
       let twoBack = 0; // cheapest cost to reach step i - 2

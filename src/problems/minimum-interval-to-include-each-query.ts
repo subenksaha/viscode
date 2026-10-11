@@ -15,6 +15,23 @@ const brute = defineSolution<Input>({
   time: "O(n·q)",
   space: "O(1)",
   idea: "For each query, scan all intervals and keep the smallest size among those that contain it.",
+  approach: [
+    {
+      title: "For each query",
+      detail: "Check every interval.",
+      at: "query",
+    },
+    {
+      title: "Contains?",
+      detail: "left ≤ q ≤ right: keep the smallest size.",
+      at: "check",
+    },
+    {
+      title: "Answer",
+      detail: "−1 if no interval contains it. O(n·q).",
+      at: "answer",
+    },
+  ],
   code: code(`
     function minInterval(intervals: number[][], queries: number[]): number[] {
       const answers: number[] = [];
@@ -58,6 +75,28 @@ const sweepHeap = defineSolution<Input>({
   time: "O((n + q) log n)",
   space: "O(n + q)",
   idea: "Sort intervals by start and answer queries in increasing order. Push every interval that has started into a min-heap keyed by size, pop the ones that already ended, and the heap top is the answer.",
+  approach: [
+    {
+      title: "Sort both",
+      detail: "Intervals by start, and queries in increasing order (remembering their original positions).",
+      at: "sort",
+    },
+    {
+      title: "Push started intervals",
+      detail: "Every interval with left ≤ q goes into a min-heap keyed by size.",
+      at: "push",
+    },
+    {
+      title: "Pop expired ones",
+      detail: "Intervals ending before q can't contain this query or any later one.",
+      at: "pop",
+    },
+    {
+      title: "Heap top is the answer",
+      detail: "The smallest live interval. O((n + q) log n).",
+      at: "answer",
+    },
+  ],
   code: code(`
     function minInterval(intervals: number[][], queries: number[]): number[] {
       intervals.sort((a, b) => a[0] - b[0]);

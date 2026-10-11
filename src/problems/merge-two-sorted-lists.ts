@@ -13,6 +13,33 @@ const iterative = defineSolution<Input>({
   time: "O(n + m)",
   space: "O(1)",
   idea: "Keep a tail pointer behind a dummy node. Repeatedly attach the smaller of the two front nodes, then attach whatever is left.",
+  approach: [
+    {
+      title: "Dummy head and tail",
+      detail: "A dummy node avoids special-casing the first append. tail always points at the last node of the merged list.",
+      at: "init",
+    },
+    {
+      title: "Take the smaller front",
+      detail: "Compare the two front nodes and splice the smaller one after tail. Taking list1 on ties keeps the merge stable.",
+      at: "takeA",
+    },
+    {
+      title: "Advance tail",
+      detail: "Move tail onto the node just attached.",
+      at: "advance",
+    },
+    {
+      title: "Append the leftover",
+      detail: "When one list runs out, the rest of the other is already sorted. Attach it in one step.",
+      at: "rest",
+    },
+    {
+      title: "Return dummy.next",
+      detail: "No new nodes are created. O(n + m) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
       const dummyHead = new ListNode(0);
@@ -75,6 +102,23 @@ const recursive = defineSolution<Input>({
   time: "O(n + m)",
   space: "O(n + m)",
   idea: "The smaller head goes first; its next is the merge of the remaining nodes.",
+  approach: [
+    {
+      title: "Smaller head goes first",
+      detail: "Whichever head is smaller is the head of the merged list.",
+      at: "pickA",
+    },
+    {
+      title: "Its next is a smaller merge",
+      detail: "Recurse on the remaining nodes and link the result after the chosen head.",
+      at: "pickB",
+    },
+    {
+      title: "Empty list base case",
+      detail: "If one list is empty, the merge is just the other list. The recursion depth is O(n + m).",
+      at: "baseA",
+    },
+  ],
   code: code(`
     function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
       if (list1 === null) return list2; //@baseA

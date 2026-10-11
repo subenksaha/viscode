@@ -12,6 +12,22 @@ const linear = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Check every element from left to right. This ignores the fact that the array is sorted.",
+  approach: [
+    {
+      title: "Scan left to right",
+      detail: "Compare each element with target.",
+      at: "loop",
+    },
+    {
+      title: "Return on a match",
+      detail: "This takes O(n) and ignores the sorted order.",
+      at: "found",
+    },
+    {
+      title: "Why it's not enough",
+      detail: "Sorting means each comparison could rule out half the array. The scan rules out only one element per step.",
+    },
+  ],
   code: code(`
     function search(nums: number[], target: number): number {
       for (let i = 0; i < nums.length; i++) { //@loop
@@ -40,6 +56,33 @@ const binary = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "Keep a window [left, right] that must contain the target if it exists. Compare the middle element and throw away the half that cannot hold it.",
+  approach: [
+    {
+      title: "Search window",
+      detail: "Invariant: if target exists, it lies inside [left, right].",
+      at: "init",
+    },
+    {
+      title: "Probe the middle",
+      detail: "Compare nums[mid] with target.",
+      at: "mid",
+    },
+    {
+      title: "Discard the left half",
+      detail: "nums[mid] < target means everything at or left of mid is too small, so left = mid + 1.",
+      at: "right",
+    },
+    {
+      title: "Discard the right half",
+      detail: "nums[mid] > target means everything at or right of mid is too big, so right = mid − 1.",
+      at: "left",
+    },
+    {
+      title: "Found or empty",
+      detail: "Each probe halves the window: O(log n). An empty window means −1.",
+      at: "found",
+    },
+  ],
   code: code(`
     function search(nums: number[], target: number): number {
       let left = 0; //@init

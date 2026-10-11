@@ -12,6 +12,28 @@ const memo = defineSolution<Input>({
   time: "O(n · S)",
   space: "O(n · S)",
   idea: "ways(i, sum) = ways(i+1, sum + nums[i]) + ways(i+1, sum − nums[i]). Many sign choices reach the same (i, sum), so memoize it.",
+  approach: [
+    {
+      title: "Branch on the sign",
+      detail: "ways(i, sum) = ways(i+1, sum + nums[i]) + ways(i+1, sum − nums[i]).",
+      at: "branch",
+    },
+    {
+      title: "Leaves",
+      detail: "At the end, count 1 if the sum equals the target.",
+      at: "end",
+    },
+    {
+      title: "Memoize (i, sum)",
+      detail: "Many sign patterns reach the same running sum.",
+      at: "hit",
+    },
+    {
+      title: "Answer",
+      detail: "O(n · S).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findTargetSumWays(nums: number[], target: number): number {
       const memo = new Map<string, number>();
@@ -63,6 +85,29 @@ const subsetSum = defineSolution<Input>({
   time: "O(n · S)",
   space: "O(S)",
   idea: "Call P the numbers given '+'. Then P − (total − P) = target, so P = (total + target) / 2. Count subsets with that sum using a 1D knapsack, iterating sums downward.",
+  approach: [
+    {
+      title: "Algebra",
+      detail: "P − (total − P) = target gives P = (total + target) / 2. An odd value or |target| > total means 0 ways.",
+      at: "check",
+    },
+    {
+      title: "Subset-count DP",
+      detail: "dp[0] = 1.",
+      at: "init",
+    },
+    {
+      title: "0/1 knapsack",
+      detail: "For each number, sweep sums downward: dp[s] += dp[s − num].",
+      at: "add",
+      nth: 3,
+    },
+    {
+      title: "Answer",
+      detail: "dp[P] counts subsets, and each subset is one sign assignment.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findTargetSumWays(nums: number[], target: number): number {
       let total = 0;

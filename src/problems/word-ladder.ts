@@ -36,6 +36,34 @@ const bfs = defineSolution<Input>({
   time: "O(N · L · 26)",
   space: "O(N)",
   idea: "Words are nodes and one-letter changes are edges. BFS from beginWord finds the shortest chain. Generate neighbors by trying all 26 letters at each position, and delete words from the dictionary once queued.",
+  approach: [
+    {
+      title: "Start at beginWord",
+      detail: "Chain length 1. If endWord isn't in the list, the answer is 0.",
+      at: "init",
+    },
+    {
+      title: "Level-by-level BFS",
+      detail: "Level k holds the words reachable in k − 1 changes.",
+      at: "level",
+      nth: 2,
+    },
+    {
+      title: "Generate neighbors",
+      detail: "Change each position to all 26 letters. With short words this beats comparing against every word.",
+      at: "word",
+    },
+    {
+      title: "Enqueue and remove from the dictionary",
+      detail: "Deleting a word once queued stops it being visited twice.",
+      at: "enqueue",
+    },
+    {
+      title: "First time endWord appears",
+      detail: "BFS guarantees this is the shortest chain.",
+      at: "found",
+    },
+  ],
   code: code(`
     function ladderLength(beginWord: string, endWord: string, wordList: string[]): number {
       const unused = new Set(wordList); // words we haven't reached yet
@@ -121,6 +149,28 @@ const bidirectional = defineSolution<Input>({
   time: "O(N · L · 26)",
   space: "O(N)",
   idea: "Grow one frontier from each end and always expand the smaller one. The search ends when a generated word lies in the other frontier. This explores far fewer words when branching is large.",
+  approach: [
+    {
+      title: "Two frontiers",
+      detail: "One grows from beginWord and one from endWord.",
+      at: "init",
+    },
+    {
+      title: "Expand the smaller side",
+      detail: "Expanding the smaller frontier keeps the number of words explored low.",
+      at: "swap",
+    },
+    {
+      title: "Expand",
+      detail: "Generate one-letter neighbors that neither search has seen.",
+      at: "expand",
+    },
+    {
+      title: "Meet in the middle",
+      detail: "When a generated word is in the other frontier, the two half-chains join into a shortest chain.",
+      at: "meet",
+    },
+  ],
   code: code(`
     function ladderLength(beginWord: string, endWord: string, wordList: string[]): number {
       const unused = new Set(wordList); // words neither side has reached yet

@@ -12,6 +12,28 @@ const mergeIntervals = defineSolution<Input>({
   time: "O(n)",
   space: "O(26)",
   idea: "Each letter spans [first, last] occurrence. Pieces must contain whole spans, so merge overlapping spans; each merged block is one piece.",
+  approach: [
+    {
+      title: "Each letter's span",
+      detail: "Record [first, last] for every letter. A piece must contain each span it touches completely.",
+      at: "spans",
+    },
+    {
+      title: "Extend the piece",
+      detail: "Spans that overlap the current piece pull its end further right.",
+      at: "extend",
+    },
+    {
+      title: "Cut at a gap",
+      detail: "A span starting after the current end means the piece is closed.",
+      at: "cut",
+    },
+    {
+      title: "Sizes",
+      detail: "The merged blocks are the smallest valid pieces.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function partitionLabels(s: string): number[] {
       // span[letter] = [first index, last index] of that letter
@@ -72,6 +94,29 @@ const lastIndex = defineSolution<Input>({
   time: "O(n)",
   space: "O(26)",
   idea: "Record each letter's last index. Scan left to right, stretching the current piece's end to the last index of every letter seen; when i reaches that end, cut.",
+  approach: [
+    {
+      title: "Last occurrence per letter",
+      detail: "One pass over the string.",
+      at: "last",
+    },
+    {
+      title: "Stretch the end",
+      detail: "Every letter seen forces the current piece to reach at least its last occurrence.",
+      at: "stretch",
+      nth: 2,
+    },
+    {
+      title: "Cut when i reaches the end",
+      detail: "Every letter in the piece has now appeared for the last time, so cutting is safe. Cutting as early as possible gives the most pieces.",
+      at: "cut",
+    },
+    {
+      title: "Sizes",
+      detail: "O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function partitionLabels(s: string): number[] {
       const lastIndex = new Map<string, number>();

@@ -11,6 +11,29 @@ const counts = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "A palindrome uses letters in mirrored pairs, plus at most one odd letter in the middle. Take every pair you can, then add 1 if any letter is left over.",
+  approach: [
+    {
+      title: "Count characters",
+      detail: "A palindrome is pairs mirrored around an optional middle letter.",
+      at: "count",
+    },
+    {
+      title: "Use all pairs",
+      detail: "Each pair of a letter can go on both sides: add 2·⌊count / 2⌋.",
+      at: "pairs",
+      nth: 2,
+    },
+    {
+      title: "Note leftovers",
+      detail: "A letter with an odd count has one spare.",
+      at: "odd",
+    },
+    {
+      title: "One spare in the middle",
+      detail: "If any letter is left over, it can sit in the center: +1.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function longestPalindrome(s: string): number {
       const count = new Map<string, number>();
@@ -54,6 +77,28 @@ const toggleSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Walk the string, keeping the set of characters seen an odd number of times. Seeing one already in the set completes a pair (+2).",
+  approach: [
+    {
+      title: "Unpaired set",
+      detail: "Track characters seen an odd number of times.",
+      at: "init",
+    },
+    {
+      title: "Open a pair",
+      detail: "A first sighting waits for a partner.",
+      at: "open",
+    },
+    {
+      title: "Close a pair",
+      detail: "A second sighting completes a pair, so add 2 and remove it from the set.",
+      at: "pair",
+    },
+    {
+      title: "Middle letter",
+      detail: "Any leftover unpaired character can sit in the center.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function longestPalindrome(s: string): number {
       const unpaired = new Set<string>(); //@init

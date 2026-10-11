@@ -12,6 +12,28 @@ const memo = defineSolution<Input>({
   time: "O(target · n)",
   space: "O(target)",
   idea: "ways(r) = sum over nums x ≤ r of ways(r − x): pick the first number, then count orderings of the rest.",
+  approach: [
+    {
+      title: "Choose the first number",
+      detail: "ways(r) counts ordered sequences summing to r. Choosing x first leaves ways(r − x) ways to finish, so sum this over every x ≤ r.",
+      at: "try",
+    },
+    {
+      title: "Remainder 0 is one way",
+      detail: "The empty sequence completes exactly one ordering.",
+      at: "base",
+    },
+    {
+      title: "Cache counts",
+      detail: "Each remainder is counted once and stored.",
+      at: "store",
+    },
+    {
+      title: "Reuse",
+      detail: "Later requests for the same remainder return the cached count, so the work is O(target · n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function combinationSum4(nums: number[], target: number): number {
       const memo = new Map<number, number>();
@@ -68,6 +90,29 @@ const bottomUp = defineSolution<Input>({
   time: "O(target · n)",
   space: "O(target)",
   idea: "dp[s] = number of ordered sequences summing to s. dp[s] += dp[s − x] for every x. The sum is the outer loop, so order matters.",
+  approach: [
+    {
+      title: "One way to make 0",
+      detail: "dp[0] = 1, the empty sequence.",
+      at: "init",
+    },
+    {
+      title: "Sum is the outer loop",
+      detail: "For each sum, try every number as the last element. Iterating sums on the outside is what counts different orders separately.",
+      at: "s",
+    },
+    {
+      title: "Add the ways to finish",
+      detail: "dp[sum] += dp[sum − num]: any sequence for sum − num followed by num is a new ordered sequence.",
+      at: "add",
+      nth: -1,
+    },
+    {
+      title: "Answer",
+      detail: "dp[target] counts all ordered combinations.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function combinationSum4(nums: number[], target: number): number {
       // dp[sum] = number of ordered ways to reach sum

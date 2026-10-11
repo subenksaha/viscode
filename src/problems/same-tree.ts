@@ -14,6 +14,24 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Two trees are equal if both are empty, or both roots have the same value and their left and right subtrees are equal.",
+  approach: [
+    {
+      title: "Compare the roots",
+      detail: "Equal values means we still need to check both subtrees.",
+      at: "recurse",
+    },
+    {
+      title: "Both null are equal",
+      detail: "Two empty trees match, which ends the recursion.",
+      at: "both-null",
+    },
+    {
+      title: "Any mismatch fails",
+      detail: "One null and one not, or different values, makes the answer false. The && chain stops at the first failure.",
+      at: "recurse",
+      nth: -1,
+    },
+  ],
   code: code(`
     function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
       if (p === null && q === null) return true; //@both-null
@@ -54,6 +72,28 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Walk both trees in lockstep with a queue of node pairs, comparing each pair.",
+  approach: [
+    {
+      title: "Queue the root pair",
+      detail: "Compare the trees in lockstep.",
+      at: "init",
+    },
+    {
+      title: "Compare a pair",
+      detail: "Both null: continue. Exactly one null or different values: false.",
+      at: "pop",
+    },
+    {
+      title: "Queue the child pairs",
+      detail: "left with left, right with right.",
+      at: "push",
+    },
+    {
+      title: "All pairs matched",
+      detail: "The trees are identical.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
       const queue: [TreeNode | null, TreeNode | null][] = [[p, q]]; // pairs to compare //@init

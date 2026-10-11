@@ -26,6 +26,22 @@ const recursive = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(h)",
   idea: "Walk root's tree. At every node, run Same Tree against subRoot.",
+  approach: [
+    {
+      title: "Same Tree at this node",
+      detail: "Compare the subtree rooted here with subRoot, node for node.",
+      at: "check",
+    },
+    {
+      title: "Otherwise try the children",
+      detail: "Recurse into the left and right subtrees. Any match returns true.",
+      at: "recurse",
+    },
+    {
+      title: "Cost",
+      detail: "Every node of root may start a full comparison, which is O(m·n) in the worst case.",
+    },
+  ],
   code: code(`
     function isSubtree(root: TreeNode | null, subRoot: TreeNode | null): boolean {
       function isSameTree(a: TreeNode | null, b: TreeNode | null): boolean {
@@ -63,6 +79,23 @@ const serialize = defineSolution<Input>({
   time: "O(m + n)",
   space: "O(m + n)",
   idea: "Serialize both trees in pre-order with null markers and a separator before every value. subRoot is a subtree exactly when its string occurs inside root's string. (Use KMP for guaranteed linear time.)",
+  approach: [
+    {
+      title: "Serialize with markers",
+      detail: "Pre-order with '#' for null children captures the exact structure. '^' before each value stops \"2\" from matching inside \"12\".",
+      at: "ser",
+    },
+    {
+      title: "Encode both trees",
+      detail: "A subtree is a contiguous block of its tree's pre-order string, nulls included.",
+      at: "both",
+    },
+    {
+      title: "Substring search",
+      detail: "subRoot is a subtree exactly when its string occurs in root's string. With KMP this is O(m + n).",
+      at: "search",
+    },
+  ],
   code: code(`
     function isSubtree(root: TreeNode | null, subRoot: TreeNode | null): boolean {
       // Preorder string with "#" for empty spots. "^" before each value stops "2" matching inside "12".

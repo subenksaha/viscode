@@ -19,6 +19,33 @@ const boundaries = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(1)",
   idea: "Keep top, bottom, left and right walls. Walk the top row, the right column, the bottom row and the left column, pulling each wall inward after its side is done.",
+  approach: [
+    {
+      title: "Four walls",
+      detail: "top, bottom, left and right bound the part not yet visited.",
+      at: "init",
+    },
+    {
+      title: "Top row, left to right",
+      detail: "Read the top row, then move top down.",
+      at: "top",
+    },
+    {
+      title: "Right column, top to bottom",
+      detail: "Read the right column, then move right in.",
+      at: "right",
+    },
+    {
+      title: "Bottom row and left column, if any remain",
+      detail: "Check the walls again first. A single remaining row or column must not be read twice.",
+      at: "bottom",
+    },
+    {
+      title: "Next ring",
+      detail: "Each ring peels off one layer until the walls cross.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function spiralOrder(matrix: number[][]): number[] {
       const result: number[] = [];
@@ -78,6 +105,28 @@ const simulate = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Walk right, down, left, up in turn. Turn clockwise whenever the next cell is outside the grid or already visited.",
+  approach: [
+    {
+      title: "Start heading right",
+      detail: "Directions cycle right → down → left → up.",
+      at: "init",
+    },
+    {
+      title: "Take the cell",
+      detail: "Record the value and mark the cell visited.",
+      at: "take",
+    },
+    {
+      title: "Turn when blocked",
+      detail: "If the next cell is off the grid or already visited, rotate clockwise. This needs an O(m·n) visited grid.",
+      at: "turn",
+    },
+    {
+      title: "Done after m·n cells",
+      detail: "Every cell is taken exactly once.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function spiralOrder(matrix: number[][]): number[] {
       const rows = matrix.length;

@@ -11,6 +11,24 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(k)",
   idea: "From every start, extend to the right until a character repeats.",
+  approach: [
+    {
+      title: "Fix a start",
+      detail: "Each start index i begins a candidate substring.",
+      at: "i",
+    },
+    {
+      title: "Extend until a repeat",
+      detail: "Grow j while s[j] is new to the set, updating best with each valid length.",
+      at: "best",
+      nth: 3,
+    },
+    {
+      title: "Stop at the first repeat",
+      detail: "Once a character repeats, any longer substring from i also contains the repeat, so stop extending. O(n²) overall.",
+      at: "j",
+    },
+  ],
   code: code(`
     function lengthOfLongestSubstring(s: string): number {
       let best = 0; //@init
@@ -55,6 +73,30 @@ const windowSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(k)",
   idea: "Grow the window on the right. While the new character is already inside, drop characters from the left.",
+  approach: [
+    {
+      title: "Window [left, right]",
+      detail: "The window always holds distinct characters, tracked in a set.",
+      at: "init",
+    },
+    {
+      title: "Bring in s[right]",
+      detail: "Extend the window by one character on the right.",
+      at: "hi",
+      nth: 4,
+    },
+    {
+      title: "Shrink while it repeats",
+      detail: "While s[right] is already inside, remove s[left] and move left forward.",
+      at: "shrink",
+    },
+    {
+      title: "Record the length",
+      detail: "After adding s[right], the window is valid, so update best. Each character enters and leaves once: O(n).",
+      at: "best",
+      nth: 3,
+    },
+  ],
   code: code(`
     function lengthOfLongestSubstring(s: string): number {
       const inWindow = new Set<string>();
@@ -105,6 +147,29 @@ const windowMap = defineSolution<Input>({
   time: "O(n)",
   space: "O(k)",
   idea: "Remember the last index of each character. On a repeat, jump left straight past the previous occurrence instead of removing characters one by one.",
+  approach: [
+    {
+      title: "Last-seen index per character",
+      detail: "Remember where each character last appeared.",
+      at: "init",
+    },
+    {
+      title: "Jump past a repeat",
+      detail: "If s[right] was last seen inside the window, move left to one past that position in one step, instead of removing characters one by one.",
+      at: "jump",
+    },
+    {
+      title: "Record and measure",
+      detail: "Update lastSeen[s[right]] = right and compare the window length with best.",
+      at: "record",
+      nth: 4,
+    },
+    {
+      title: "Answer",
+      detail: "Each index is visited once. O(n) time.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lengthOfLongestSubstring(s: string): number {
       const lastSeen = new Map<string, number>(); // letter -> index where we last saw it

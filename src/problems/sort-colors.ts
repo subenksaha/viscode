@@ -11,6 +11,23 @@ const counting = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Count the 0s, 1s and 2s, then overwrite the array with that many of each.",
+  approach: [
+    {
+      title: "Count each color",
+      detail: "Only three values exist, so three counters capture everything.",
+      at: "count",
+      nth: -1,
+    },
+    {
+      title: "Overwrite",
+      detail: "Write that many 0s, then 1s, then 2s.",
+      at: "write",
+    },
+    {
+      title: "Two passes",
+      detail: "O(n) time and O(1) space. The one-pass Dutch flag method avoids the second pass.",
+    },
+  ],
   code: code(`
     function sortColors(nums: number[]): void {
       const count = [0, 0, 0]; // how many 0s, 1s and 2s
@@ -46,6 +63,28 @@ const dutchFlag = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Keep three regions: [0, low) are 0s, [low, mid) are 1s, (high, end] are 2s. Look at nums[mid]: send 0s left, 2s right, and step over 1s.",
+  approach: [
+    {
+      title: "Three regions",
+      detail: "[0, low) are 0s, [low, mid) are 1s, (high, end] are 2s, and [mid, high] is unknown.",
+      at: "init",
+    },
+    {
+      title: "2: swap to the back",
+      detail: "Swap nums[mid] with nums[high] and shrink high. Don't advance mid: the value swapped in hasn't been examined yet.",
+      at: "two",
+    },
+    {
+      title: "0: swap to the front",
+      detail: "Swap with nums[low], then advance both low and mid. The value swapped in is a 1 (or mid itself), which is already checked.",
+      at: "zero",
+    },
+    {
+      title: "1: leave it",
+      detail: "Advance mid. When mid passes high, the array is sorted in one pass.",
+      at: "one",
+    },
+  ],
   code: code(`
     function sortColors(nums: number[]): void {
       // nums[0..low-1] are 0s, nums[low..mid-1] are 1s, nums[high+1..] are 2s.

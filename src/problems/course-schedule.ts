@@ -17,6 +17,33 @@ const kahn = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V + E)",
   idea: "Repeatedly take a course with no remaining prerequisites and remove its outgoing edges. If every course gets taken, there is no cycle.",
+  approach: [
+    {
+      title: "Build the graph and in-degrees",
+      detail: "An edge from b to a means b unlocks a. inDegree[a] counts unfinished prerequisites.",
+      at: "build",
+    },
+    {
+      title: "Start with free courses",
+      detail: "Courses with in-degree 0 can be taken right away.",
+      at: "seed",
+    },
+    {
+      title: "Take a course",
+      detail: "Pop it and count it as taken.",
+      at: "take",
+    },
+    {
+      title: "Unlock dependents",
+      detail: "Decrement each dependent's in-degree. At zero, it is ready and joins the queue.",
+      at: "ready",
+    },
+    {
+      title: "All taken means no cycle",
+      detail: "Courses on a cycle never reach in-degree 0. So taken === numCourses exactly when the graph is acyclic.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canFinish(numCourses: number, prerequisites: number[][]): boolean {
       // unlocks[c] = courses that need c first; inDegree[c] = how many courses c still waits on
@@ -96,6 +123,33 @@ const dfsColors = defineSolution<Input>({
   time: "O(V + E)",
   space: "O(V + E)",
   idea: "Mark nodes white (new), gray (on the current path) or black (done). Reaching a gray node means a back edge, which is a cycle.",
+  approach: [
+    {
+      title: "Adjacency list",
+      detail: "Edges go from a prerequisite to the course it unlocks.",
+      at: "build",
+    },
+    {
+      title: "Gray on entry",
+      detail: "Mark the course as visiting: it is on the current DFS path.",
+      at: "enter",
+    },
+    {
+      title: "Explore dependents",
+      detail: "Recurse into each course this one unlocks. Hitting a gray course means a back edge, which is a cycle.",
+      at: "visit",
+    },
+    {
+      title: "Black on exit",
+      detail: "Once all descendants are clean, mark the course done. Later visits return immediately.",
+      at: "exit",
+    },
+    {
+      title: "No cycle found",
+      detail: "If no DFS hits a gray node, all courses can be finished.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canFinish(numCourses: number, prerequisites: number[][]): boolean {
       const unlocks: number[][] = Array.from({ length: numCourses }, () => []);

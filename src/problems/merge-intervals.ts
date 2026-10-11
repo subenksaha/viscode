@@ -14,6 +14,33 @@ const sortMerge = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "After sorting by start, overlapping intervals are adjacent. Extend the last merged interval while the next one starts inside it.",
+  approach: [
+    {
+      title: "Sort by start",
+      detail: "After sorting, any interval that overlaps the current block must come right after it.",
+      at: "sort",
+    },
+    {
+      title: "Start the first block",
+      detail: "merged holds the finished intervals, and its last element is the block still growing.",
+      at: "init",
+    },
+    {
+      title: "Extend on overlap",
+      detail: "If the next start ≤ the last end, extend the end to cover it, taking the max because one interval may contain another.",
+      at: "merge",
+    },
+    {
+      title: "New block on a gap",
+      detail: "Otherwise the last block is final and a new one starts.",
+      at: "push",
+    },
+    {
+      title: "Result",
+      detail: "O(n log n) for the sort plus one linear pass.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function merge(intervals: number[][]): number[][] {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
@@ -60,6 +87,24 @@ const repeated = defineSolution<Input>({
   time: "O(n³)",
   space: "O(n)",
   idea: "Without sorting: keep looking for any two overlapping intervals, merge them, and repeat until no pair overlaps.",
+  approach: [
+    {
+      title: "Look for an overlapping pair",
+      detail: "Two intervals overlap when each starts no later than the other ends.",
+      at: "pair",
+    },
+    {
+      title: "Merge them",
+      detail: "Replace the pair with their union and restart the search, since the bigger interval may now overlap others.",
+      at: "merge",
+    },
+    {
+      title: "Repeat until stable",
+      detail: "A pass that finds no overlap ends the loop. Many passes over all pairs make this O(n³).",
+      at: "pass",
+      nth: -1,
+    },
+  ],
   code: code(`
     function merge(intervals: number[][]): number[][] {
       const result = intervals.map((interval) => [...interval]);

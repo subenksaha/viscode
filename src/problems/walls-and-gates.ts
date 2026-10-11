@@ -28,6 +28,22 @@ const perGate = defineSolution<Input>({
   time: "O(g · m·n)",
   space: "O(m·n)",
   idea: "From every gate, DFS outward writing distance d into each room, but only continue where d improves on what the room already holds.",
+  approach: [
+    {
+      title: "DFS from each gate",
+      detail: "Write distance d into each room reached.",
+      at: "gate",
+    },
+    {
+      title: "Only improve",
+      detail: "Stop if the room already holds a smaller or equal distance from another gate. Walls (−1) stop the search too.",
+      at: "write",
+    },
+    {
+      title: "Cost",
+      detail: "Rooms can be rewritten by several gates, so O(g · m·n).",
+    },
+  ],
   code: code(`
     function wallsAndGates(rooms: number[][]): void {
       const rows = rooms.length;
@@ -75,6 +91,23 @@ const multiBfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Start a BFS from all gates at once. BFS reaches each room first along a shortest path, so each empty room is written exactly once with its final distance.",
+  approach: [
+    {
+      title: "Seed every gate",
+      detail: "All gates start at distance 0 together.",
+      at: "seed",
+    },
+    {
+      title: "Expand in order",
+      detail: "BFS pops rooms in non-decreasing distance order.",
+      at: "pop",
+    },
+    {
+      title: "Fill once",
+      detail: "An empty room is written the first time it is reached, by the nearest gate. Each cell is processed once.",
+      at: "fill",
+    },
+  ],
   code: code(`
     function wallsAndGates(rooms: number[][]): void {
       const EMPTY = 2147483647;

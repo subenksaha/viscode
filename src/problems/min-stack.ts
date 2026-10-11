@@ -16,6 +16,29 @@ const pairs = defineSolution<Input>({
   time: "O(1) per op",
   space: "O(n)",
   idea: "Store each value together with the minimum of the stack at the moment it was pushed. The top pair always knows the current minimum.",
+  approach: [
+    {
+      title: "Store the min with each value",
+      detail: "Each entry records the stack's minimum at the moment it was pushed.",
+      at: "ctor",
+    },
+    {
+      title: "Push computes min(val, minBelow)",
+      detail: "The minimum only depends on what is below.",
+      at: "push",
+      nth: 3,
+    },
+    {
+      title: "Pop needs no bookkeeping",
+      detail: "The entry below already knows its own minimum.",
+      at: "pop",
+    },
+    {
+      title: "getMin reads the top pair",
+      detail: "O(1) for every operation.",
+      at: "min",
+    },
+  ],
   code: code(`
     class MinStack {
       // Each entry stores [value, smallest value at or below it].
@@ -80,6 +103,28 @@ const twoStacks = defineSolution<Input>({
   time: "O(1) per op",
   space: "O(n)",
   idea: "Push onto a second stack only when the value is ≤ the current min. Popping a value equal to that min pops it there too.",
+  approach: [
+    {
+      title: "Main stack and min stack",
+      detail: "The top of mins is always the current minimum.",
+      at: "ctor",
+    },
+    {
+      title: "Push onto mins on a new min",
+      detail: "Use ≤ rather than <, so duplicate minimums are tracked and popping one doesn't lose the other.",
+      at: "push-min",
+    },
+    {
+      title: "Pop in sync",
+      detail: "If the popped value equals mins' top, pop mins too.",
+      at: "pop",
+    },
+    {
+      title: "getMin is O(1)",
+      detail: "Just read the top of mins.",
+      at: "min",
+    },
+  ],
   code: code(`
     class MinStack {
       stack: number[] = []; //@ctor

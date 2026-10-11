@@ -11,6 +11,23 @@ const extra = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n²)",
   idea: "Element (r, c) moves to (c, n−1−r). Fill a new matrix, then copy it back.",
+  approach: [
+    {
+      title: "Blank target",
+      detail: "A separate matrix means nothing gets overwritten mid-rotation.",
+      at: "init",
+    },
+    {
+      title: "Move each element",
+      detail: "Under a clockwise rotation, (r, c) goes to (c, n−1−r): rows become columns, read from the right.",
+      at: "place",
+    },
+    {
+      title: "Copy back",
+      detail: "Overwrite the original rows. O(n²) extra space.",
+      at: "copy",
+    },
+  ],
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;
@@ -48,6 +65,24 @@ const transposeReverse = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "A clockwise rotation equals a transpose (swap across the main diagonal) followed by reversing every row.",
+  approach: [
+    {
+      title: "Transpose",
+      detail: "Swap matrix[r][c] with matrix[c][r] above the diagonal. Rows become columns.",
+      at: "transpose",
+    },
+    {
+      title: "Reverse each row",
+      detail: "Mirroring left-to-right turns the transpose into a clockwise rotation.",
+      at: "reverse",
+    },
+    {
+      title: "In place",
+      detail: "Two simple passes, O(1) extra space.",
+      at: "reverse",
+      nth: -1,
+    },
+  ],
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;
@@ -84,6 +119,29 @@ const layers = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Work ring by ring from the outside in. Each position on a ring trades places with three others in a 4-cycle: top → right → bottom → left → top.",
+  approach: [
+    {
+      title: "Process ring by ring",
+      detail: "The outer ring rotates independently of the inner ones.",
+      at: "layer",
+    },
+    {
+      title: "Save the top",
+      detail: "Each position on a ring belongs to a 4-cycle with three other cells.",
+      at: "save",
+    },
+    {
+      title: "Rotate the four cells",
+      detail: "left → top, bottom → left, right → bottom, saved top → right. One temporary value is enough.",
+      at: "cycle",
+    },
+    {
+      title: "Inner rings",
+      detail: "Repeat until the center. Each cell moves exactly once.",
+      at: "layer",
+      nth: -1,
+    },
+  ],
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;

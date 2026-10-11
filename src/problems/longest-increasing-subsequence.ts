@@ -11,6 +11,29 @@ const quadratic = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "dp[i] = length of the longest increasing subsequence ending at i = 1 + max dp[j] over j < i with nums[j] < nums[i].",
+  approach: [
+    {
+      title: "Every element starts a run of 1",
+      detail: "dp[i] is the length of the longest increasing subsequence that ends exactly at nums[i]. On its own, each element has length 1.",
+      at: "init",
+    },
+    {
+      title: "Look back at earlier elements",
+      detail: "For index i, consider every j < i as the previous element of the subsequence.",
+      at: "i",
+      nth: 3,
+    },
+    {
+      title: "Extend smaller predecessors",
+      detail: "If nums[j] < nums[i], the subsequence ending at j can be extended by nums[i]: dp[i] = max(dp[i], dp[j] + 1).",
+      at: "extend",
+    },
+    {
+      title: "Take the max over all ends",
+      detail: "The LIS can end anywhere, so the answer is max(dp). Two nested loops make this O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lengthOfLIS(nums: number[]): number {
       // dp[i] = length of the longest increasing subsequence ending at nums[i]
@@ -51,6 +74,29 @@ const patience = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "tails[k] = the smallest possible tail of an increasing subsequence of length k+1. For each x, binary-search the first tail ≥ x and replace it, or append x if none exists.",
+  approach: [
+    {
+      title: "tails[k] = smallest tail of length k+1",
+      detail: "Keep, for each possible length, the smallest value an increasing subsequence of that length can end with. Small tails are easier to extend.",
+      at: "init",
+    },
+    {
+      title: "Binary search the slot",
+      detail: "tails is always sorted, so find the first tail ≥ num in O(log n).",
+      at: "search",
+    },
+    {
+      title: "Replace or append",
+      detail: "If num beats every tail, it extends the longest subsequence (append). Otherwise it replaces a tail with a smaller value, leaving more room to grow later.",
+      at: "place",
+      nth: 4,
+    },
+    {
+      title: "The length of tails is the answer",
+      detail: "tails may not be a real subsequence, but its length equals the LIS length. Overall O(n log n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lengthOfLIS(nums: number[]): number {
       // tails[len - 1] = smallest possible last number of an increasing subsequence of length len

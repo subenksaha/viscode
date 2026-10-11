@@ -11,6 +11,29 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "For every buy day, try every later sell day and keep the best profit.",
+  approach: [
+    {
+      title: "Start with no trade",
+      detail: "best = 0 because doing nothing is always allowed, so the answer is never negative.",
+      at: "init",
+    },
+    {
+      title: "Choose a buy day",
+      detail: "Each day i is a candidate buy day. The sell day must come strictly later.",
+      at: "i",
+    },
+    {
+      title: "Try every later sell day",
+      detail: "For each j > i, compute prices[j] − prices[i]. This checks all n²/2 buy/sell pairs.",
+      at: "j",
+    },
+    {
+      title: "Keep the best profit",
+      detail: "Update best with every profit seen. After every pair is checked, best is the maximum profit.",
+      at: "update",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxProfit(prices: number[]): number {
       let best = 0; //@init
@@ -49,6 +72,29 @@ const onePass = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "The best sell today pairs with the cheapest price seen so far. Track that minimum as you scan.",
+  approach: [
+    {
+      title: "Track the cheapest price so far",
+      detail: "Selling on day d is best when paired with the minimum price before d. So we only need the running minimum, not every earlier day.",
+      at: "init",
+    },
+    {
+      title: "New low: it becomes the buy candidate",
+      detail: "When today's price beats the minimum, any future sale would rather buy here. Selling today can't beat a profit of 0, so just update minPrice.",
+      at: "min",
+      nth: 2,
+    },
+    {
+      title: "Otherwise, try selling today",
+      detail: "price − minPrice is the best profit for a sale today. Compare it with best.",
+      at: "profit",
+    },
+    {
+      title: "One scan answers it",
+      detail: "Each day is processed once with O(1) state. best holds the maximum profit across all sell days.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxProfit(prices: number[]): number {
       let minPrice = Infinity; //@init

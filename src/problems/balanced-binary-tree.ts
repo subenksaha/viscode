@@ -15,6 +15,22 @@ const topDown = defineSolution<Input>({
   time: "O(n²)",
   space: "O(h)",
   idea: "At every node, compute the height of both subtrees from scratch and compare them, then recurse into both children.",
+  approach: [
+    {
+      title: "Measure both subtrees",
+      detail: "At each node, compute the left and right heights from scratch.",
+      at: "heights",
+    },
+    {
+      title: "Compare",
+      detail: "A difference greater than 1 means the tree is not balanced.",
+      at: "bad",
+    },
+    {
+      title: "Recurse",
+      detail: "Otherwise check both children the same way. Heights are recomputed at every level, so this is O(n²) on skewed trees.",
+    },
+  ],
   code: code(`
     function height(node: TreeNode | null): number {
       if (node === null) return 0;
@@ -63,6 +79,28 @@ const bottomUp = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Return each subtree's height from a post-order DFS, or −1 as soon as any subtree is unbalanced. Each node is visited once.",
+  approach: [
+    {
+      title: "Post-order",
+      detail: "Get the children's results before deciding about a node.",
+      at: "left",
+    },
+    {
+      title: "Return the height when balanced",
+      detail: "1 + max(left, right).",
+      at: "ret",
+    },
+    {
+      title: "−1 propagates failure",
+      detail: "If either child returned −1, or the heights differ by more than 1, return −1 at once.",
+      at: "bad",
+    },
+    {
+      title: "Answer",
+      detail: "The root's result is −1 exactly when some subtree is unbalanced. Each node is visited once.",
+      at: "answer",
+    },
+  ],
   code: code(`
     function isBalanced(root: TreeNode | null): boolean {
       // Returns the height of the subtree, or -1 if it is not balanced.

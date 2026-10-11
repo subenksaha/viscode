@@ -101,6 +101,33 @@ const withMap = defineSolution<Input>({
   time: "O(L) per op",
   space: "O(total chars)",
   idea: "Each node maps a character to its child node and flags whether a word ends there. insert creates missing nodes; search and startsWith just walk.",
+  approach: [
+    {
+      title: "Empty root",
+      detail: "Each node maps letters to child nodes and has a flag for whether a word ends there.",
+      at: "ctor",
+    },
+    {
+      title: "Insert creates the missing path",
+      detail: "Walk letter by letter, creating a child wherever one is missing.",
+      at: "insert-step",
+    },
+    {
+      title: "Mark the word's end",
+      detail: "The last node's flag separates \"apple\" from \"app\", even though both share the path.",
+      at: "insert-end",
+    },
+    {
+      title: "Search walks and checks the flag",
+      detail: "The whole word must have a path that ends on a flagged node.",
+      at: "search-end",
+    },
+    {
+      title: "startsWith only needs the path",
+      detail: "If the walk doesn't break, some word has this prefix. Every operation is O(L).",
+      at: "prefix-end",
+    },
+  ],
   code: code(`
     class TrieNode {
       children = new Map<string, TrieNode>();
@@ -149,6 +176,33 @@ const withArray = defineSolution<Input>({
   time: "O(L) per op",
   space: "O(26 · nodes)",
   idea: "For lowercase words, store children in an array indexed by letter. Lookups are direct, but every node reserves 26 slots.",
+  approach: [
+    {
+      title: "Empty root",
+      detail: "Children are a 26-slot array indexed by letter.",
+      at: "ctor",
+    },
+    {
+      title: "Insert by index",
+      detail: "letter − 'a' picks the slot directly, so no hashing is needed.",
+      at: "insert-step",
+    },
+    {
+      title: "Mark the end",
+      detail: "Flag the final node as a word end.",
+      at: "insert-end",
+    },
+    {
+      title: "Walk for search",
+      detail: "Follow the slots. A missing slot means the word isn't stored.",
+      at: "search-end",
+    },
+    {
+      title: "Prefix check",
+      detail: "Same walk, without checking the flag. Faster lookups, but every node uses 26 slots.",
+      at: "prefix-end",
+    },
+  ],
   code: code(`
     class TrieNode {
       children: (TrieNode | undefined)[] = new Array(26); // one slot per letter a..z

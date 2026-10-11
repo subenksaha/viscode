@@ -34,6 +34,24 @@ const sortAll = defineSolution<Input>({
   time: "O(N log N)",
   space: "O(N)",
   idea: "Pour every value into one array, sort it and build a new list.",
+  approach: [
+    {
+      title: "Collect all values",
+      detail: "Walk every list and push each value into one array.",
+      at: "collect",
+      nth: -1,
+    },
+    {
+      title: "Sort",
+      detail: "O(N log N) for N total nodes. This ignores the fact that each list is already sorted.",
+      at: "sort",
+    },
+    {
+      title: "Rebuild a list",
+      detail: "Create new nodes in sorted order.",
+      at: "build",
+    },
+  ],
   code: code(`
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
       const values: number[] = [];
@@ -71,6 +89,25 @@ const oneByOne = defineSolution<Input>({
   time: "O(k · N)",
   space: "O(1)",
   idea: "Fold the lists: merge list 0 with list 1, then the result with list 2, and so on.",
+  approach: [
+    {
+      title: "Start empty",
+      detail: "result begins as an empty list.",
+      at: "init",
+    },
+    {
+      title: "Fold in each list",
+      detail: "Merge result with the next list using the standard two-list merge.",
+      at: "fold",
+      nth: 2,
+    },
+    {
+      title: "Repeated work",
+      detail: "Early nodes get re-scanned in every later merge, so the cost grows to O(k · N).",
+      at: "pick",
+      nth: -1,
+    },
+  ],
   code: code(`
     function mergeTwo(first: ListNode | null, second: ListNode | null): ListNode | null {
       const dummyHead = new ListNode(0);
@@ -116,6 +153,24 @@ const divide = defineSolution<Input>({
   time: "O(N log k)",
   space: "O(1)",
   idea: "Merge lists in pairs: k lists become k/2, then k/4, … Every node takes part in log k merges.",
+  approach: [
+    {
+      title: "Pair up the lists",
+      detail: "Each round merges list 0 with 1, list 2 with 3, and so on.",
+      at: "pair",
+    },
+    {
+      title: "Two-list merges inside",
+      detail: "Each pair uses the ordinary splice merge.",
+      at: "pick",
+    },
+    {
+      title: "Halve until one remains",
+      detail: "k lists become ⌈k/2⌉ each round. Every node moves through log k merges, giving O(N log k) total.",
+      at: "round",
+      nth: 2,
+    },
+  ],
   code: code(`
     function mergeTwo(first: ListNode | null, second: ListNode | null): ListNode | null {
       const dummyHead = new ListNode(0);
@@ -176,6 +231,28 @@ const heap = defineSolution<Input>({
   time: "O(N log k)",
   space: "O(k)",
   idea: "Keep the current head of every list in a min-heap. Pop the smallest, append it, and push its successor.",
+  approach: [
+    {
+      title: "Seed the heap with each head",
+      detail: "The overall smallest node must be one of the k list heads.",
+      at: "init",
+    },
+    {
+      title: "Pop the smallest",
+      detail: "Take the minimum, append it to the result, and advance tail.",
+      at: "pop",
+    },
+    {
+      title: "Push its successor",
+      detail: "The next node from the same list becomes a candidate. The heap never holds more than k nodes.",
+      at: "push",
+    },
+    {
+      title: "Done when the heap empties",
+      detail: "Each of the N nodes is pushed and popped once, at O(log k) each.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
       // Min-heap of the current head of each list.

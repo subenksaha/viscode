@@ -11,6 +11,23 @@ const brute = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "For each day, walk forward until a warmer day appears.",
+  approach: [
+    {
+      title: "For each day",
+      detail: "Look forward for a warmer day.",
+      at: "i",
+    },
+    {
+      title: "Cooler days",
+      detail: "Keep walking.",
+      at: "j",
+    },
+    {
+      title: "First warmer day",
+      detail: "answer[i] = j − i. O(n²) worst case.",
+      at: "found",
+    },
+  ],
   code: code(`
     function dailyTemperatures(temps: number[]): number[] {
       const daysToWait = new Array(temps.length).fill(0);
@@ -53,6 +70,24 @@ const monoStack = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Keep a stack of days still waiting for a warmer one; their temperatures decrease from bottom to top. A warmer day pops every cooler day off the top and answers it.",
+  approach: [
+    {
+      title: "Waiting days",
+      detail: "The stack holds days with no warmer day found yet. Their temperatures decrease from bottom to top.",
+      at: "push",
+    },
+    {
+      title: "A warmer day resolves cooler ones",
+      detail: "Pop every waiting day colder than today and set its wait to today − day.",
+      at: "pop",
+    },
+    {
+      title: "Push today",
+      detail: "Today waits too. Each day is pushed and popped once: O(n).",
+      at: "push",
+      nth: 4,
+    },
+  ],
   code: code(`
     function dailyTemperatures(temps: number[]): number[] {
       const daysToWait = new Array(temps.length).fill(0);

@@ -12,6 +12,33 @@ const greedyEnd = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "Keep the interval that finishes earliest. It leaves the most room for the rest. Any interval starting before the last kept end must be removed.",
+  approach: [
+    {
+      title: "Sort by end",
+      detail: "The interval that finishes first is always safe to keep. It can only leave more room than any other choice.",
+      at: "sort",
+    },
+    {
+      title: "Nothing kept yet",
+      detail: "end = −∞.",
+      at: "init",
+    },
+    {
+      title: "Keep compatible intervals",
+      detail: "If an interval starts at or after the last kept end, keep it and advance end.",
+      at: "keep",
+    },
+    {
+      title: "Remove conflicts",
+      detail: "Anything starting before end overlaps a kept interval that ends earlier, so remove it.",
+      at: "remove",
+    },
+    {
+      title: "Answer",
+      detail: "This is the classic interval-scheduling greedy. O(n log n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[1] - b[1]); //@sort
@@ -58,6 +85,33 @@ const greedyStart = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "Sort by start. When two intervals overlap, remove the one that ends later, i.e. keep the smaller end.",
+  approach: [
+    {
+      title: "Sort by start",
+      detail: "Process intervals left to right.",
+      at: "sort",
+    },
+    {
+      title: "Keep the first",
+      detail: "end tracks where the last kept interval ends.",
+      at: "init",
+    },
+    {
+      title: "Overlap: drop the later finisher",
+      detail: "One of the two must go. Keeping the one that ends first leaves the most room, so end = min(end, finish).",
+      at: "remove",
+    },
+    {
+      title: "No overlap: keep it",
+      detail: "Move end to the new interval's finish.",
+      at: "keep",
+    },
+    {
+      title: "Count removals",
+      detail: "Each overlap costs exactly one removal.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
@@ -106,6 +160,28 @@ const dp = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Sort by start. dp[i] = most intervals you can keep ending with interval i = 1 + max dp[j] over compatible j < i. Answer = n − max(dp).",
+  approach: [
+    {
+      title: "Sort by start",
+      detail: "Turn the problem around: removing the fewest intervals means keeping the longest chain of non-overlapping ones.",
+      at: "sort",
+    },
+    {
+      title: "dp[i]: longest chain ending at i",
+      detail: "Each interval alone is a chain of length 1.",
+      at: "i",
+    },
+    {
+      title: "Extend compatible chains",
+      detail: "If interval j ends by the time i starts, append i to j's chain: dp[i] = max(dp[i], dp[j] + 1).",
+      at: "extend",
+    },
+    {
+      title: "Remove the rest",
+      detail: "Removals = n − max(dp). O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort

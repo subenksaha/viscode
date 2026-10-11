@@ -47,6 +47,32 @@ const bfs = defineSolution<Input>({
   time: "O(C)",
   space: "O(U + E)",
   idea: "Adjacent words reveal one ordering edge at their first differing letter. Topologically sort the letters. If some letter never reaches in-degree 0, there is a cycle and no valid order.",
+  approach: [
+    {
+      title: "Letters become nodes",
+      detail: "Every letter that appears is a node, even if no rule mentions it.",
+      at: "letters",
+    },
+    {
+      title: "Adjacent words give one edge",
+      detail: "The first position where two neighboring words differ tells us the earlier word's letter comes first. Nothing after that position says anything.",
+      at: "compare",
+    },
+    {
+      title: "Invalid prefix case",
+      detail: "If a longer word comes before its own prefix (e.g. \"abc\" before \"ab\"), no alphabet can explain it, so return \"\".",
+    },
+    {
+      title: "Topological sort",
+      detail: "Start from letters with in-degree 0. Take one, append it, and release its successors.",
+      at: "take",
+    },
+    {
+      title: "Detect cycles",
+      detail: "If some letters never reach in-degree 0, they lie on a cycle and no order exists.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function alienOrder(words: string[]): string {
       // lettersAfter.get(x) = letters that must come after x
@@ -144,6 +170,28 @@ const dfs = defineSolution<Input>({
   time: "O(C)",
   space: "O(U + E)",
   idea: "Build the same graph. DFS each letter; after visiting everything that must come after it, prepend the letter. A gray (in-progress) letter seen again means a cycle.",
+  approach: [
+    {
+      title: "Build the graph",
+      detail: "Same edges: the first differing letters of adjacent words.",
+      at: "compare",
+    },
+    {
+      title: "Enter a letter",
+      detail: "Mark it visiting and recurse into every letter that must come after it.",
+      at: "enter",
+    },
+    {
+      title: "Post-order placement",
+      detail: "When everything after a letter has been placed, add it to the finished list. Reversed, that list is a valid order.",
+      at: "exit",
+    },
+    {
+      title: "Cycle check",
+      detail: "Reaching a letter still marked visiting means a cycle, so the answer is \"\".",
+      at: "ret",
+    },
+  ],
   code: code(`
     function alienOrder(words: string[]): string {
       // lettersAfter.get(x) = letters that must come after x

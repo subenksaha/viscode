@@ -14,6 +14,28 @@ const bfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Start a BFS from every 0 at once. The first time the wave reaches a cell, that distance is its shortest distance to a 0.",
+  approach: [
+    {
+      title: "Seed every 0",
+      detail: "All zeros start the BFS together at distance 0.",
+      at: "seed",
+    },
+    {
+      title: "Expand in waves",
+      detail: "Cells come off the queue in non-decreasing distance order.",
+      at: "pop",
+    },
+    {
+      title: "First reach is the shortest",
+      detail: "When a cell's distance improves, set it to the parent's distance + 1 and enqueue it. BFS reaches each cell first by a shortest path.",
+      at: "set",
+    },
+    {
+      title: "Done",
+      detail: "Each cell is enqueued once: O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function updateMatrix(mat: number[][]): number[][] {
       const rows = mat.length;
@@ -81,6 +103,30 @@ const twoPass = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(1) extra",
   idea: "A shortest path to a 0 comes from some direction. One pass from the top-left handles paths coming from above/left; a second pass from the bottom-right handles below/right.",
+  approach: [
+    {
+      title: "0s are 0, others start far",
+      detail: "Use a value larger than any real distance as \"∞\".",
+      at: "init",
+    },
+    {
+      title: "Pass from the top-left",
+      detail: "Each cell takes min(itself, above + 1, left + 1). This captures every shortest path that arrives from above or the left.",
+      at: "down",
+      nth: 4,
+    },
+    {
+      title: "Pass from the bottom-right",
+      detail: "Same with below and right. Any shortest path is covered by one of the two sweeps.",
+      at: "up",
+      nth: 4,
+    },
+    {
+      title: "Done",
+      detail: "Two linear passes, no queue.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function updateMatrix(mat: number[][]): number[][] {
       const rows = mat.length;

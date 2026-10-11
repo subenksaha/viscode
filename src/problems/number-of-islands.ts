@@ -28,6 +28,29 @@ const dfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Scan the grid. Each unvisited '1' starts a new island; flood-fill it with DFS, sinking every connected land cell so it is not counted again.",
+  approach: [
+    {
+      title: "Scan for land",
+      detail: "Walk the grid. An unvisited '1' is the first cell found of a new island, so count it.",
+      at: "found",
+    },
+    {
+      title: "Sink the island",
+      detail: "DFS in four directions, turning each connected '1' into '0'. The whole island disappears, so it is never counted twice.",
+      at: "sink",
+      nth: 2,
+    },
+    {
+      title: "Skip sunk cells",
+      detail: "Later cells that were part of a counted island are now water and get skipped.",
+      at: "scan",
+    },
+    {
+      title: "Answer",
+      detail: "Each cell is visited a constant number of times: O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function numIslands(grid: string[][]): number {
       const rows = grid.length;
@@ -86,6 +109,28 @@ const bfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(min(m, n))",
   idea: "Same scan, but explore each island with a queue instead of recursion.",
+  approach: [
+    {
+      title: "Start a new island",
+      detail: "An unvisited land cell bumps the count and seeds a queue.",
+      at: "found",
+    },
+    {
+      title: "Pop and explore",
+      detail: "For each cell taken off the queue, look at its four neighbors.",
+      at: "pop",
+    },
+    {
+      title: "Mark when enqueuing",
+      detail: "Set a neighbor to '0' as soon as it is enqueued, so it can't be enqueued twice.",
+      at: "push",
+    },
+    {
+      title: "Answer",
+      detail: "The number of BFS seeds is the number of islands.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function numIslands(grid: string[][]): number {
       const rows = grid.length;
@@ -157,6 +202,34 @@ const unionFind = defineSolution<Input>({
   time: "O(m·n · α(m·n))",
   space: "O(m·n)",
   idea: "Start with one set per land cell. Union each land cell with its land neighbors to the right and below. Every successful union merges two islands, so subtract one.",
+  approach: [
+    {
+      title: "Every land cell is an island",
+      detail: "Give each '1' its own set and set count to the number of land cells.",
+      at: "init",
+    },
+    {
+      title: "Look right and down",
+      detail: "Each adjacency only needs checking once, so compare each land cell with its right and lower neighbors.",
+      at: "cell",
+      nth: 2,
+    },
+    {
+      title: "Find both roots",
+      detail: "Follow parent pointers to each set's representative.",
+      at: "find",
+    },
+    {
+      title: "Union merges two islands",
+      detail: "If the roots differ, link them and decrement count, since two islands just became one.",
+      at: "union",
+    },
+    {
+      title: "Answer",
+      detail: "The remaining count is the number of distinct sets.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function numIslands(grid: string[][]): number {
       const rows = grid.length;

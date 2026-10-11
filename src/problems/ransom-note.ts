@@ -13,6 +13,28 @@ const removeEach = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(n)",
   idea: "For each letter of the note, find an unused copy in the magazine and cross it out. If one is missing, the note can't be built.",
+  approach: [
+    {
+      title: "Copy the magazine",
+      detail: "Letters are crossed out as they are used.",
+      at: "init",
+    },
+    {
+      title: "Find a copy",
+      detail: "Search for an unused instance of the note's letter.",
+      at: "find",
+    },
+    {
+      title: "Cross it out",
+      detail: "Each magazine letter can be used once.",
+      at: "use",
+    },
+    {
+      title: "All found",
+      detail: "If a letter can't be found, return false. Scanning per letter makes this O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canConstruct(ransomNote: string, magazine: string): boolean {
       const letters = magazine.split(""); //@init
@@ -55,6 +77,23 @@ const counting = defineSolution<Input>({
   time: "O(m + n)",
   space: "O(1)",
   idea: "Count the magazine's letters once, then spend one count per note letter. A count going below zero means we ran out.",
+  approach: [
+    {
+      title: "Count the magazine",
+      detail: "One pass builds a supply count per letter.",
+      at: "count",
+    },
+    {
+      title: "Spend per note letter",
+      detail: "Decrement the count. Going below zero means the supply ran out.",
+      at: "spend",
+    },
+    {
+      title: "Enough of everything",
+      detail: "O(m + n) time, at most 26 counters.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canConstruct(ransomNote: string, magazine: string): boolean {
       const count = new Map<string, number>();

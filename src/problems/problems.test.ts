@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { categories } from "@/catalog/categories";
 import { lists } from "@/catalog/lists";
 import { getProblem, problems } from "@/catalog/problems";
-import { runSolution } from "@/core/trace";
+import { findKeyStep, runSolution } from "@/core/trace";
 
 describe("catalog", () => {
   it("every list references registered problems and known categories", () => {
@@ -38,6 +38,20 @@ describe.each(problems.map((p) => [p.slug, p] as const))("%s", (_, entry) => {
       expect(def.steps.length, `${solution.id}: default input has steps`).toBeGreaterThan(0);
       const lineCount = solution.code.source.split("\n").length;
       for (const step of def.steps) expect(step.line).toBeLessThanOrEqual(lineCount);
+
+      expect(solution.approach.length, `${solution.id}: approach stages`).toBeGreaterThanOrEqual(3);
+      expect(
+        solution.approach.some((a) => a.at),
+        `${solution.id}: approach visualizes a critical step`,
+      ).toBe(true);
+      for (const stage of solution.approach) {
+        if (!stage.at) continue;
+        expect(solution.code.lines, `${solution.id}: approach marker`).toHaveProperty(stage.at);
+        expect(
+          findKeyStep(def.steps, stage),
+          `${solution.id}: "${stage.title}" reached on default input`,
+        ).toBeGreaterThanOrEqual(0);
+      }
 
       for (const ex of problem.examples) {
         const { result } = runSolution(problem, solution, ex.input);

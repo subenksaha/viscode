@@ -12,6 +12,29 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "You can only arrive from above or from the left, so paths(r, c) = paths(r−1, c) + paths(r, c−1). The first row and column have one path each.",
+  approach: [
+    {
+      title: "Edges have one path",
+      detail: "On the top row you can only have moved right, and on the left column only down, so those cells are all 1.",
+      at: "init",
+    },
+    {
+      title: "Above + left",
+      detail: "Every other cell is entered from above or from the left, so paths add: dp[r][c] = dp[r−1][c] + dp[r][c−1].",
+      at: "fill",
+    },
+    {
+      title: "Fill row by row",
+      detail: "Rows are processed top-down, so both dependencies are always ready.",
+      at: "fill",
+      nth: -1,
+    },
+    {
+      title: "Corner is the answer",
+      detail: "dp[m−1][n−1] counts every path.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function uniquePaths(m: number, n: number): number {
       // dp[row][col] = number of paths to reach that cell. The first row and column have just one.
@@ -49,6 +72,23 @@ const row = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(n)",
   idea: "Keep one row. Before the update, row[c] holds the value from above; row[c−1] already holds the new value to the left.",
+  approach: [
+    {
+      title: "One row of 1s",
+      detail: "Start with the first row.",
+      at: "init",
+    },
+    {
+      title: "In-place update",
+      detail: "Before updating, row[c] still holds the value from the row above, and row[c−1] already holds the new left value. So row[c] += row[c−1].",
+      at: "fill",
+    },
+    {
+      title: "Answer",
+      detail: "row[n−1] after the last row. O(n) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function uniquePaths(m: number, n: number): number {
       // Keep only one row. Before updating, row[col] still holds the value from the row above.
@@ -82,6 +122,23 @@ const combinatorics = defineSolution<Input>({
   time: "O(min(m, n))",
   space: "O(1)",
   idea: "Every path makes (m−1) down moves and (n−1) right moves. Choose which of the m+n−2 moves go down: C(m+n−2, m−1).",
+  approach: [
+    {
+      title: "Count moves",
+      detail: "Every path is m−1 downs and n−1 rights in some order, m+n−2 moves in all. Choosing where the downs go fixes the path: C(m+n−2, k) with k = min(m,n)−1.",
+      at: "init",
+    },
+    {
+      title: "Multiply incrementally",
+      detail: "Build the binomial coefficient as a product of fractions. Each partial product is itself a binomial coefficient, so it stays whole.",
+      at: "mul",
+    },
+    {
+      title: "Answer",
+      detail: "Only O(min(m, n)) multiplications are needed.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function uniquePaths(m: number, n: number): number {
       // Every path is (m - 1) downs and (n - 1) rights in some order: choose k of the total moves.

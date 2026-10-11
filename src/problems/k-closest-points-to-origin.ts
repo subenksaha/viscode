@@ -15,6 +15,22 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Sort all points by squared distance (no need for the square root) and take the first k.",
+  approach: [
+    {
+      title: "Sort by squared distance",
+      detail: "x² + y² preserves the order of real distances, so no square root is needed.",
+      at: "sort",
+    },
+    {
+      title: "Take k",
+      detail: "The first k points are the closest.",
+      at: "ret",
+    },
+    {
+      title: "Cost",
+      detail: "O(n log n), even though only k points matter.",
+    },
+  ],
   code: code(`
     function kClosest(points: number[][], k: number): number[][] {
       // Squared distance is enough for comparing; no need for a square root.
@@ -37,6 +53,28 @@ const maxHeap = defineSolution<Input>({
   time: "O(n log k)",
   space: "O(k)",
   idea: "Keep the k closest points seen so far in a max-heap keyed by distance. A new point that is closer than the heap's farthest replaces it.",
+  approach: [
+    {
+      title: "Max-heap of size k",
+      detail: "The top is the farthest of the k closest points seen so far.",
+      at: "init",
+    },
+    {
+      title: "Push each point",
+      detail: "Add it to the heap.",
+      at: "push",
+    },
+    {
+      title: "Evict the farthest",
+      detail: "Once the heap holds k+1 points, drop the top. It can't be among the k closest.",
+      at: "evict",
+    },
+    {
+      title: "Result",
+      detail: "The heap holds the answer. O(n log k) time, O(k) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function kClosest(points: number[][], k: number): number[][] {
       const squaredDistance = (point: number[]) => point[0] * point[0] + point[1] * point[1];

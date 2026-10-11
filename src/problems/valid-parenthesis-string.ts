@@ -12,6 +12,29 @@ const memo = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n²)",
   idea: "canBeValid(i, open): can s[i..] finish with open unmatched '('? A '*' branches three ways: '(' , ')' or nothing. open must never go negative.",
+  approach: [
+    {
+      title: "Track the open count",
+      detail: "canBeValid(i, open) asks whether s[i..] can finish with open unmatched '('. A negative count is invalid at once.",
+      at: "branch",
+    },
+    {
+      title: "'*' branches three ways",
+      detail: "As '(', as ')' or as nothing.",
+      at: "branch",
+      nth: 2,
+    },
+    {
+      title: "End",
+      detail: "Valid only if open is 0.",
+      at: "end",
+    },
+    {
+      title: "Memoize",
+      detail: "O(n²) states.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function checkValidString(s: string): boolean {
       const memo = new Map<string, boolean>();
@@ -76,6 +99,29 @@ const range = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Track the smallest and largest possible number of unmatched '(' so far. '(' raises both, ')' lowers both, '*' widens the range by one each way. Fail if max < 0; clamp min at 0; succeed if min ends at 0.",
+  approach: [
+    {
+      title: "Range of possible open counts",
+      detail: "[minOpen, maxOpen] covers every way to read the stars.",
+      at: "init",
+    },
+    {
+      title: "Update per character",
+      detail: "'(' raises both, ')' lowers both, '*' lowers min and raises max.",
+      at: "update",
+      nth: 2,
+    },
+    {
+      title: "Clamp min at 0",
+      detail: "A negative count is never valid, so drop those interpretations. If max < 0, fail.",
+      at: "clamp",
+    },
+    {
+      title: "Valid if 0 is possible",
+      detail: "minOpen === 0 at the end. O(n), O(1).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function checkValidString(s: string): boolean {
       // Track the smallest and largest number of unclosed "(" we could have.

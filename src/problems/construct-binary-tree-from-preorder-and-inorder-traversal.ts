@@ -44,6 +44,28 @@ const hashMap = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "The next pre-order value is always the root of the current subtree. Its position in the inorder array splits the remaining values into left and right subtrees. A value → index map makes that lookup O(1).",
+  approach: [
+    {
+      title: "Index the inorder values",
+      detail: "A value → index map turns the root lookup into O(1).",
+      at: "root",
+    },
+    {
+      title: "Split in constant time",
+      detail: "The root's index splits the inorder range into the left part [start, idx−1] and the right part [idx+1, end].",
+      at: "split",
+    },
+    {
+      title: "Empty range is null",
+      detail: "The recursion stops when a range is empty.",
+      at: "empty",
+    },
+    {
+      title: "Build in preorder",
+      detail: "Consume preorder left to right, building the left subtree before the right. O(n) total.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
       const inorderIndex = new Map<number, number>();
@@ -74,6 +96,28 @@ const linearSearch = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "The same recursion, but find the root in the inorder slice by scanning. Simpler, and quadratic on skewed trees.",
+  approach: [
+    {
+      title: "Preorder gives the root",
+      detail: "The next unused preorder value is the root of the current subtree.",
+      at: "root",
+    },
+    {
+      title: "Scan inorder for it",
+      detail: "Everything left of it in inorder is the left subtree and everything right of it is the right subtree. Finding it takes a linear scan.",
+      at: "split",
+    },
+    {
+      title: "Empty ranges are null",
+      detail: "A range with start > end means there is no subtree.",
+      at: "empty",
+    },
+    {
+      title: "Build left, then right",
+      detail: "Build left first because preorder lists the whole left subtree before the right. Scanning can make this O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
       let nextPreorder = 0; // preorder[nextPreorder] is the next subtree root

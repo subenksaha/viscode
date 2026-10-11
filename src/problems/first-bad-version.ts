@@ -14,6 +14,22 @@ const linear = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Call isBadVersion on 1, 2, 3, … and return the first one that is bad.",
+  approach: [
+    {
+      title: "Ask every version",
+      detail: "Call isBadVersion on 1, 2, 3, … in order.",
+      at: "loop",
+    },
+    {
+      title: "First bad one",
+      detail: "The first true is the answer, but it can take n calls.",
+      at: "found",
+    },
+    {
+      title: "Wasteful",
+      detail: "The good…bad layout is sorted, which binary search can exploit.",
+    },
+  ],
   code: code(`
     function solution(isBadVersion: (v: number) => boolean) {
       return (n: number): number => {
@@ -44,6 +60,33 @@ const binary = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "Versions go good, good, …, bad, bad. Binary search for the first bad one: if mid is bad the answer is at or left of mid, otherwise it is right of mid.",
+  approach: [
+    {
+      title: "Search [1, n]",
+      detail: "The answer is the first true in a monotone false…true sequence.",
+      at: "init",
+    },
+    {
+      title: "Probe mid",
+      detail: "Use left + (right − left) / 2 to avoid overflow in fixed-width languages.",
+      at: "mid",
+    },
+    {
+      title: "Good: go right",
+      detail: "Everything at or before mid is good, so left = mid + 1.",
+      at: "good",
+    },
+    {
+      title: "Bad: keep mid",
+      detail: "mid might be the first bad version, so right = mid, not mid − 1.",
+      at: "bad",
+    },
+    {
+      title: "Converge",
+      detail: "When left === right it is the answer, after ⌈log₂ n⌉ calls.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function solution(isBadVersion: (v: number) => boolean) {
       return (n: number): number => {

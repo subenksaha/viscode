@@ -17,6 +17,24 @@ const linear = defineSolution<Input>({
   time: "O(|n|)",
   space: "O(1)",
   idea: "Multiply x into the result |n| times; for negative n, invert x first.",
+  approach: [
+    {
+      title: "Negative exponent",
+      detail: "For n < 0, use 1/x and |n|.",
+      at: "mul",
+    },
+    {
+      title: "Multiply |n| times",
+      detail: "result *= x on each step.",
+      at: "mul",
+      nth: -1,
+    },
+    {
+      title: "Answer",
+      detail: "O(|n|), which is too slow for large n.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function myPow(x: number, n: number): number {
       if (n < 0) { //@neg
@@ -54,6 +72,28 @@ const fast = defineSolution<Input>({
   time: "O(log |n|)",
   space: "O(1)",
   idea: "Write n in binary. Square x at every step; whenever the current bit of n is 1, multiply that power of x into the result. x^13 = x^8 · x^4 · x^1.",
+  approach: [
+    {
+      title: "Binary exponent",
+      detail: "x^13 = x^8 · x^4 · x^1 because 13 = 1101₂.",
+      at: "init",
+    },
+    {
+      title: "Use set bits",
+      detail: "When the low bit of the exponent is 1, multiply the current power of x into the result.",
+      at: "bit",
+    },
+    {
+      title: "Square",
+      detail: "x, x², x⁴, x⁸, … each step.",
+      at: "square",
+    },
+    {
+      title: "Answer",
+      detail: "O(log |n|) multiplications. Invert at the end for negative n.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function myPow(x: number, n: number): number {
       // Write the exponent in binary: x^13 = x^8 * x^4 * x^1.

@@ -12,6 +12,28 @@ const simulate = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "From each starting station, drive around the circle and stop as soon as the tank would go negative.",
+  approach: [
+    {
+      title: "Try each start",
+      detail: "Drive around the full circle.",
+      at: "start",
+    },
+    {
+      title: "Track the tank",
+      detail: "Add gas[i] − cost[i] at each station.",
+      at: "drive",
+    },
+    {
+      title: "Fail when negative",
+      detail: "Ran out before the next station.",
+      at: "fail",
+    },
+    {
+      title: "First full loop",
+      detail: "O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canCompleteCircuit(gas: number[], cost: number[]): number {
       const n = gas.length;
@@ -64,6 +86,28 @@ const greedy = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "If total gas < total cost, no start works. Otherwise, whenever the running tank goes negative at i, no start in [start, i] can work either, so restart at i + 1.",
+  approach: [
+    {
+      title: "Running totals",
+      detail: "total tells whether any solution exists. tank measures the trip from the current candidate start.",
+      at: "init",
+    },
+    {
+      title: "Accumulate",
+      detail: "Add each station's net gain.",
+      at: "add",
+    },
+    {
+      title: "Reset on empty",
+      detail: "If the tank drops below 0 at i, no start between the candidate and i can work: each of them arrives at i with no more gas. Try i + 1.",
+      at: "reset",
+    },
+    {
+      title: "Answer",
+      detail: "If total ≥ 0, the last candidate works. O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canCompleteCircuit(gas: number[], cost: number[]): number {
       let total = 0; // gas left after the whole loop //@init

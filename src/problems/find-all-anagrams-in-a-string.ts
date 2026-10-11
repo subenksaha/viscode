@@ -12,6 +12,23 @@ const sortEach = defineSolution<Input>({
   time: "O(n · m log m)",
   space: "O(m)",
   idea: "Sort p once. For every window of length |p| in s, sort it and compare with sorted p.",
+  approach: [
+    {
+      title: "Sort p once",
+      detail: "Anagrams have identical sorted letters.",
+      at: "key",
+    },
+    {
+      title: "Sort every window",
+      detail: "Slide a window of length |p| and sort it.",
+      at: "window",
+    },
+    {
+      title: "Compare",
+      detail: "Equal means an anagram starts here. Sorting each window costs O(m log m).",
+      at: "match",
+    },
+  ],
   code: code(`
     function findAnagrams(s: string, p: string): number[] {
       const sortLetters = (word: string) => word.split("").sort().join("");
@@ -49,6 +66,28 @@ const sliding = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Keep the letter counts of p minus the counts of the current window, and how many letters are still unbalanced. Sliding adds one letter on the right and removes one on the left; when nothing is unbalanced, the window is an anagram.",
+  approach: [
+    {
+      title: "need = p counts − window counts",
+      detail: "unbalanced counts letters whose need isn't zero. When it reaches 0, the window is an anagram.",
+      at: "init",
+    },
+    {
+      title: "Add on the right",
+      detail: "The entering letter decreases its need.",
+      at: "add",
+    },
+    {
+      title: "Drop on the left",
+      detail: "Once the window exceeds |p|, the leaving letter increases its need. Only the two changed letters can flip balance, so updates are O(1).",
+      at: "drop",
+    },
+    {
+      title: "Record matches",
+      detail: "unbalanced === 0 gives an anagram starting at right − |p| + 1. O(n) overall.",
+      at: "match",
+    },
+  ],
   code: code(`
     function findAnagrams(s: string, p: string): number[] {
       // need[letter] = (count in p) - (count in window). All zero means anagram.

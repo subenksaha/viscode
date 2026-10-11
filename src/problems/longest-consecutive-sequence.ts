@@ -11,6 +11,24 @@ const bruteForce = defineSolution<Input>({
   time: "O(n³)",
   space: "O(1)",
   idea: "From every number, keep checking whether the next integer exists by scanning the array.",
+  approach: [
+    {
+      title: "Start a run at each number",
+      detail: "Pretend every number begins a run.",
+      at: "start",
+    },
+    {
+      title: "Extend by scanning",
+      detail: "Look for current + 1 with a linear scan, again and again. Each lookup is O(n), which is why this is slow.",
+      at: "extend",
+    },
+    {
+      title: "Keep the best length",
+      detail: "Compare each run length with best.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function longestConsecutive(nums: number[]): number {
       let best = 0; //@init
@@ -53,6 +71,29 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "Sort, then walk once: a +1 step extends the run, an equal value is skipped, and anything else starts a new run.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Consecutive numbers become neighbors.",
+      at: "sort",
+    },
+    {
+      title: "Extend on +1",
+      detail: "If nums[i] is exactly nums[i−1] + 1, the current run grows.",
+      at: "extend",
+    },
+    {
+      title: "Reset on a gap",
+      detail: "Anything bigger than +1 starts a new run. Duplicates are skipped without breaking the run.",
+      at: "reset",
+    },
+    {
+      title: "Track the best",
+      detail: "O(n log n), dominated by the sort.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function longestConsecutive(nums: number[]): number {
       if (nums.length === 0) return 0;
@@ -110,6 +151,29 @@ const hashSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Put everything in a set. Only start counting at x when x − 1 is absent (x starts a run), then walk x+1, x+2, … Each number is visited a constant number of times.",
+  approach: [
+    {
+      title: "Build a set",
+      detail: "O(1) membership tests, with duplicates removed.",
+      at: "build",
+    },
+    {
+      title: "Only start at the beginning of a run",
+      detail: "If num − 1 exists, num is in the middle of some run, so skip it. This keeps the work linear.",
+      at: "skip",
+    },
+    {
+      title: "Count upward from run starts",
+      detail: "From a true start, walk num+1, num+2, … while they exist.",
+      at: "extend",
+    },
+    {
+      title: "Best length",
+      detail: "Each number is part of exactly one upward walk, so the total is O(n).",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function longestConsecutive(nums: number[]): number {
       const numSet = new Set(nums); //@build

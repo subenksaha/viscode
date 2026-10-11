@@ -26,6 +26,28 @@ const simulate = defineSolution<Input>({
   time: "O((m·n)²)",
   space: "O(m·n)",
   idea: "Each minute, scan the whole grid for fresh oranges next to a rotten one and rot them together. Stop when a minute changes nothing.",
+  approach: [
+    {
+      title: "One minute at a time",
+      detail: "Each minute, find every fresh orange next to a rotten one.",
+      at: "minute",
+    },
+    {
+      title: "Collect first, then rot",
+      detail: "Collect all of them before changing anything, so newly rotten oranges don't spread within the same minute.",
+      at: "scan",
+    },
+    {
+      title: "Rot together",
+      detail: "Apply all changes at once.",
+      at: "rot",
+    },
+    {
+      title: "Stop when nothing changes",
+      detail: "If fresh oranges remain at that point, they can't be reached: −1. Rescanning the grid every minute makes this O((m·n)²).",
+      at: "stop",
+    },
+  ],
   code: code(`
     function orangesRotting(grid: number[][]): number {
       const rows = grid.length;
@@ -78,6 +100,33 @@ const bfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Queue every rotten orange at minute 0 and BFS level by level. Each level is one minute. Count fresh oranges so you know if any are left unreachable.",
+  approach: [
+    {
+      title: "Seed all rotten oranges",
+      detail: "Count the fresh ones too, to detect unreachable oranges later.",
+      at: "seed",
+    },
+    {
+      title: "One BFS level per minute",
+      detail: "Every orange rotten at minute t spreads to its neighbors at minute t + 1.",
+      at: "level",
+    },
+    {
+      title: "Rot fresh neighbors",
+      detail: "Mark them rotten, decrement fresh, and queue them for the next level.",
+      at: "rot",
+    },
+    {
+      title: "Advance the clock",
+      detail: "The next level is the newly rotten set.",
+      at: "tick",
+    },
+    {
+      title: "Answer",
+      detail: "If fresh > 0, some orange was never reached: −1. Otherwise return the minutes. O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function orangesRotting(grid: number[][]): number {
       const rows = grid.length;

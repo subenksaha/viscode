@@ -11,6 +11,25 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Fix each start, extend the end one step at a time, and keep a running sum.",
+  approach: [
+    {
+      title: "Fix a start index",
+      detail: "Every subarray has a start i. Try them all.",
+      at: "i",
+    },
+    {
+      title: "Extend the end with a running sum",
+      detail: "Rather than re-summing each subarray, add nums[j] to the running sum as j moves right. Every subarray starting at i gets its sum in O(1).",
+      at: "sum",
+      nth: 3,
+    },
+    {
+      title: "Track the best sum",
+      detail: "Compare each running sum with best. All n(n+1)/2 subarrays are covered, so the result is exact.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxSubArray(nums: number[]): number {
       let best = -Infinity; //@init
@@ -52,6 +71,29 @@ const kadane = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "At each index, either extend the current subarray or start fresh, whichever is larger. A negative running sum only hurts, so drop it.",
+  approach: [
+    {
+      title: "Seed with the first element",
+      detail: "current is the best sum of a subarray ending exactly at i. best is the best seen anywhere.",
+      at: "init",
+    },
+    {
+      title: "Extend or restart",
+      detail: "At each i, the best subarray ending at i either extends the one ending at i−1 or starts fresh at nums[i]. If current was negative, restarting wins.",
+      at: "cur",
+    },
+    {
+      title: "Record the best",
+      detail: "After computing current, update best. Green cells mark the winning subarray so far.",
+      at: "best",
+      nth: 3,
+    },
+    {
+      title: "Finish in one pass",
+      detail: "Each element is handled once with two variables, so O(n) time and O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxSubArray(nums: number[]): number {
       let current = nums[0]; // best sum of a subarray ending at i //@init
@@ -99,6 +141,28 @@ const divideConquer = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(log n)",
   idea: "The best subarray lies in the left half, in the right half, or crosses the middle. Solve both halves recursively and compute the best crossing sum directly.",
+  approach: [
+    {
+      title: "Split at the middle",
+      detail: "Any subarray lies wholly in the left half, wholly in the right half, or crosses mid.",
+      at: "split",
+    },
+    {
+      title: "Best crossing sum: left part",
+      detail: "A crossing subarray must include nums[mid]. Walk left from mid and keep the largest suffix sum ending at mid.",
+      at: "left",
+    },
+    {
+      title: "Best crossing sum: right part",
+      detail: "Similarly, walk right from mid+1 and keep the largest prefix sum. Adding the two gives the best crossing subarray in linear time.",
+      at: "right",
+    },
+    {
+      title: "Recurse and take the max",
+      detail: "Single elements are base cases. Each level returns max(left half, right half, crossing). There are log n levels with O(n) work each, so O(n log n).",
+      at: "combine",
+    },
+  ],
   code: code(`
     function maxSubArray(nums: number[]): number {
       // Best subarray sum inside nums[start..end].

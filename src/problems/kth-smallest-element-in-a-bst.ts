@@ -14,6 +14,22 @@ const collectAll = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "In-order traversal of a BST lists values in sorted order. Collect them all and take index k − 1.",
+  approach: [
+    {
+      title: "In-order visits in sorted order",
+      detail: "Collect every value with left subtree, node, right subtree.",
+      at: "visit",
+    },
+    {
+      title: "Index k − 1",
+      detail: "The sorted array's k−1 entry is the answer. It visits the whole tree even when k is small.",
+      at: "ret",
+    },
+    {
+      title: "Cost",
+      detail: "O(n) time and O(n) space for the array.",
+    },
+  ],
   code: code(`
     function kthSmallest(root: TreeNode | null, k: number): number {
       const sortedValues: number[] = [];
@@ -51,6 +67,28 @@ const iterative = defineSolution<Input>({
   time: "O(h + k)",
   space: "O(h)",
   idea: "Walk in-order with an explicit stack and stop as soon as the k-th node is popped. There is no need to visit the rest of the tree.",
+  approach: [
+    {
+      title: "Push the left spine",
+      detail: "The smallest value is the leftmost node.",
+      at: "left",
+    },
+    {
+      title: "Pop in sorted order",
+      detail: "Each pop is the next smallest value. Count the pops.",
+      at: "pop",
+    },
+    {
+      title: "Go right",
+      detail: "After visiting a node, continue in its right subtree.",
+      at: "right",
+    },
+    {
+      title: "Stop at the k-th pop",
+      detail: "No need to finish the traversal. O(h + k) time.",
+      at: "found",
+    },
+  ],
   code: code(`
     function kthSmallest(root: TreeNode | null, k: number): number {
       const stack: TreeNode[] = [];

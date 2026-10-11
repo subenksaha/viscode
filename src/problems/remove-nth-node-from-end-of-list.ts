@@ -13,6 +13,30 @@ const twoPass = defineSolution<Input>({
   time: "O(L)",
   space: "O(1)",
   idea: "Count the length L, then walk L − n steps from a dummy head to the node just before the target and unlink it.",
+  approach: [
+    {
+      title: "Count the length",
+      detail: "The nth node from the end is node L − n + 1 from the front.",
+      at: "count",
+      nth: -1,
+    },
+    {
+      title: "Dummy head",
+      detail: "Starting from a dummy makes removing the real head no different from any other node.",
+      at: "init",
+    },
+    {
+      title: "Walk to the predecessor",
+      detail: "Take L − n steps so prev sits just before the target.",
+      at: "walk",
+      nth: -1,
+    },
+    {
+      title: "Unlink",
+      detail: "prev.next = prev.next.next skips the target node.",
+      at: "unlink",
+    },
+  ],
   code: code(`
     function removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {
       let length = 0;
@@ -55,6 +79,30 @@ const onePass = defineSolution<Input>({
   time: "O(L)",
   space: "O(1)",
   idea: "Move fast n + 1 steps ahead of slow (both starting at a dummy). Then move both until fast falls off the end; slow is right before the target.",
+  approach: [
+    {
+      title: "Both start at the dummy",
+      detail: "slow will end up before the target. fast keeps a fixed lead.",
+      at: "init",
+    },
+    {
+      title: "Open a gap of n + 1",
+      detail: "Move fast n + 1 steps ahead. The gap stays constant from now on.",
+      at: "gap",
+      nth: -1,
+    },
+    {
+      title: "Move together",
+      detail: "Advance both until fast falls off the end. slow is then exactly n + 1 nodes behind the end, just before the target.",
+      at: "move",
+      nth: -1,
+    },
+    {
+      title: "Unlink in one pass",
+      detail: "Skip the target with slow.next = slow.next.next.",
+      at: "unlink",
+    },
+  ],
   code: code(`
     function removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {
       const dummyHead = new ListNode(0, head); // makes removing the first node easy

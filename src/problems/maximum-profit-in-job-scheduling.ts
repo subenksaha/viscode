@@ -19,6 +19,29 @@ const quadratic = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Sort jobs by end time. dp[i] is the best profit using the first i jobs: either skip job i, or take it plus the best dp over jobs that end by its start (found by scanning back).",
+  approach: [
+    {
+      title: "Sort by end time",
+      detail: "After sorting, any compatible earlier job comes before the current one.",
+      at: "sort",
+    },
+    {
+      title: "Find compatible jobs",
+      detail: "Scan back to the last job that ends by this job's start.",
+      at: "scan",
+    },
+    {
+      title: "Skip or take",
+      detail: "dp[i] = max(dp[i−1], dp[compatible] + profit). Either skip this job, or add it to the best schedule of compatible jobs.",
+      at: "choose",
+      nth: 3,
+    },
+    {
+      title: "Answer",
+      detail: "The linear scan makes this O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function jobScheduling(startTime: number[], endTime: number[], profit: number[]): number {
       const jobs = startTime.map((start, i) => ({ start, end: endTime[i], profit: profit[i] }));
@@ -68,6 +91,30 @@ const binarySearch = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Same recurrence, but since jobs are sorted by end time, binary search for the last job ending at or before the current start.",
+  approach: [
+    {
+      title: "Sort by end time",
+      detail: "End times become non-decreasing, so they can be binary searched.",
+      at: "sort",
+    },
+    {
+      title: "Binary search the compatible prefix",
+      detail: "Find how many earlier jobs end at or before this job's start.",
+      at: "search",
+      nth: 3,
+    },
+    {
+      title: "Skip or take",
+      detail: "Same recurrence as before.",
+      at: "choose",
+      nth: 3,
+    },
+    {
+      title: "Answer",
+      detail: "O(n log n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function jobScheduling(startTime: number[], endTime: number[], profit: number[]): number {
       const jobs = startTime.map((start, i) => ({ start, end: endTime[i], profit: profit[i] }));

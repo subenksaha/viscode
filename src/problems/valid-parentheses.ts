@@ -11,6 +11,28 @@ const stack = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Push each opening bracket. A closing bracket must match the top of the stack. At the end, the stack must be empty.",
+  approach: [
+    {
+      title: "Openers wait on a stack",
+      detail: "The most recent unclosed bracket must be the first one closed: last in, first out.",
+      at: "init",
+    },
+    {
+      title: "Push openers",
+      detail: "Every '(' '[' '{' goes onto the stack.",
+      at: "push",
+    },
+    {
+      title: "Closers must match the top",
+      detail: "Pop and compare. A mismatch or an empty stack means the string is invalid.",
+      at: "pop",
+    },
+    {
+      title: "Nothing left open",
+      detail: "The string is valid only if the stack ends empty.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isValid(s: string): boolean {
       const openerFor: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
@@ -60,6 +82,23 @@ const replace = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "A valid string always contains an adjacent pair like (), [] or {}. Delete such pairs until nothing changes. Valid strings shrink to empty.",
+  approach: [
+    {
+      title: "Start",
+      detail: "A valid string always has an innermost pair right next to each other: (), [] or {}.",
+      at: "init",
+    },
+    {
+      title: "Strip adjacent pairs",
+      detail: "Delete them. This exposes the next layer of pairs.",
+      at: "strip",
+    },
+    {
+      title: "Repeat until stable",
+      detail: "If the string shrinks to empty, every bracket was matched. Each pass costs O(n), and there can be up to n/2 passes.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isValid(s: string): boolean {
       // Keep deleting adjacent pairs like "()" until nothing changes.

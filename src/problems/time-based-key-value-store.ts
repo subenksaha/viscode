@@ -47,6 +47,23 @@ const linear = defineSolution<Input>({
   time: "set O(1), get O(n)",
   space: "O(n)",
   idea: "Store each key's (timestamp, value) pairs in arrival order. For get, walk backwards until a timestamp ≤ the query.",
+  approach: [
+    {
+      title: "Append to history",
+      detail: "Timestamps arrive in increasing order, so each key's list stays sorted with no extra work.",
+      at: "set",
+    },
+    {
+      title: "Scan backwards",
+      detail: "Start at the newest entry and step back past entries that are too late.",
+      at: "scan",
+    },
+    {
+      title: "First timestamp ≤ query",
+      detail: "That is the latest value at or before the query time. Worst case O(n) per get.",
+      at: "found",
+    },
+  ],
   code: code(`
     class TimeMap {
       store = new Map<string, [number, string][]>(); //@ctor
@@ -85,6 +102,28 @@ const binary = defineSolution<Input>({
   time: "set O(1), get O(log n)",
   space: "O(n)",
   idea: "Each key's history is already sorted by timestamp. Binary search for the last timestamp ≤ the query.",
+  approach: [
+    {
+      title: "Append to history",
+      detail: "The list is sorted by timestamp automatically.",
+      at: "set",
+    },
+    {
+      title: "Binary search for the floor",
+      detail: "We want the last entry with time ≤ the query.",
+      at: "init",
+    },
+    {
+      title: "Too late: go left",
+      detail: "An entry after the query time can't be the answer.",
+      at: "too-late",
+    },
+    {
+      title: "Candidate: record and go right",
+      detail: "Record it, then look for a later one that still qualifies. O(log n) per get.",
+      at: "ok",
+    },
+  ],
   code: code(`
     class TimeMap {
       store = new Map<string, [number, string][]>(); //@ctor

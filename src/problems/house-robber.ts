@@ -11,6 +11,28 @@ const memo = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "rob(i) = max(rob(i+1), nums[i] + rob(i+2)): skip house i, or take it and skip its neighbor.",
+  approach: [
+    {
+      title: "Skip or rob",
+      detail: "best(i) is the most money from houses i onward. Either skip house i (best(i+1)) or rob it and skip its neighbor (nums[i] + best(i+2)).",
+      at: "choose",
+    },
+    {
+      title: "Past the end is 0",
+      detail: "No houses left means no money.",
+      at: "base",
+    },
+    {
+      title: "Memoize",
+      detail: "Store best(i) once computed.",
+      at: "store",
+    },
+    {
+      title: "Overlapping subproblems",
+      detail: "Both branches meet at the same indices, and the cache makes the whole run O(n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function rob(nums: number[]): number {
       const memo = new Map<number, number>();
@@ -60,6 +82,23 @@ const table = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "dp[i] = best loot from the first i houses = max(dp[i−1], dp[i−2] + nums[i−1]).",
+  approach: [
+    {
+      title: "Seed the table",
+      detail: "dp[0] = 0 (no houses) and dp[1] = nums[0] (only the first house).",
+      at: "init",
+    },
+    {
+      title: "Choose per house",
+      detail: "dp[i] = max(dp[i−1], dp[i−2] + nums[i−1]): skip this house, or rob it on top of the best total from two houses back.",
+      at: "fill",
+    },
+    {
+      title: "Answer",
+      detail: "dp[n] is the best total for the whole street.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function rob(nums: number[]): number {
       // dp[i] = most money from the first i houses
@@ -97,6 +136,25 @@ const twoVars = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Keep only the best totals for i−1 houses (bestOneBack) and i−2 houses (bestTwoBack).",
+  approach: [
+    {
+      title: "Two running totals",
+      detail: "bestOneBack is the best up to the previous house, bestTwoBack the best up to the one before that.",
+      at: "init",
+    },
+    {
+      title: "Decide for this house",
+      detail: "current = max(bestOneBack, bestTwoBack + money).",
+      at: "cur",
+      nth: 3,
+    },
+    {
+      title: "Slide the window",
+      detail: "Shift both totals forward one house. O(n) time, O(1) space.",
+      at: "shift",
+      nth: 3,
+    },
+  ],
   code: code(`
     function rob(nums: number[]): number {
       let bestTwoBack = 0; // best total up to two houses ago //@init

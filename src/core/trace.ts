@@ -1,4 +1,4 @@
-import type { CompiledCode, Panel, ProblemModule, Solution, Step } from "./types";
+import type { ApproachStep, CompiledCode, Panel, ProblemModule, Solution, Step } from "./types";
 import { Args } from "./input";
 
 /** Max steps recorded per run; brute-force runs on big inputs get cut off. */
@@ -42,7 +42,7 @@ export class Tracer {
       this.truncated = true;
       return;
     }
-    this.steps.push({ line, note, panels: typeof panels === "function" ? panels() : panels });
+    this.steps.push({ label, line, note, panels: typeof panels === "function" ? panels() : panels });
   }
 }
 
@@ -70,4 +70,12 @@ export function runSolution<I>(
   const t = new Tracer(solution.code.lines);
   const result = solution.run(input, t);
   return { steps: t.steps, result, truncated: t.truncated };
+}
+
+/** Index of the trace step an approach stage points at, or -1 if the run never reached it. */
+export function findKeyStep(steps: Step[], { at, nth = 1 }: ApproachStep): number {
+  if (!at) return -1;
+  const hits: number[] = [];
+  steps.forEach((s, i) => s.label === at && hits.push(i));
+  return hits.at(nth > 0 ? nth - 1 : nth) ?? -1;
 }

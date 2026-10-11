@@ -15,6 +15,30 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Process the queue one level at a time: its size at the start of a round is exactly the number of nodes on that level.",
+  approach: [
+    {
+      title: "Queue the root",
+      detail: "BFS visits nodes in level order.",
+      at: "init",
+    },
+    {
+      title: "Freeze the level size",
+      detail: "The queue length at the start of a round is exactly the number of nodes on this level.",
+      at: "level",
+      nth: 2,
+    },
+    {
+      title: "Drain that many nodes",
+      detail: "Record each value and enqueue its children for the next round.",
+      at: "node",
+    },
+    {
+      title: "Close the level",
+      detail: "Push the collected values as one row.",
+      at: "push",
+      nth: 2,
+    },
+  ],
   code: code(`
     function levelOrder(root: TreeNode | null): number[][] {
       const result: number[][] = [];
@@ -70,6 +94,24 @@ const dfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Pre-order DFS carrying the depth. Append each value to result[depth], creating that level the first time it is reached.",
+  approach: [
+    {
+      title: "Carry the depth",
+      detail: "Pre-order DFS with depth. The first time a depth is reached, create its row.",
+      at: "new",
+    },
+    {
+      title: "Append to the row",
+      detail: "Visiting left before right keeps each row in left-to-right order.",
+      at: "add",
+      nth: 3,
+    },
+    {
+      title: "Result",
+      detail: "Same rows as BFS, using O(h) recursion instead of a queue.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function levelOrder(root: TreeNode | null): number[][] {
       const result: number[][] = [];

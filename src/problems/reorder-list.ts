@@ -12,6 +12,28 @@ const array = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Copy the nodes into an array, then relink them by alternating from the front and the back.",
+  approach: [
+    {
+      title: "Index the nodes",
+      detail: "An array gives O(1) access to the front and back nodes.",
+      at: "collect",
+    },
+    {
+      title: "Link front to back",
+      detail: "nodes[front] points to nodes[back].",
+      at: "front",
+    },
+    {
+      title: "Link back to the next front",
+      detail: "Then nodes[back] points to nodes[front + 1], and both indices move inward.",
+      at: "back",
+    },
+    {
+      title: "Terminate",
+      detail: "The node where the indices meet becomes the tail, so clear its next.",
+      at: "end",
+    },
+  ],
   code: code(`
     function reorderList(head: ListNode | null): void {
       const nodes: ListNode[] = [];
@@ -57,6 +79,30 @@ const inPlace = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Find the middle with slow/fast pointers, reverse the second half, then weave the two halves together.",
+  approach: [
+    {
+      title: "Find the middle",
+      detail: "slow moves 1 step and fast 2. When fast reaches the end, slow is at the middle.",
+      at: "mid",
+      nth: -1,
+    },
+    {
+      title: "Cut",
+      detail: "Detach the second half so the first half ends at the middle.",
+      at: "split",
+    },
+    {
+      title: "Reverse the second half",
+      detail: "Standard in-place reversal, so the old tail comes first.",
+      at: "reverse",
+      nth: -1,
+    },
+    {
+      title: "Weave",
+      detail: "Alternate nodes: first, last, second, second-to-last… All in place with O(1) extra space.",
+      at: "weave",
+    },
+  ],
   code: code(`
     function reorderList(head: ListNode | null): void {
       if (head === null) return;

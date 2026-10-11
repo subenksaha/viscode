@@ -11,6 +11,24 @@ const recursion = defineSolution<Input>({
   time: "O(2ⁿ)",
   space: "O(n)",
   idea: "The last move was 1 or 2 steps, so ways(n) = ways(n−1) + ways(n−2). Without caching, the same subproblems are solved again and again.",
+  approach: [
+    {
+      title: "Think about the last move",
+      detail: "To stand on step n, your final move was a 1-step from n−1 or a 2-step from n−2. So ways(n) = ways(n−1) + ways(n−2).",
+      at: "recurse",
+    },
+    {
+      title: "Base cases",
+      detail: "ways(1) = 1 and ways(2) = 2 end the recursion.",
+      at: "base",
+    },
+    {
+      title: "Watch the repeated work",
+      detail: "f(3) is computed from both f(5) and f(4), and lower values even more often. The call tree doubles at each level, so this takes O(2ⁿ) time.",
+      at: "recurse",
+      nth: 4,
+    },
+  ],
   code: code(`
     function climbStairs(n: number): number {
       if (n <= 2) return n; //@base
@@ -48,6 +66,23 @@ const memo = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Same recursion, but cache each answer so every n is computed once.",
+  approach: [
+    {
+      title: "Same recurrence",
+      detail: "ways(n) = ways(n−1) + ways(n−2), computed top-down.",
+      at: "recurse",
+    },
+    {
+      title: "Cache each result",
+      detail: "After solving ways(k), store it so it never has to be recomputed.",
+      at: "store",
+    },
+    {
+      title: "Reuse cached answers",
+      detail: "The second request for f(3) returns instantly. Each n is solved once, so the time drops from O(2ⁿ) to O(n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function climbStairs(n: number, memo = new Map<number, number>()): number {
       if (n <= 2) return n; //@base
@@ -92,6 +127,23 @@ const bottomUp = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Fill dp[i] = dp[i−1] + dp[i−2] from the bottom up.",
+  approach: [
+    {
+      title: "Seed the table",
+      detail: "dp[0] = 1 (stand still) and dp[1] = 1 (one single step) are the starting values.",
+      at: "init",
+    },
+    {
+      title: "Fill in increasing order",
+      detail: "dp[i] = dp[i−1] + dp[i−2]. Both terms are already filled, so no recursion is needed.",
+      at: "fill",
+    },
+    {
+      title: "Read the answer",
+      detail: "dp[n] is the number of ways to reach the top.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function climbStairs(n: number): number {
       // dp[i] = number of ways to reach step i
@@ -127,6 +179,23 @@ const twoVars = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Only the previous two values matter, so keep just those.",
+  approach: [
+    {
+      title: "Keep just two values",
+      detail: "dp[i] only depends on the previous two entries, so two variables are enough.",
+      at: "init",
+    },
+    {
+      title: "Slide forward",
+      detail: "current = oneStepBack + twoStepsBack. Then shift: the old oneStepBack becomes twoStepsBack, and current becomes oneStepBack.",
+      at: "shift",
+    },
+    {
+      title: "Answer in O(1) space",
+      detail: "After the loop, oneStepBack holds ways(n). These are the Fibonacci numbers.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function climbStairs(n: number): number {
       let twoStepsBack = 1; // ways to reach step i - 2 //@init

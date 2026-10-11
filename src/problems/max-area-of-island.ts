@@ -26,6 +26,24 @@ const dfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Scan for land. From each unvisited land cell, DFS returns 1 plus the areas of its four neighbors, sinking cells so they are counted once. Track the largest result.",
+  approach: [
+    {
+      title: "Find land",
+      detail: "Each unvisited 1 starts a new island.",
+      at: "island",
+    },
+    {
+      title: "Sink and count",
+      detail: "DFS returns 1 plus the areas of its four neighbors. Sinking a cell to 0 stops it being counted twice.",
+      at: "sink",
+      nth: 2,
+    },
+    {
+      title: "Keep the best",
+      detail: "The largest area found.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxAreaOfIsland(grid: number[][]): number {
       const rows = grid.length;
@@ -88,6 +106,23 @@ const bfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(min(m, n))",
   idea: "Same scan, but measure each island with a queue: count cells as they are dequeued and enqueue unvisited land neighbors.",
+  approach: [
+    {
+      title: "New island",
+      detail: "Mark the cell and queue it.",
+      at: "start",
+    },
+    {
+      title: "Count on dequeue",
+      detail: "Each dequeued cell adds 1 to the area. Mark neighbors when enqueuing.",
+      at: "pop",
+    },
+    {
+      title: "Keep the best",
+      detail: "Compare each island's area with best.",
+      at: "best",
+    },
+  ],
   code: code(`
     function maxAreaOfIsland(grid: number[][]): number {
       const rows = grid.length;

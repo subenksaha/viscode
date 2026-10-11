@@ -26,6 +26,23 @@ const borderDfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "An 'O' survives exactly when it connects to the border. DFS from every border 'O' and mark it safe; then flip every unmarked 'O' to 'X' and restore the safe ones.",
+  approach: [
+    {
+      title: "Start from the border",
+      detail: "An 'O' region survives only if it touches the border.",
+      at: "border",
+    },
+    {
+      title: "Mark safe",
+      detail: "DFS through connected 'O's, marking them 'S'.",
+      at: "mark",
+    },
+    {
+      title: "Flip the rest",
+      detail: "Unmarked 'O's are surrounded, so they become 'X'. 'S' goes back to 'O'.",
+      at: "flip",
+    },
+  ],
   code: code(`
     function solve(board: string[][]): void {
       const rows = board.length;
@@ -85,6 +102,23 @@ const borderBfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Same idea with one multi-source BFS: seed the queue with every border 'O', spread through 'O' neighbors, then flip what was never reached.",
+  approach: [
+    {
+      title: "Seed all border 'O's",
+      detail: "One multi-source BFS covers every safe region.",
+      at: "seed",
+    },
+    {
+      title: "Spread",
+      detail: "Mark connected 'O' neighbors as safe.",
+      at: "pop",
+    },
+    {
+      title: "Flip",
+      detail: "Cells never reached are captured.",
+      at: "flip",
+    },
+  ],
   code: code(`
     function solve(board: string[][]): void {
       const rows = board.length;

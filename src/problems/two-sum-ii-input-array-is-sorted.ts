@@ -13,6 +13,23 @@ const binarySearch = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)",
   idea: "For each i, binary-search the part of the sorted array to its right for target − numbers[i].",
+  approach: [
+    {
+      title: "Fix the first number",
+      detail: "need = target − numbers[i].",
+      at: "i",
+    },
+    {
+      title: "Binary search to its right",
+      detail: "The array is sorted, so each search is O(log n).",
+      at: "mid",
+    },
+    {
+      title: "Found",
+      detail: "Return 1-indexed positions. O(n log n) total.",
+      at: "found",
+    },
+  ],
   code: code(`
     function twoSum(numbers: number[], target: number): number[] {
       for (let i = 0; i < numbers.length; i++) { //@i
@@ -66,6 +83,28 @@ const twoPointers = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Start at both ends. Since the array is sorted, a sum that is too small can only grow by moving l right, and a sum that is too big can only shrink by moving r left.",
+  approach: [
+    {
+      title: "Both ends",
+      detail: "left at the smallest value, right at the largest.",
+      at: "init",
+    },
+    {
+      title: "Too big: move right in",
+      detail: "numbers[right] paired with the smallest remaining value already overshoots, so it can't be in any answer.",
+      at: "right",
+    },
+    {
+      title: "Too small: move left forward",
+      detail: "Symmetric: numbers[left] can't reach the target even with the largest value.",
+      at: "left",
+    },
+    {
+      title: "Hit",
+      detail: "O(n), O(1) space.",
+      at: "found",
+    },
+  ],
   code: code(`
     function twoSum(numbers: number[], target: number): number[] {
       let left = 0; //@init

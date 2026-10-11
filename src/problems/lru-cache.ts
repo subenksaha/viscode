@@ -17,6 +17,33 @@ const mapOrder = defineSolution<Input>({
   time: "O(1) per op",
   space: "O(capacity)",
   idea: "A JS Map iterates keys in insertion order. Deleting and re-inserting a key moves it to the newest end, so the first key is always the least recently used.",
+  approach: [
+    {
+      title: "A Map keeps insertion order",
+      detail: "JavaScript Maps iterate keys oldest-first, so the first key is always the least recently used.",
+      at: "ctor",
+    },
+    {
+      title: "put inserts as newest",
+      detail: "Delete then set, so even an update moves the key to the newest end.",
+      at: "put",
+    },
+    {
+      title: "get refreshes recency",
+      detail: "On a hit, delete and re-insert the key to make it the most recent.",
+      at: "touch",
+    },
+    {
+      title: "Evict the oldest when full",
+      detail: "When over capacity, keys().next() gives the least recently used key. Delete it.",
+      at: "evict",
+    },
+    {
+      title: "Miss",
+      detail: "An absent key returns −1. Every operation is O(1).",
+      at: "miss",
+    },
+  ],
   code: code(`
     class LRUCache {
       // A Map remembers insertion order: the first key is the least recently used.
@@ -101,6 +128,33 @@ const hashDll = defineSolution<Input>({
   time: "O(1) per op",
   space: "O(capacity)",
   idea: "A doubly linked list keeps usage order (head = most recent, tail = least recent) and a hash map finds any node in O(1). Touching a node unlinks it and reinserts it after head.",
+  approach: [
+    {
+      title: "Sentinel head and tail",
+      detail: "Dummy nodes remove edge cases. Most recent sits after head, least recent before tail.",
+      at: "ctor",
+    },
+    {
+      title: "Insert at the front",
+      detail: "The map points from the key to its node, and the node goes right after head.",
+      at: "put",
+    },
+    {
+      title: "Touch moves a node to the front",
+      detail: "Unlink in O(1) using prev/next, then reinsert after head.",
+      at: "touch",
+    },
+    {
+      title: "Evict from the back",
+      detail: "When over capacity, the node before tail is least recent. Unlink it and delete its key from the map.",
+      at: "evict",
+    },
+    {
+      title: "Miss",
+      detail: "A key not in the map returns −1.",
+      at: "miss",
+    },
+  ],
   code: code(`
     class Node {
       prev: Node | null = null;

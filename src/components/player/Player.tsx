@@ -3,12 +3,13 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { getProblem } from "@/catalog/problems";
 import { fmt } from "@/core/panels";
-import { runSolution } from "@/core/trace";
+import { findKeyStep, runSolution } from "@/core/trace";
 import type { AnyProblemModule } from "@/core/types";
 import type { CodeToken } from "@/lib/highlight";
 import { cn } from "@/lib/cn";
 import { usePlayer } from "@/store/player";
 import { SceneView } from "../scene/SceneView";
+import { Approach } from "./Approach";
 import { CodePanel } from "./CodePanel";
 import { Controls } from "./Controls";
 
@@ -40,6 +41,11 @@ export function Player({ slug, codes }: { slug: string; codes: Record<string, Co
     }
   }, [problem, solution, rawInput]);
 
+  const keySteps = useMemo(
+    () => solution.approach.map((stage) => findKeyStep(run.steps, stage)),
+    [solution, run.steps],
+  );
+
   const { index, playing, speed, reset, next, prev, toggle } = usePlayer();
 
   useEffect(() => reset(run.steps.length), [run.steps, reset]);
@@ -65,6 +71,7 @@ export function Player({ slug, codes }: { slug: string; codes: Record<string, Co
   }, [toggle, next, prev]);
 
   const step = run.steps[Math.min(index, run.steps.length - 1)];
+  const stage = keySteps.indexOf(index);
   const atEnd = run.steps.length > 0 && index >= run.steps.length - 1;
 
   return (
@@ -92,7 +99,7 @@ export function Player({ slug, codes }: { slug: string; codes: Record<string, Co
       </div>
       <p className="text-sm text-fg/60">{solution.idea}</p>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <div id="player" className="grid scroll-mt-4 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         <div className="flex min-w-0 flex-col gap-3">
           <form
             className="flex gap-2"
@@ -133,9 +140,14 @@ export function Player({ slug, codes }: { slug: string; codes: Record<string, Co
               step && <SceneView panels={step.panels} />
             )}
           </div>
-          <p className="min-h-12 rounded-lg border border-fg/10 bg-fg/[0.02] px-4 py-3 text-sm text-fg/80">
-            {step?.note}
-          </p>
+          <div className="flex min-h-12 flex-col gap-1 rounded-lg border border-fg/10 bg-fg/[0.02] px-4 py-3 text-sm text-fg/80">
+            {stage >= 0 && (
+              <span className="text-[11px] font-medium tracking-wider text-amber-700 uppercase dark:text-amber-300">
+                Key step {stage + 1} · {solution.approach[stage].title}
+              </span>
+            )}
+            <p>{step?.note}</p>
+          </div>
           {atEnd && !run.error && (
             <p className="font-mono text-sm text-emerald-700 dark:text-emerald-300">Output: {fmt(run.result)}</p>
           )}
@@ -148,6 +160,8 @@ export function Player({ slug, codes }: { slug: string; codes: Record<string, Co
           <p className="text-xs text-fg/40">Space: play/pause · ←/→: step</p>
         </div>
       </div>
+
+      {!run.error && <Approach stages={solution.approach} steps={run.steps} keySteps={keySteps} />}
     </div>
   );
 }

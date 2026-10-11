@@ -13,6 +13,28 @@ const withArray = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Put the nodes in an array, reverse every full block of k entries in the array, then relink the nodes in the new order.",
+  approach: [
+    {
+      title: "Collect nodes",
+      detail: "An array gives random access.",
+      at: "collect",
+    },
+    {
+      title: "Reverse each full block",
+      detail: "Swap inside each block of k. A partial final block stays as it is.",
+      at: "reverse",
+    },
+    {
+      title: "Relink",
+      detail: "Point each node to the next one in the new array order.",
+      at: "relink",
+    },
+    {
+      title: "Return",
+      detail: "O(n) extra space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverseKGroup(head: ListNode | null, k: number): ListNode | null {
       const nodes: ListNode[] = [];
@@ -57,6 +79,33 @@ const inPlace = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Keep a pointer to the node before the current group. Check that k nodes remain, reverse them with the usual prev/curr loop, then splice the reversed group back between its neighbours.",
+  approach: [
+    {
+      title: "Dummy before the first group",
+      detail: "before is the node preceding the current group.",
+      at: "init",
+    },
+    {
+      title: "Find the k-th node",
+      detail: "If fewer than k nodes remain, stop.",
+      at: "kth",
+    },
+    {
+      title: "Reverse the group",
+      detail: "The usual prev/curr loop, with prev starting at the next group so the reversed tail is already connected.",
+      at: "flip",
+    },
+    {
+      title: "Splice",
+      detail: "before.next = kth (the new start). The old first node is now the group's tail and the next group's \"before\".",
+      at: "splice",
+    },
+    {
+      title: "Leftover stays",
+      detail: "O(n) time, O(1) space.",
+      at: "short",
+    },
+  ],
   code: code(`
     function reverseKGroup(head: ListNode | null, k: number): ListNode | null {
       const dummyHead = new ListNode(0, head);

@@ -11,6 +11,28 @@ const minHeap = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Process meetings by start time. The heap holds the end time of each room in use. If the earliest-ending room is free by now, reuse it; otherwise open a new room.",
+  approach: [
+    {
+      title: "Sort by start",
+      detail: "Assign rooms in the order meetings begin.",
+      at: "sort",
+    },
+    {
+      title: "Free the earliest room if possible",
+      detail: "The heap top is the room that frees up soonest. If it ends by this meeting's start, take it over.",
+      at: "reuse",
+    },
+    {
+      title: "Occupy a room",
+      detail: "Push this meeting's end time. The heap now holds one entry per room in use.",
+      at: "push",
+    },
+    {
+      title: "Rooms needed",
+      detail: "The heap only grows when every room is busy, so its final size is the minimum number of rooms.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
@@ -54,6 +76,29 @@ const twoPointers = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Sort start and end times separately. Sweep the starts: if a meeting ends before the next one starts, that room frees up; otherwise you need another room.",
+  approach: [
+    {
+      title: "Separate the starts and ends",
+      detail: "Which meeting ends doesn't matter, only how many have ended. So sort the start times and end times independently.",
+      at: "sort",
+    },
+    {
+      title: "A start before the next end needs a room",
+      detail: "If the next start comes before the earliest unmatched end, every room is busy.",
+      at: "open",
+    },
+    {
+      title: "An end before the start frees one",
+      detail: "Otherwise a meeting has finished. Reuse its room and advance the end pointer.",
+      at: "reuse",
+    },
+    {
+      title: "Track the peak",
+      detail: "The maximum rooms in use at any moment is the answer.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
       const starts = intervals.map((meeting) => meeting[0]).sort((a, b) => a - b);
@@ -107,6 +152,24 @@ const sweep = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Turn each meeting into a +1 at its start and a −1 at its end. Sort the events (ends before starts at the same time) and track the running total.",
+  approach: [
+    {
+      title: "Make events",
+      detail: "+1 at each start and −1 at each end. Sort by time, with ends before starts at equal times, so back-to-back meetings share a room.",
+      at: "sort",
+    },
+    {
+      title: "Sweep",
+      detail: "Add each event's change to the running count of rooms in use.",
+      at: "apply",
+    },
+    {
+      title: "Peak occupancy",
+      detail: "The highest running count is the number of rooms needed.",
+      at: "best",
+      nth: -1,
+    },
+  ],
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
       // Each meeting adds +1 at its start and -1 at its end.

@@ -15,6 +15,34 @@ const linear = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "The list is sorted and disjoint. Copy intervals that end before the new one, merge every interval that overlaps it, then copy the rest.",
+  approach: [
+    {
+      title: "Hold the new interval as a window",
+      detail: "[start, end] grows as it absorbs overlapping intervals.",
+      at: "init",
+    },
+    {
+      title: "Copy everything strictly before",
+      detail: "Intervals ending before start can't overlap. Copy them as they are.",
+      at: "before",
+    },
+    {
+      title: "Absorb overlaps",
+      detail: "While an interval starts at or before end, it overlaps the window. Widen the window to cover it.",
+      at: "merge",
+      nth: -1,
+    },
+    {
+      title: "Place the merged window",
+      detail: "All overlaps are absorbed, so emit the window.",
+      at: "place",
+    },
+    {
+      title: "Copy the rest",
+      detail: "Remaining intervals start after the window ends. One pass, O(n).",
+      at: "after",
+    },
+  ],
   code: code(`
     function insert(intervals: number[][], newInterval: number[]): number[][] {
       const result: number[][] = [];
@@ -80,6 +108,28 @@ const appendMerge = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Ignore the existing order: add the new interval, sort by start and run the standard merge. Simple, but slower.",
+  approach: [
+    {
+      title: "Append and sort",
+      detail: "Throw the new interval in with the others and sort by start, ignoring the fact that the input was already sorted.",
+      at: "sort",
+    },
+    {
+      title: "Merge overlaps into the last interval",
+      detail: "If the next interval starts at or before the last end, extend that end.",
+      at: "merge",
+    },
+    {
+      title: "Otherwise start a new interval",
+      detail: "A gap means the previous merged block is complete.",
+      at: "push",
+    },
+    {
+      title: "Result",
+      detail: "Correct, but the sort makes it O(n log n) when O(n) is possible.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function insert(intervals: number[][], newInterval: number[]): number[][] {
       const sorted = [...intervals, newInterval].sort((a, b) => a[0] - b[0]); //@sort

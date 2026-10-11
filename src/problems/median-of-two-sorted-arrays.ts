@@ -13,6 +13,24 @@ const merge = defineSolution<Input>({
   time: "O(m + n)",
   space: "O(1)",
   idea: "Walk both arrays like the merge step of merge sort, but stop once the middle element(s) have been passed.",
+  approach: [
+    {
+      title: "Merge step by step",
+      detail: "Take the smaller front element, as in merge sort.",
+      at: "take",
+    },
+    {
+      title: "Stop at the middle",
+      detail: "Only ⌊total / 2⌋ + 1 elements need merging.",
+      at: "take",
+      nth: -1,
+    },
+    {
+      title: "Median",
+      detail: "Odd total: the last element taken. Even: the average of the last two. O(m + n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findMedianSortedArrays(nums1: number[], nums2: number[]): number {
       const total = nums1.length + nums2.length;
@@ -66,6 +84,33 @@ const partition = defineSolution<Input>({
   time: "O(log min(m, n))",
   space: "O(1)",
   idea: "Cut both arrays so the left halves together hold half the elements. Binary-search the cut in the shorter array until every left value is ≤ every right value; the median sits at the cut.",
+  approach: [
+    {
+      title: "Cut the shorter array",
+      detail: "The left halves of both arrays must together hold ⌈(m + n) / 2⌉ elements, so choosing the cut in the short array fixes the cut in the long one.",
+      at: "init",
+    },
+    {
+      title: "Try a cut",
+      detail: "Look at the four values around the two cuts.",
+      at: "cut",
+    },
+    {
+      title: "Move the cut",
+      detail: "If longLeft > shortRight, too few short elements are on the left, so move right. If shortLeft > longRight, move left.",
+      at: "right",
+    },
+    {
+      title: "Valid partition",
+      detail: "Every left value is ≤ every right value.",
+      at: "check",
+    },
+    {
+      title: "Median at the cut",
+      detail: "Odd total: max of the left side. Even: the average of max(left) and min(right). O(log min(m, n)).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findMedianSortedArrays(nums1: number[], nums2: number[]): number {
       // Binary search over the shorter array.

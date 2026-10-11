@@ -19,6 +19,28 @@ const memoDfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "len(r, c) = 1 + the best len of a strictly larger neighbor. Increasing paths can't loop, so each cell's answer is fixed; cache it and compute every cell once.",
+  approach: [
+    {
+      title: "Start from every cell",
+      detail: "The longest path could start anywhere.",
+      at: "start",
+    },
+    {
+      title: "Step to larger neighbors",
+      detail: "Strictly increasing paths can't loop, so the recursion always terminates.",
+      at: "step",
+    },
+    {
+      title: "Store each cell's best",
+      detail: "The answer from a cell doesn't depend on how we got there, so cache it.",
+      at: "store",
+    },
+    {
+      title: "Reuse",
+      detail: "Every cell is computed once: O(m·n).",
+      at: "hit",
+    },
+  ],
   code: code(`
     function longestIncreasingPath(matrix: number[][]): number {
       const rows = matrix.length;
@@ -97,6 +119,28 @@ const topo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Point an edge from each cell to every larger neighbor; the graph is a DAG. Repeatedly remove all cells with no smaller neighbors left (Kahn's algorithm). The number of layers peeled is the longest path.",
+  approach: [
+    {
+      title: "Count smaller neighbors",
+      detail: "Edges point from small to large. Local minima have in-degree 0.",
+      at: "indeg",
+    },
+    {
+      title: "Peel layers",
+      detail: "Remove every cell with no smaller neighbors left.",
+      at: "layer",
+    },
+    {
+      title: "Release the next layer",
+      detail: "Neighbors whose in-degree hits 0 form the next layer.",
+      at: "peel",
+    },
+    {
+      title: "Layers = longest path",
+      detail: "Each layer adds one cell to the longest chain.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function longestIncreasingPath(matrix: number[][]): number {
       const rows = matrix.length;

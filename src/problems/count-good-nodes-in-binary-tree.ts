@@ -13,6 +13,24 @@ const dfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Pass the largest value seen on the path from the root down. A node is good if it is ≥ that max; its children get max(max, node.val).",
+  approach: [
+    {
+      title: "Carry the path maximum",
+      detail: "A node is good if it is ≥ the largest value from the root down to it.",
+      at: "check",
+    },
+    {
+      title: "Pass the new max down",
+      detail: "Children get max(pathMax, node.val).",
+      at: "check",
+      nth: 3,
+    },
+    {
+      title: "Sum",
+      detail: "Total good nodes over the whole tree. O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function goodNodes(root: TreeNode | null): number {
       // Counts good nodes below node; pathMax is the largest value from the root to here.
@@ -53,6 +71,28 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Same rule, iteratively: the queue holds each node together with the max on the path to it.",
+  approach: [
+    {
+      title: "Pairs of node and max",
+      detail: "The queue stores each node with the max on its path.",
+      at: "init",
+    },
+    {
+      title: "Check",
+      detail: "Good if node.val ≥ pathMax.",
+      at: "check",
+    },
+    {
+      title: "Children inherit the updated max",
+      detail: "max(pathMax, node.val).",
+      at: "push",
+    },
+    {
+      title: "Total",
+      detail: "Same answer, iterative.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function goodNodes(root: TreeNode | null): number {
       if (root === null) return 0;

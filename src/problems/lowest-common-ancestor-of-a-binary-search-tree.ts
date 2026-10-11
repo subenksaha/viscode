@@ -20,6 +20,22 @@ const recursive = defineSolution<Input>({
   time: "O(h)",
   space: "O(h)",
   idea: "If p and q are both smaller than the node, the answer is in the left subtree; both larger, the right. Otherwise they split here, so this node is the LCA.",
+  approach: [
+    {
+      title: "Both smaller: go left",
+      detail: "If p and q are both less than the node, they are both in the left subtree, and so is their LCA.",
+      at: "left",
+    },
+    {
+      title: "Both larger: go right",
+      detail: "The mirror case moves to the right subtree.",
+    },
+    {
+      title: "Split point is the LCA",
+      detail: "When p and q fall on different sides, or one of them is the node itself, this node is the deepest common ancestor.",
+      at: "found",
+    },
+  ],
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
       if (p.val < root.val && q.val < root.val) return lowestCommonAncestor(root.left!, p, q); //@left
@@ -54,6 +70,23 @@ const iterative = defineSolution<Input>({
   time: "O(h)",
   space: "O(1)",
   idea: "The same decision as the recursive version, written as a loop, so it needs no stack space.",
+  approach: [
+    {
+      title: "Start at the root",
+      detail: "The BST ordering tells us where p and q are without searching.",
+      at: "init",
+    },
+    {
+      title: "Descend while both are on one side",
+      detail: "Move left or right while p and q agree on a direction.",
+      at: "left",
+    },
+    {
+      title: "Return at the split",
+      detail: "O(h) time with O(1) space.",
+      at: "found",
+    },
+  ],
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
       let node = root; //@init
@@ -96,6 +129,23 @@ const generic = defineSolution<Input>({
   time: "O(h)",
   space: "O(h)",
   idea: "Record the search path from the root to p and to q. The LCA is the last node the two paths share. This works for any tree if you swap the BST search for a DFS.",
+  approach: [
+    {
+      title: "Record both search paths",
+      detail: "Walk from the root to p and to q, storing every node visited.",
+      at: "paths",
+    },
+    {
+      title: "Walk the common prefix",
+      detail: "The paths match from the root until they diverge.",
+      at: "common",
+    },
+    {
+      title: "Last shared node",
+      detail: "The deepest node on both paths is the LCA. Replace the BST search with a DFS and this works for any tree.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
       // Nodes visited going from the root down to target.

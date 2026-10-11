@@ -14,6 +14,22 @@ const linear = defineSolution<Input>({
   time: "O(n · max(piles))",
   space: "O(1)",
   idea: "Try k = 1, 2, 3, … and return the first speed that finishes all piles within h hours.",
+  approach: [
+    {
+      title: "Hours at speed k",
+      detail: "Each pile takes ⌈pile / k⌉ hours.",
+      at: "hours",
+    },
+    {
+      title: "First speed that fits",
+      detail: "Try k = 1, 2, 3, … and stop at the first that finishes within h.",
+      at: "ret",
+    },
+    {
+      title: "Cost",
+      detail: "Up to max(piles) speeds × n piles each. Binary search cuts the number of speeds tried to log(max).",
+    },
+  ],
   code: code(`
     function minEatingSpeed(piles: number[], h: number): number {
       for (let speed = 1; ; speed++) { //@try
@@ -42,6 +58,33 @@ const binary = defineSolution<Input>({
   time: "O(n log max(piles))",
   space: "O(1)",
   idea: "Hours needed only go down as k goes up, so binary-search k in [1, max(piles)] for the smallest speed that fits in h hours.",
+  approach: [
+    {
+      title: "Search space [1, max pile]",
+      detail: "At max(piles), every pile takes one hour, which always fits since h ≥ n.",
+      at: "init",
+    },
+    {
+      title: "Monotone feasibility",
+      detail: "Faster speeds never need more hours, so the feasible speeds form a suffix.",
+      at: "mid",
+    },
+    {
+      title: "Fits: try slower",
+      detail: "high = speed, keeping it as a candidate.",
+      at: "fits",
+    },
+    {
+      title: "Too slow: go faster",
+      detail: "low = speed + 1.",
+      at: "slow",
+    },
+    {
+      title: "Smallest feasible speed",
+      detail: "low === high.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minEatingSpeed(piles: number[], h: number): number {
       let low = 1; //@init

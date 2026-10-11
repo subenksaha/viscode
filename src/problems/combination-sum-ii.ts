@@ -15,6 +15,23 @@ const includeExclude = defineSolution<Input>({
   time: "O(2ⁿ · n)",
   space: "O(n)",
   idea: "Sort, then for each candidate either take it or not. Equal combinations come out identical after sorting, so a set of keys removes the duplicates.",
+  approach: [
+    {
+      title: "Take the candidate",
+      detail: "Branch 1: include candidates[i] and move to i + 1, since each number is used at most once.",
+      at: "take",
+    },
+    {
+      title: "Skip it",
+      detail: "Branch 2: leave it out.",
+      at: "skip",
+    },
+    {
+      title: "Record unique hits",
+      detail: "Sorted paths give identical keys for equal combinations, so a set filters duplicates. Duplicates are still generated, which wastes work.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function combinationSum2(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b);
@@ -80,6 +97,28 @@ const skipDuplicates = defineSolution<Input>({
   time: "O(2ⁿ · n)",
   space: "O(n)",
   idea: "Sort, then at each depth loop over the remaining candidates. Skip a value equal to the previous sibling (it would start the same combinations again) and stop once a value exceeds what is left.",
+  approach: [
+    {
+      title: "Choose from the remaining candidates",
+      detail: "Loop i from start and recurse on i + 1.",
+      at: "choose",
+    },
+    {
+      title: "Skip equal siblings",
+      detail: "At the same depth, a value equal to the previous one would start the same combinations again.",
+      at: "dup",
+    },
+    {
+      title: "Stop when too big",
+      detail: "Sorted order means every later candidate is too big as well.",
+      at: "stop",
+    },
+    {
+      title: "Record",
+      detail: "A remainder of 0 is a unique combination. No dedupe set is needed.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function combinationSum2(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b);

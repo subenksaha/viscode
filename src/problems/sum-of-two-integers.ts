@@ -12,6 +12,28 @@ const xorCarry = defineSolution<Input>({
   time: "O(32)",
   space: "O(1)",
   idea: "a ^ b adds without carrying; (a & b) << 1 is the carry. Repeat until there is no carry left.",
+  approach: [
+    {
+      title: "Loop while there is a carry",
+      detail: "Treat b as \"what is still left to add\". When it reaches 0, a holds the full sum.",
+      at: "loop",
+    },
+    {
+      title: "Carry bits",
+      detail: "a & b marks positions where both are 1. Those overflow into the next column, so shift them left by one.",
+      at: "carry",
+    },
+    {
+      title: "Add without carrying",
+      detail: "a ^ b is the bitwise sum ignoring carries.",
+      at: "xor",
+    },
+    {
+      title: "Feed the carry back",
+      detail: "The carry becomes the new b, to be added on the next round. Each round pushes the carry at least one bit left, so it ends within 32 rounds.",
+      at: "shift",
+    },
+  ],
   code: code(`
     function getSum(a: number, b: number): number {
       // a ^ b adds the bits without carrying; (a & b) << 1 is the carry.
@@ -53,6 +75,33 @@ const fullAdder = defineSolution<Input>({
   time: "O(32)",
   space: "O(1)",
   idea: "Add one bit position at a time like a hardware ripple-carry adder: sum bit = x ^ y ^ c, next carry = majority(x, y, c).",
+  approach: [
+    {
+      title: "Start empty",
+      detail: "Build the result one bit at a time, carrying between positions like column addition.",
+      at: "init",
+    },
+    {
+      title: "Read the bits at position i",
+      detail: "Extract bit i of a and of b with a shift and & 1.",
+      at: "bits",
+    },
+    {
+      title: "Sum bit = XOR of three",
+      detail: "The output bit is 1 when an odd number of bitA, bitB and carry are 1, which is exactly a ^ b ^ c.",
+      at: "sum",
+    },
+    {
+      title: "Carry = majority",
+      detail: "The carry out is 1 when at least two of the three inputs are 1. It feeds into the next position.",
+      at: "carry",
+    },
+    {
+      title: "Assemble the result",
+      detail: "After 32 positions every bit of the sum is placed. The 32-bit wraparound also handles negative numbers.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function getSum(a: number, b: number): number {
       // Add one bit position at a time, like column addition in binary.

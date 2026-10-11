@@ -12,6 +12,24 @@ const hashSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Walk the list and remember each node. Meeting a node twice means there is a cycle; reaching null means there is not.",
+  approach: [
+    {
+      title: "Remember visited nodes",
+      detail: "Store node references, not values, because values can repeat without a cycle.",
+      at: "init",
+    },
+    {
+      title: "Walk and record",
+      detail: "Add each node to the set as you pass it.",
+      at: "add",
+      nth: 2,
+    },
+    {
+      title: "A repeat means a cycle",
+      detail: "Coming back to a node already in the set means some next pointer loops back. Reaching null means the list ends, so there is no cycle. O(n) space.",
+      at: "found",
+    },
+  ],
   code: code(`
     function hasCycle(head: ListNode | null): boolean {
       const seen = new Set<ListNode>(); //@init
@@ -50,6 +68,23 @@ const floyd = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Move slow one step and fast two steps at a time. In a cycle, fast gains one step per move and must land on slow; otherwise fast falls off the end.",
+  approach: [
+    {
+      title: "Two runners at head",
+      detail: "slow moves 1 step per turn and fast moves 2.",
+      at: "init",
+    },
+    {
+      title: "Advance both",
+      detail: "Without a cycle, fast reaches null first and we return false.",
+      at: "fast",
+    },
+    {
+      title: "Inside a cycle, fast gains on slow",
+      detail: "Once both are in the loop, the gap between them shrinks by 1 each turn, so they must meet. Meeting proves a cycle with O(1) extra space.",
+      at: "meet",
+    },
+  ],
   code: code(`
     function hasCycle(head: ListNode | null): boolean {
       let slow = head; //@init

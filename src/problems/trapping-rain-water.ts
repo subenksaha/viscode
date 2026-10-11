@@ -12,6 +12,29 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Water above bar i is min(tallest bar to its left, tallest bar to its right) − height[i]. Find both maxima by scanning each time.",
+  approach: [
+    {
+      title: "Tallest wall to the left",
+      detail: "Scan from 0 to i.",
+      at: "left",
+    },
+    {
+      title: "Tallest wall to the right",
+      detail: "Scan from i to the end.",
+      at: "right",
+    },
+    {
+      title: "Water above this bar",
+      detail: "The water level is the lower of the two walls, so water = min(left, right) − height[i].",
+      at: "add",
+      nth: 6,
+    },
+    {
+      title: "Total",
+      detail: "Two scans per bar: O(n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function trap(height: number[]): number {
       let water = 0;
@@ -53,6 +76,31 @@ const prefixMax = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Precompute the tallest bar to the left of every index and to the right of every index. Then each bar's water is a single lookup.",
+  approach: [
+    {
+      title: "Left maxima",
+      detail: "leftMax[i] = max(height[i], leftMax[i−1]).",
+      at: "L",
+      nth: -1,
+    },
+    {
+      title: "Right maxima",
+      detail: "rightMax[i] = max(height[i], rightMax[i+1]).",
+      at: "R",
+      nth: -1,
+    },
+    {
+      title: "Constant-time water per bar",
+      detail: "min(leftMax[i], rightMax[i]) − height[i].",
+      at: "add",
+      nth: 6,
+    },
+    {
+      title: "Total",
+      detail: "Three linear passes, O(n) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function trap(height: number[]): number {
       const n = height.length;
@@ -108,6 +156,30 @@ const twoPointers = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Move inward from both ends, always on the side with the lower max. That side's water is bounded by its own max, since the other side is known to be at least as tall.",
+  approach: [
+    {
+      title: "Walk inward from both ends",
+      detail: "Keep the running maxima from each side.",
+      at: "init",
+    },
+    {
+      title: "Update maxima",
+      detail: "Include the current bars.",
+      at: "max",
+      nth: 3,
+    },
+    {
+      title: "The lower side is settled",
+      detail: "If leftMax < rightMax, some wall on the right is at least rightMax, so the water at left is exactly leftMax − height[left].",
+      at: "left",
+      nth: 3,
+    },
+    {
+      title: "Mirror on the right",
+      detail: "Otherwise settle the right bar using rightMax. O(n) time, O(1) space.",
+      at: "right",
+    },
+  ],
   code: code(`
     function trap(height: number[]): number {
       let left = 0; //@init

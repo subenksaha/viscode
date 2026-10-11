@@ -12,6 +12,29 @@ const memo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dist(i, j) converts word1[i..] into word2[j..]. Equal letters cost nothing; otherwise pay 1 and take the best of insert (j+1), delete (i+1) or replace (both +1).",
+  approach: [
+    {
+      title: "Compare the current letters",
+      detail: "Equal letters cost nothing: move both indices.",
+      at: "cmp",
+    },
+    {
+      title: "Otherwise three edits",
+      detail: "Insert (j+1), delete (i+1) or replace (both +1), each costing 1. Take the minimum.",
+      at: "cmp",
+      nth: 2,
+    },
+    {
+      title: "Base cases",
+      detail: "One string exhausted: the remaining letters of the other must be inserted or deleted.",
+      at: "base-b",
+    },
+    {
+      title: "Memoize",
+      detail: "O(m·n) states.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function minDistance(word1: string, word2: string): number {
       const memo = new Map<string, number>();
@@ -75,6 +98,23 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dp[i][j] = edits to turn the first i letters of word1 into the first j of word2. Matching letters copy the diagonal; otherwise 1 + min(left = insert, up = delete, diagonal = replace).",
+  approach: [
+    {
+      title: "Borders",
+      detail: "Turning a prefix into the empty string (or back) costs its length.",
+      at: "init",
+    },
+    {
+      title: "Fill",
+      detail: "Match: copy the diagonal. Otherwise 1 + min(left = insert, up = delete, diagonal = replace).",
+      at: "cell",
+    },
+    {
+      title: "Answer",
+      detail: "dp[m][n].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minDistance(word1: string, word2: string): number {
       const rows = word1.length;

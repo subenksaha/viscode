@@ -11,6 +11,22 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Two meetings conflict when each starts before the other ends. Test every pair.",
+  approach: [
+    {
+      title: "Pick a meeting",
+      detail: "Compare it with every other meeting.",
+      at: "i",
+    },
+    {
+      title: "Overlap test",
+      detail: "Meetings A and B clash if A starts before B ends and B starts before A ends. Any clash means the answer is false.",
+      at: "clash",
+    },
+    {
+      title: "No clashes",
+      detail: "If every pair passes, all meetings can be attended. This is O(n²) comparisons.",
+    },
+  ],
   code: code(`
     function canAttendMeetings(intervals: number[][]): boolean {
       for (let i = 0; i < intervals.length; i++) { //@i
@@ -47,6 +63,22 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "After sorting by start, a conflict must involve neighbors: check whether each meeting starts before the previous one ends.",
+  approach: [
+    {
+      title: "Sort by start",
+      detail: "In time order, if a meeting clashes with any earlier one, it also clashes with the one right before it.",
+      at: "sort",
+    },
+    {
+      title: "Compare neighbors",
+      detail: "If a meeting starts before the previous one ends, the person can't attend both.",
+      at: "clash",
+    },
+    {
+      title: "No clash",
+      detail: "If every neighbor pair is fine, the whole schedule is fine. O(n log n).",
+    },
+  ],
   code: code(`
     function canAttendMeetings(intervals: number[][]): boolean {
       intervals.sort((a, b) => a[0] - b[0]); //@sort

@@ -16,6 +16,29 @@ const dfs = defineSolution<Input>({
   time: "O(n + E)",
   space: "O(n + E)",
   idea: "Every DFS started from an unvisited node explores exactly one component. Count the starts.",
+  approach: [
+    {
+      title: "Build adjacency",
+      detail: "Store each undirected edge in both directions.",
+      at: "build",
+    },
+    {
+      title: "Unvisited node: new component",
+      detail: "Scan the nodes. An unvisited node can't belong to any component explored so far, so count it.",
+      at: "start",
+    },
+    {
+      title: "Flood its component",
+      detail: "DFS marks everything reachable, so those nodes are never counted again.",
+      at: "visit",
+      nth: 2,
+    },
+    {
+      title: "Answer",
+      detail: "The number of DFS starts equals the number of components. O(n + E).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
       const neighbors: number[][] = Array.from({ length: n }, () => []);
@@ -77,6 +100,28 @@ const unionFind = defineSolution<Input>({
   time: "O(E · α(n))",
   space: "O(n)",
   idea: "Start with n components. Each edge that joins two different sets merges them, so subtract one.",
+  approach: [
+    {
+      title: "n singletons",
+      detail: "Every node starts as its own component, so count = n.",
+      at: "init",
+    },
+    {
+      title: "Process an edge",
+      detail: "Find the roots of both endpoints.",
+      at: "edge",
+    },
+    {
+      title: "Union merges two components",
+      detail: "Different roots mean this edge connects two separate components. Link them and decrement count.",
+      at: "union",
+    },
+    {
+      title: "Answer",
+      detail: "Edges inside an existing component change nothing. The final count is the answer.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
       const parent = Array.from({ length: n }, (_, node) => node); //@init
@@ -127,6 +172,29 @@ const bfs = defineSolution<Input>({
   time: "O(n + E)",
   space: "O(n + E)",
   idea: "Same counting idea as DFS, but explore each component with a queue.",
+  approach: [
+    {
+      title: "Build adjacency",
+      detail: "Store each undirected edge in both directions.",
+      at: "build",
+    },
+    {
+      title: "New component",
+      detail: "Each unvisited start node bumps the count and seeds a queue.",
+      at: "start",
+    },
+    {
+      title: "Expand with a queue",
+      detail: "Mark neighbors when enqueuing so every node is processed once.",
+      at: "pop",
+      nth: 2,
+    },
+    {
+      title: "Answer",
+      detail: "The count of seeds is the component count.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
       const neighbors: number[][] = Array.from({ length: n }, () => []);

@@ -14,6 +14,28 @@ const backtrack = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n)",
   idea: "From position start, try every end so that s[start..end] is a palindrome, cut it off, and recurse on the rest. Each check walks inward from both ends.",
+  approach: [
+    {
+      title: "Try each end",
+      detail: "For the current start, test s[start..end] with two pointers. Non-palindromes are skipped.",
+      at: "check",
+    },
+    {
+      title: "Cut a palindrome",
+      detail: "Push it and recurse on the rest of the string.",
+      at: "cut",
+    },
+    {
+      title: "Complete partition",
+      detail: "Reaching the end of the string gives a full partition.",
+      at: "done",
+    },
+    {
+      title: "Undo",
+      detail: "Pop and try a longer cut.",
+      at: "undo",
+    },
+  ],
   code: code(`
     function partition(s: string): string[][] {
       const result: string[][] = [];
@@ -84,6 +106,24 @@ const dpTable = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n²)",
   idea: "Precompute pal[i][j] = (s[i] = s[j]) and pal[i+1][j−1], so every palindrome check during the backtracking is a table lookup.",
+  approach: [
+    {
+      title: "Precompute palindromes",
+      detail: "pal[i][j] = s[i] === s[j] && pal[i+1][j−1], filled from the bottom row up.",
+      at: "fill",
+      nth: -1,
+    },
+    {
+      title: "O(1) lookups while cutting",
+      detail: "Backtracking asks the table instead of re-scanning substrings.",
+      at: "lookup",
+    },
+    {
+      title: "Record partitions",
+      detail: "Same output as before, with repeated checks removed.",
+      at: "done",
+    },
+  ],
   code: code(`
     function partition(s: string): string[][] {
       const n = s.length;

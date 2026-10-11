@@ -11,6 +11,28 @@ const carry = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Add 1 to the last digit like on paper: write (d + carry) mod 10 and carry ⌊(d + carry) / 10⌋ leftwards. If a carry is left over, prepend it.",
+  approach: [
+    {
+      title: "Start with carry 1",
+      detail: "Adding 1 is the same as a carry into the last digit.",
+      at: "init",
+    },
+    {
+      title: "Sum each digit",
+      detail: "digit + carry.",
+      at: "sum",
+    },
+    {
+      title: "Write and carry",
+      detail: "Write sum % 10 and carry ⌊sum / 10⌋ to the left.",
+      at: "write",
+    },
+    {
+      title: "Prepend if needed",
+      detail: "All nines turn into 1 followed by zeros.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function plusOne(digits: number[]): number[] {
       let carry = 1; //@init
@@ -49,6 +71,22 @@ const earlyExit = defineSolution<Input>({
   time: "O(n)",
   space: "O(1) extra",
   idea: "Scan from the right. A 9 becomes 0 and the carry moves on; the first digit below 9 just goes up by one and we are done. If every digit was 9, the answer is 1 followed by zeros.",
+  approach: [
+    {
+      title: "Nines roll over",
+      detail: "A 9 becomes 0 and the carry continues left.",
+      at: "zero",
+    },
+    {
+      title: "First non-nine",
+      detail: "Increment it and return right away. Nothing further left changes.",
+      at: "bump",
+    },
+    {
+      title: "All nines",
+      detail: "If the loop finishes, every digit was 9: return [1, 0, …, 0].",
+    },
+  ],
   code: code(`
     function plusOne(digits: number[]): number[] {
       for (let i = digits.length - 1; i >= 0; i--) {

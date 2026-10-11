@@ -12,6 +12,28 @@ const backtrack = defineSolution<Input>({
   time: "O(n^(T/min))",
   space: "O(T/min)",
   idea: "Build combinations in non-decreasing index order so each set is generated once. Reuse the same index to allow repeats, and stop early once a candidate overshoots (they are sorted).",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Sorted candidates let us stop a loop as soon as one is too big.",
+      at: "sort",
+    },
+    {
+      title: "Choose",
+      detail: "Add candidates[i] and recurse with the same start i, so it can be reused.",
+      at: "choose",
+    },
+    {
+      title: "Prune",
+      detail: "If a candidate exceeds the remainder, every later one does too. Break.",
+      at: "prune",
+    },
+    {
+      title: "Record and undo",
+      detail: "A remainder of 0 means the path is a valid combination. Pop on return to try the next option.",
+      at: "found",
+    },
+  ],
   code: code(`
     function combinationSum(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b); //@sort
@@ -73,6 +95,28 @@ const dp = defineSolution<Input>({
   time: "O(n · T · k)",
   space: "O(T · k)",
   idea: "Like the coin-change table, but store the combinations themselves. Loop candidates in the outer loop so each combination is built in one order only.",
+  approach: [
+    {
+      title: "Base: the empty combination",
+      detail: "combos[0] = [[]].",
+      at: "init",
+    },
+    {
+      title: "Candidates in the outer loop",
+      detail: "Adding candidates one at a time means each combination is built in a fixed order, so no duplicates appear.",
+      at: "coin",
+    },
+    {
+      title: "Extend smaller sums",
+      detail: "For each sum, append the candidate to every combination for sum − candidate. Looping sum upward allows reuse.",
+      at: "extend",
+    },
+    {
+      title: "Answer",
+      detail: "combos[target] lists every combination.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function combinationSum(candidates: number[], target: number): number[][] {
       // combos[sum] = every combination that adds up to sum

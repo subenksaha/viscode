@@ -11,6 +11,23 @@ const checkEach = defineSolution<Input>({
   time: "O(32)",
   space: "O(1)",
   idea: "Test the lowest bit, shift right, repeat until the number is 0.",
+  approach: [
+    {
+      title: "Inspect the lowest bit",
+      detail: "n & 1 is 1 exactly when the last bit is set. Add it to count.",
+      at: "add",
+    },
+    {
+      title: "Shift right",
+      detail: "Unsigned shift >>> 1 drops that bit and brings the next one into the last position.",
+      at: "shift",
+    },
+    {
+      title: "Stop at zero",
+      detail: "When n becomes 0 there are no set bits left. This runs once per bit up to the highest set bit.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function hammingWeight(n: number): number {
       let count = 0; //@init
@@ -46,6 +63,28 @@ const kernighan = defineSolution<Input>({
   time: "O(number of 1s)",
   space: "O(1)",
   idea: "n & (n − 1) clears the lowest set bit. Count how many times you can do that before n becomes 0.",
+  approach: [
+    {
+      title: "Find the lowest set bit",
+      detail: "Subtracting 1 flips the lowest 1 to 0 and turns all the 0s below it into 1s.",
+      at: "loop",
+    },
+    {
+      title: "Clear it with n & (n − 1)",
+      detail: "ANDing n with n − 1 wipes exactly that lowest 1 and leaves the higher bits alone.",
+      at: "clear",
+    },
+    {
+      title: "Count each clear",
+      detail: "Every iteration removes one set bit, so the loop runs as many times as there are 1s.",
+      at: "count",
+    },
+    {
+      title: "Done when n is 0",
+      detail: "For sparse numbers this beats checking all 32 positions.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function hammingWeight(n: number): number {
       let count = 0; //@init

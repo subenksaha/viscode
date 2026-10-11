@@ -12,6 +12,25 @@ const twoPasses = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "The first and last houses are neighbors, so at most one is robbed. Solve the line without the last house and the line without the first, then take the better one.",
+  approach: [
+    {
+      title: "Line without the last house",
+      detail: "Run the two-variable House Robber over houses 0..n−2.",
+      at: "step",
+      nth: 4,
+    },
+    {
+      title: "Line without the first house",
+      detail: "Run it again over houses 1..n−1.",
+      at: "step",
+      nth: -1,
+    },
+    {
+      title: "Combine",
+      detail: "max(skipLast, skipFirst) is the best plan on the circle. O(n) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function rob(nums: number[]): number {
       if (nums.length === 1) return nums[0]; //@single
@@ -89,6 +108,24 @@ const tables = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Same split into two lines, but each line gets an explicit DP table so you can see every subproblem.",
+  approach: [
+    {
+      title: "The circle forbids first + last together",
+      detail: "At most one of the end houses can be robbed. So solve two straight-line versions: houses 0..n−2 and houses 1..n−1.",
+      at: "init",
+    },
+    {
+      title: "Fill each line's table",
+      detail: "Within a line it is plain House Robber: dp[k] = max(dp[k−1], dp[k−2] + house).",
+      at: "fill",
+      nth: -1,
+    },
+    {
+      title: "Take the better line",
+      detail: "Every valid plan avoids the first house or the last one (or both), so one of the two lines covers it.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function rob(nums: number[]): number {
       if (nums.length === 1) return nums[0]; //@single

@@ -13,6 +13,29 @@ const memo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "After using i chars of s1 and j of s2, the next char of s3 is s3[i+j]. Take it from s1 if it matches s1[i], or from s2 if it matches s2[j]. Memoize failures on (i, j).",
+  approach: [
+    {
+      title: "The next character is forced",
+      detail: "After using i chars of s1 and j of s2, s3[i + j] must come from s1[i] or from s2[j].",
+      at: "try",
+    },
+    {
+      title: "Try both sources",
+      detail: "If both match, try s1 first, then s2. Memoize (i, j) so no failing state is explored twice.",
+      at: "try",
+      nth: 2,
+    },
+    {
+      title: "All matched",
+      detail: "i + j reaching |s3| means a valid interleaving.",
+      at: "done",
+    },
+    {
+      title: "Answer",
+      detail: "O(m·n) states.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isInterleave(s1: string, s2: string, s3: string): boolean {
       if (s1.length + s2.length !== s3.length) return false;
@@ -71,6 +94,24 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dp[i][j] = can the first i chars of s1 and the first j of s2 form the first i+j of s3? Come from above if s1[i−1] matches, or from the left if s2[j−1] matches.",
+  approach: [
+    {
+      title: "dp[0][0] = true",
+      detail: "Two empty prefixes form an empty prefix.",
+      at: "init",
+    },
+    {
+      title: "From above or the left",
+      detail: "dp[i][j] is true if s1[i−1] matches s3[i+j−1] and dp[i−1][j] is true, or s2[j−1] matches and dp[i][j−1] is true.",
+      at: "cell",
+      nth: 3,
+    },
+    {
+      title: "Answer",
+      detail: "dp[m][n].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isInterleave(s1: string, s2: string, s3: string): boolean {
       const len1 = s1.length;

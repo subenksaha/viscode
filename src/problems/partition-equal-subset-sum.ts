@@ -12,6 +12,23 @@ const sumSet = defineSolution<Input>({
   time: "O(n · S)",
   space: "O(S)",
   idea: "We need a subset summing to half the total. Keep the set of sums reachable so far; each number adds itself to every existing sum.",
+  approach: [
+    {
+      title: "Target is half",
+      detail: "An odd total can't be split. Otherwise we need a subset summing to total / 2.",
+      at: "init",
+    },
+    {
+      title: "Grow the reachable set",
+      detail: "Each number either joins a subset or doesn't. New sums are existing sums plus the number, capped at half.",
+      at: "add",
+    },
+    {
+      title: "Stop when half is reachable",
+      detail: "Then the remaining numbers sum to the other half.",
+      at: "found",
+    },
+  ],
   code: code(`
     function canPartition(nums: number[]): boolean {
       let total = 0;
@@ -64,6 +81,28 @@ const dp = defineSolution<Input>({
   time: "O(n · S)",
   space: "O(S)",
   idea: "dp[s] says whether some subset sums to s. For each number, sweep s from high to low so each number is used at most once: dp[s] |= dp[s − x].",
+  approach: [
+    {
+      title: "dp[0] = true",
+      detail: "The empty subset sums to 0.",
+      at: "init",
+    },
+    {
+      title: "Process each number",
+      detail: "Sweep sums from half down to num.",
+      at: "num",
+    },
+    {
+      title: "Mark reachable sums",
+      detail: "If sum − num was reachable without this number, sum is reachable with it. Going downward stops a number from being used twice.",
+      at: "set",
+    },
+    {
+      title: "Answer",
+      detail: "dp[half]. O(n · S) time, O(S) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canPartition(nums: number[]): boolean {
       let total = 0;

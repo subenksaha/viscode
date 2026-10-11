@@ -14,6 +14,28 @@ const dedupeSet = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n · 2ⁿ)",
   idea: "Sort so equal subsets look identical, generate every subset, and keep each distinct one using a set of string keys.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "Identical subsets then produce identical keys.",
+      at: "sort",
+    },
+    {
+      title: "Enumerate masks",
+      detail: "Generate every subset with a bitmask.",
+      at: "keep",
+    },
+    {
+      title: "Skip duplicates",
+      detail: "[2] built from either copy of 2 has the same key, so keep only the first.",
+      at: "mask",
+    },
+    {
+      title: "Distinct subsets",
+      detail: "Duplicates are still generated and then thrown away.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function subsetsWithDup(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
@@ -62,6 +84,28 @@ const backtrack = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n)",
   idea: "Sort, then backtrack as in Subsets. At each depth, only the first of several equal values may be chosen; picking a later copy would build the same subsets again.",
+  approach: [
+    {
+      title: "Record every path",
+      detail: "Each recursion state is a subset.",
+      at: "record",
+    },
+    {
+      title: "Skip equal siblings",
+      detail: "At the same depth, choosing a later equal value repeats subsets the first one already produced. Only the first copy may start a branch.",
+      at: "skip",
+    },
+    {
+      title: "Choose and undo",
+      detail: "A deeper level can still take the second 2, giving [2,2].",
+      at: "choose",
+    },
+    {
+      title: "Result",
+      detail: "No duplicates are ever generated.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function subsetsWithDup(nums: number[]): number[][] {
       nums.sort((a, b) => a - b);

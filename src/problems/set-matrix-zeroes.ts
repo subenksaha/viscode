@@ -12,6 +12,23 @@ const copy = defineSolution<Input>({
   time: "O(m·n·(m+n))",
   space: "O(m·n)",
   idea: "Scan a frozen copy so new zeros do not spread. For every original zero, clear its row and column in the real matrix.",
+  approach: [
+    {
+      title: "Freeze a copy",
+      detail: "Zeros written during the scan must not trigger more zeroing, so read from a snapshot.",
+      at: "copy",
+    },
+    {
+      title: "Find an original zero",
+      detail: "Scan the snapshot cell by cell.",
+      at: "zero",
+    },
+    {
+      title: "Clear its row and column",
+      detail: "Write zeros across the real matrix. Clearing a full row and column per zero makes this O(m·n·(m+n)).",
+      at: "clear",
+    },
+  ],
   code: code(`
     function setZeroes(matrix: number[][]): void {
       const rows = matrix.length;
@@ -57,6 +74,24 @@ const sets = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m + n)",
   idea: "First pass: record which rows and columns contain a zero. Second pass: zero every cell whose row or column was recorded.",
+  approach: [
+    {
+      title: "Record zero rows and columns",
+      detail: "The first pass only notes which rows and columns contain a zero.",
+      at: "mark",
+    },
+    {
+      title: "Apply",
+      detail: "The second pass zeroes every cell in a marked row or column. O(m·n) time, O(m + n) space.",
+      at: "apply",
+    },
+    {
+      title: "Why two passes",
+      detail: "Separating \"find\" from \"write\" stops new zeros from spreading further.",
+      at: "apply",
+      nth: -1,
+    },
+  ],
   code: code(`
     function setZeroes(matrix: number[][]): void {
       const zeroRows = new Set<number>();
@@ -106,6 +141,28 @@ const inPlace = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(1)",
   idea: "Use row 0 and column 0 as the marker sets. Remember separately whether row 0 and column 0 themselves contained a zero, and clear them last.",
+  approach: [
+    {
+      title: "Save the flags for row 0 and column 0",
+      detail: "Row 0 and column 0 will hold the markers, so first remember whether they contained zeros themselves.",
+      at: "flags",
+    },
+    {
+      title: "Mark in the first row and column",
+      detail: "For each inner zero, set matrix[r][0] and matrix[0][c] to 0. Then zero any inner cell whose row or column marker is 0.",
+      at: "apply",
+    },
+    {
+      title: "Clear row 0 last",
+      detail: "Only now is it safe to overwrite the markers.",
+      at: "row0",
+    },
+    {
+      title: "Clear column 0 last",
+      detail: "The flags decide whether to clear column 0 too. O(1) extra space.",
+      at: "col0",
+    },
+  ],
   code: code(`
     function setZeroes(matrix: number[][]): void {
       const rows = matrix.length;

@@ -11,6 +11,30 @@ const lengthPrefix = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Write each string as <length>#<string>. The decoder reads digits up to '#', then takes exactly that many characters, so any character (even '#') is safe inside a string.",
+  approach: [
+    {
+      title: "Length prefix",
+      detail: "Write each string as <length>#<string>. The content is never scanned, so any character is safe.",
+      at: "encode",
+      nth: 2,
+    },
+    {
+      title: "Read the length",
+      detail: "Read the digits up to the next '#'. That number says how many characters follow.",
+      at: "len",
+    },
+    {
+      title: "Take exactly that many",
+      detail: "Slice the string and jump past it. A '#' inside the content is never mistaken for a delimiter.",
+      at: "take",
+      nth: 2,
+    },
+    {
+      title: "Done",
+      detail: "Each character is read once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function encode(strs: string[]): string {
       // Each string becomes "<length>#<string>", e.g. "hi" -> "2#hi".
@@ -63,6 +87,29 @@ const escaping = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Join with the separator ' # '. Inside strings, double every '#' so a lone '#' surrounded by spaces can only be a separator.",
+  approach: [
+    {
+      title: "Escape and delimit",
+      detail: "Double every '#' inside a string (\"co#de\" → \"co##de\"), then end each string with \" # \".",
+      at: "encode",
+      nth: 2,
+    },
+    {
+      title: "Scan the encoding",
+      detail: "Walk the encoded string one token at a time.",
+      at: "loop",
+    },
+    {
+      title: "Unescape",
+      detail: "\"##\" is always a literal '#'. A real separator is \" # \" with a single '#'.",
+      at: "unescape",
+    },
+    {
+      title: "Split on separators",
+      detail: "At \" # \", the current string is complete, even if it is empty.",
+      at: "split",
+    },
+  ],
   code: code(`
     function encode(strs: string[]): string {
       // Double every "#" inside a string, then end each string with " # ".

@@ -18,6 +18,33 @@ const simulate = defineSolution<Input>({
   time: "O(T log 26)",
   space: "O(26)",
   idea: "Each tick, run the available task with the most copies left, since it is the hardest to fit. A task that just ran waits in a cooldown queue for n ticks before it is available again.",
+  approach: [
+    {
+      title: "Ready heap",
+      detail: "Ready task types, ordered by copies left. Running the most frequent first avoids leaving it stuck at the end with forced idles.",
+      at: "init",
+    },
+    {
+      title: "Each tick",
+      detail: "One interval passes.",
+      at: "tick",
+    },
+    {
+      title: "Run the most frequent",
+      detail: "Pop it and decrement. If copies remain, it goes into cooldown until time + n.",
+      at: "run",
+    },
+    {
+      title: "Release from cooldown",
+      detail: "When its wait ends, it returns to the ready heap. Ticks where nothing is ready are idle.",
+      at: "release",
+    },
+    {
+      title: "Total ticks",
+      detail: "The simulation length is the answer.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function leastInterval(tasks: string[], n: number): number {
       const count = new Map<string, number>();
@@ -88,6 +115,28 @@ const formula = defineSolution<Input>({
   time: "O(T)",
   space: "O(26)",
   idea: "The most frequent task (count f) forces f − 1 frames of length n + 1, plus a final partial frame holding every task tied for the max. If there are enough other tasks to fill all gaps, the answer is just the number of tasks.",
+  approach: [
+    {
+      title: "Count tasks",
+      detail: "Only the frequencies matter.",
+      at: "count",
+    },
+    {
+      title: "The most frequent task sets the frame",
+      detail: "f copies of it need f − 1 gaps of n slots between them: (f − 1) × (n + 1) intervals.",
+      at: "max",
+    },
+    {
+      title: "Ties fill the last frame",
+      detail: "Every task tied for the max adds one slot after the final frame.",
+      at: "tied",
+    },
+    {
+      title: "Max with the task count",
+      detail: "If there are enough other tasks to fill every gap, no idle is needed and the answer is just the number of tasks.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function leastInterval(tasks: string[], n: number): number {
       const count = new Map<string, number>();

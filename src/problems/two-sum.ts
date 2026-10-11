@@ -12,6 +12,28 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Try every pair (i, j) with i < j and check whether they add up to target.",
+  approach: [
+    {
+      title: "Fix the first index",
+      detail: "Pick each index i as the first member of the pair. Only pairs with j > i need checking, because (i, j) and (j, i) are the same pair.",
+      at: "i",
+    },
+    {
+      title: "Scan every partner after it",
+      detail: "For a fixed i, walk j through every later index. This is what makes the method quadratic: about n²/2 pairs in total.",
+      at: "j",
+    },
+    {
+      title: "Test the sum",
+      detail: "Add nums[i] + nums[j] and compare it with target. No extra memory is used. We simply re-read the array.",
+      at: "check",
+    },
+    {
+      title: "Return the first match",
+      detail: "The problem guarantees exactly one valid pair, so the first pair that hits the target is the answer and we return [i, j] at once.",
+      at: "found",
+    },
+  ],
   code: code(`
     function twoSum(nums: number[], target: number): number[] {
       for (let i = 0; i < nums.length; i++) { //@i
@@ -59,6 +81,33 @@ const twoPointers = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Sort indices by value, then move two pointers inward: a small sum moves left forward, a big sum moves right back.",
+  approach: [
+    {
+      title: "Sort indices, not values",
+      detail: "Sorting would lose the original positions, so sort an array of indices by their values instead. The labels under each cell keep the original index we must return.",
+      at: "sort",
+    },
+    {
+      title: "Start at both extremes",
+      detail: "Put left on the smallest value and right on the largest. Their sum is the widest possible starting point for narrowing.",
+      at: "init",
+    },
+    {
+      title: "Compare the sum to the target",
+      detail: "If the sum is too big, the largest value cannot pair with anything (it is already paired with the smallest), so drop it. If the sum is too small, the smallest value cannot work, so drop it.",
+      at: "sum",
+    },
+    {
+      title: "Shrink from the side that can't help",
+      detail: "Each move discards one candidate with certainty, so the pointers meet after at most n moves and the scan is O(n) after the sort.",
+      at: "hi",
+    },
+    {
+      title: "Map back to original positions",
+      detail: "When the sum equals target, look up the original indices through the sorted order and return them in increasing order.",
+      at: "found",
+    },
+  ],
   code: code(`
     function twoSum(nums: number[], target: number): number[] {
       // Sort the indices by their values, so we can still return original positions.
@@ -127,6 +176,33 @@ const hashMap = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Walk once, remembering value → index. For each number, check whether its complement was already seen.",
+  approach: [
+    {
+      title: "Prepare a value → index map",
+      detail: "The map remembers every number we have walked past and where it was. It lets us answer \"have I seen x?\" in O(1).",
+      at: "init",
+    },
+    {
+      title: "Compute the complement",
+      detail: "At index i, the only partner that works is need = target − nums[i]. Instead of searching for it, we look it up.",
+      at: "need",
+    },
+    {
+      title: "Look up before storing",
+      detail: "Check the map before inserting nums[i]. This order stops an element pairing with itself (e.g. target 6 and a single 3).",
+      at: "check",
+    },
+    {
+      title: "Remember the current number",
+      detail: "If no partner exists yet, store nums[i] → i. A later element may need it as its complement.",
+      at: "store",
+    },
+    {
+      title: "Return on the first hit",
+      detail: "When the complement is already in the map, its stored index plus the current index is the answer. One pass, O(n) time.",
+      at: "found",
+    },
+  ],
   code: code(`
     function twoSum(nums: number[], target: number): number[] {
       const seen = new Map<number, number>(); //@init

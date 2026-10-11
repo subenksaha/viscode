@@ -15,6 +15,30 @@ const prim = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Grow one tree from point 0. Keep for every outside point its cheapest edge into the tree; repeatedly add the cheapest outside point and update the others with distances to it.",
+  approach: [
+    {
+      title: "Start the tree at point 0",
+      detail: "cheapest[i] is the cheapest known edge from point i into the tree.",
+      at: "init",
+    },
+    {
+      title: "Pick the cheapest outside point",
+      detail: "The cheapest edge crossing out of the tree is always safe to add.",
+      at: "pick",
+      nth: 2,
+    },
+    {
+      title: "Add it",
+      detail: "Pay its cost.",
+      at: "add",
+      nth: 2,
+    },
+    {
+      title: "Update the others",
+      detail: "Distances to the newly added point may be cheaper. A dense graph needs no heap: O(n²).",
+      at: "relax",
+    },
+  ],
   code: code(`
     function minCostConnectPoints(points: number[][]): number {
       const n = points.length;
@@ -84,6 +108,28 @@ const kruskal = defineSolution<Input>({
   time: "O(n² log n)",
   space: "O(n²)",
   idea: "List all n² edges, sort by length, and add each edge whose endpoints are in different components (union-find), until n − 1 edges are in.",
+  approach: [
+    {
+      title: "Sort all edges",
+      detail: "n(n−1)/2 Manhattan distances.",
+      at: "sort",
+    },
+    {
+      title: "Take edges between different components",
+      detail: "Union-find checks the components. The shortest edge connecting two separate trees is always safe.",
+      at: "take",
+    },
+    {
+      title: "Skip cycle edges",
+      detail: "Endpoints already connected.",
+      at: "skip",
+    },
+    {
+      title: "Stop at n − 1 edges",
+      detail: "O(n² log n) for the sort.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function minCostConnectPoints(points: number[][]): number {
       const n = points.length;

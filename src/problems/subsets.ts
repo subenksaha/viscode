@@ -14,6 +14,24 @@ const cascade = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n · 2ⁿ)",
   idea: "Start with just the empty set. For each number, copy every subset so far and add the number to each copy.",
+  approach: [
+    {
+      title: "Start with []",
+      detail: "The empty set is always a subset.",
+      at: "init",
+    },
+    {
+      title: "Double the list for each number",
+      detail: "Every existing subset gets a copy that includes the new number. The originals are the copies without it.",
+      at: "num",
+      nth: 2,
+    },
+    {
+      title: "Extend",
+      detail: "After n numbers there are 2ⁿ subsets.",
+      at: "extend",
+    },
+  ],
   code: code(`
     function subsets(nums: number[]): number[][] {
       const result: number[][] = [[]]; //@init
@@ -52,6 +70,24 @@ const bitmask = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n)",
   idea: "Each subset corresponds to an n-bit number: bit i says whether nums[i] is in it. Count from 0 to 2ⁿ − 1.",
+  approach: [
+    {
+      title: "Count from 0 to 2ⁿ − 1",
+      detail: "Bit i of mask decides whether nums[i] is in the subset.",
+      at: "pick",
+    },
+    {
+      title: "Every mask is a different subset",
+      detail: "For example, mask 5 (binary 101) picks nums[0] and nums[2].",
+      at: "pick",
+      nth: 6,
+    },
+    {
+      title: "Done",
+      detail: "2ⁿ masks, n bit checks each.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function subsets(nums: number[]): number[][] {
       const result: number[][] = [];
@@ -93,6 +129,23 @@ const backtrack = defineSolution<Input>({
   time: "O(n · 2ⁿ)",
   space: "O(n)",
   idea: "Every path in the recursion is a subset. Record the current path, then try extending it with each later number.",
+  approach: [
+    {
+      title: "Record at every node",
+      detail: "Each recursion state, including the empty path, is a subset.",
+      at: "record",
+    },
+    {
+      title: "Extend with later numbers only",
+      detail: "Starting the loop at start keeps each subset in index order, so none is generated twice.",
+      at: "choose",
+    },
+    {
+      title: "Undo",
+      detail: "Pop before trying the next number.",
+      at: "undo",
+    },
+  ],
   code: code(`
     function subsets(nums: number[]): number[][] {
       const result: number[][] = [];

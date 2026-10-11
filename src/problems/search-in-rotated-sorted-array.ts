@@ -12,6 +12,22 @@ const linear = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Check every element.",
+  approach: [
+    {
+      title: "Check each element",
+      detail: "Ignore the sorted structure and compare every element with target, left to right.",
+      at: "loop",
+    },
+    {
+      title: "Return the index on a match",
+      detail: "The first equal element gives the answer. If the loop ends with no match, return −1. This takes O(n) time, so it misses the O(log n) requirement.",
+      at: "found",
+    },
+    {
+      title: "Why it's not enough",
+      detail: "Rotation keeps two sorted runs, so a smarter search can throw away half the range at each step. The scan ignores that and pays O(n).",
+    },
+  ],
   code: code(`
     function search(nums: number[], target: number): number {
       for (let i = 0; i < nums.length; i++) { //@loop
@@ -40,6 +56,33 @@ const pivotThenSearch = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "Binary search for the index of the minimum (the pivot). Both sides of it are sorted, so run a normal binary search on the side that can contain target.",
+  approach: [
+    {
+      title: "Binary search for the pivot",
+      detail: "The smallest element marks where the rotation happened. If nums[mid] > nums[right], the drop is right of mid. Otherwise it is at mid or to its left.",
+      at: "pivot",
+    },
+    {
+      title: "Pivot found",
+      detail: "nums[pivot..end] and nums[0..pivot−1] are now two ordinary sorted runs.",
+      at: "found-pivot",
+    },
+    {
+      title: "Choose the run that can hold target",
+      detail: "If target is between nums[pivot] and the last value, it can only be in the right run. Otherwise it must be in the left run.",
+      at: "side",
+    },
+    {
+      title: "Plain binary search in that run",
+      detail: "Inside a sorted run, compare nums[mid] with target and drop half each time.",
+      at: "mid",
+    },
+    {
+      title: "Found",
+      detail: "Two O(log n) searches in a row are still O(log n) overall.",
+      at: "found",
+    },
+  ],
   code: code(`
     function search(nums: number[], target: number): number {
       // 1. Binary search for the smallest element: that is where the rotation happened.
@@ -122,6 +165,33 @@ const onePass = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "At every mid, at least one half is sorted. If target lies inside the sorted half's range, search there; otherwise search the other half.",
+  approach: [
+    {
+      title: "Search the whole array",
+      detail: "No separate pivot pass is needed: we decide the direction at every mid.",
+      at: "init",
+    },
+    {
+      title: "Check mid",
+      detail: "If nums[mid] is target, we are done. Otherwise one of the halves [left..mid] or [mid..right] must be fully sorted.",
+      at: "mid",
+    },
+    {
+      title: "Identify the sorted half",
+      detail: "If nums[left] ≤ nums[mid], the left half is sorted. Otherwise the rotation break is in the left half, so the right half is sorted.",
+      at: "left-sorted",
+    },
+    {
+      title: "Is target inside the sorted half?",
+      detail: "A sorted half's range is just [first, last], so a range check says whether target lives there. If not, it must be in the other half.",
+      at: "go-right-a",
+    },
+    {
+      title: "Narrow and repeat",
+      detail: "Each step discards half the range, so we reach target in O(log n).",
+      at: "go-left-a",
+    },
+  ],
   code: code(`
     function search(nums: number[], target: number): number {
       let left = 0; //@init

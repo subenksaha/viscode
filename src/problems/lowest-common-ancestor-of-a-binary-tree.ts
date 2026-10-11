@@ -15,6 +15,28 @@ const parents = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Record every node's parent with a traversal. Collect all ancestors of p, then walk up from q until you hit one of them.",
+  approach: [
+    {
+      title: "Map parents",
+      detail: "Traverse from the root, recording each node's parent, until both p and q are mapped.",
+      at: "map",
+    },
+    {
+      title: "Collect p's ancestors",
+      detail: "Walk from p to the root and put every node, p included, in a set.",
+      at: "up-p",
+    },
+    {
+      title: "Climb from q",
+      detail: "Walk up from q until reaching a node in that set.",
+      at: "up-q",
+    },
+    {
+      title: "First shared ancestor",
+      detail: "That node is the deepest one above both p and q.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
       // Record each node's parent until we have found both p and q.
@@ -80,6 +102,28 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Return p or q if found in a subtree, else null. If both subtrees return something, this node is the split point: the LCA. Otherwise pass up whichever side found something.",
+  approach: [
+    {
+      title: "Search both subtrees",
+      detail: "Each call returns p or q if its subtree contains one of them, otherwise null.",
+      at: "left",
+    },
+    {
+      title: "Found a target",
+      detail: "Reaching p or q returns it immediately. If the other target is below it, this node is still the LCA.",
+      at: "base",
+    },
+    {
+      title: "Pass results up",
+      detail: "If only one side found something, pass it upward.",
+      at: "pass",
+    },
+    {
+      title: "Both sides found something",
+      detail: "p is on one side and q on the other, so this node is where they meet: the LCA. One pass, O(n).",
+      at: "split",
+    },
+  ],
   code: code(`
     function lowestCommonAncestor(root: TreeNode | null, p: TreeNode, q: TreeNode): TreeNode | null {
       if (root === null || root === p || root === q) return root; //@base

@@ -15,6 +15,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(n² · |t|)",
   space: "O(|t|)",
   idea: "For every start, extend the end until the window contains all of t, then record it if it is the shortest so far.",
+  approach: [
+    {
+      title: "Count what t needs",
+      detail: "need maps each character to how many copies are required.",
+      at: "need",
+    },
+    {
+      title: "Extend from each start",
+      detail: "Grow the window from i, checking coverage after each new character.",
+      at: "j",
+    },
+    {
+      title: "First covering end",
+      detail: "The first j that covers t gives the shortest window starting at i. Record it if it beats the best and move to the next start.",
+      at: "best",
+    },
+  ],
   code: code(`
     function minWindow(s: string, t: string): string {
       const need = new Map<string, number>();
@@ -69,6 +86,34 @@ const slidingWindow = defineSolution<Input>({
   time: "O(|s| + |t|)",
   space: "O(|t|)",
   idea: "Expand right until the window covers t (tracked by a count of satisfied letters). Then shrink from the left as long as it still covers t, recording the smallest window.",
+  approach: [
+    {
+      title: "Requirements",
+      detail: "need holds the required counts. have counts how many distinct letters are fully satisfied.",
+      at: "need",
+    },
+    {
+      title: "Expand right",
+      detail: "When a letter's window count reaches its need, have goes up by one.",
+      at: "have",
+    },
+    {
+      title: "Window covers t",
+      detail: "Once have equals the number of distinct needed letters, the window is valid.",
+      at: "valid",
+    },
+    {
+      title: "Record, then shrink",
+      detail: "Save the window if it is the shortest yet, then drop s[left] to try a smaller one.",
+      at: "best",
+      nth: -1,
+    },
+    {
+      title: "Coverage breaks",
+      detail: "When dropping a character takes its count below need, have falls and we expand right again. Both pointers move only forward: O(|s| + |t|).",
+      at: "shrink",
+    },
+  ],
   code: code(`
     function minWindow(s: string, t: string): string {
       const need = new Map<string, number>();

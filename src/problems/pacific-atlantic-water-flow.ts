@@ -19,6 +19,29 @@ const bruteForce = defineSolution<Input>({
   time: "O((m·n)²)",
   space: "O(m·n)",
   idea: "From each cell, flow downhill (to equal or lower neighbors) and check whether the water reaches both oceans.",
+  approach: [
+    {
+      title: "Pour water on a cell",
+      detail: "Treat every cell as a rain source and follow the water downhill.",
+      at: "cell",
+    },
+    {
+      title: "Flow to equal-or-lower neighbors",
+      detail: "DFS spreads to neighbors no higher than the current cell. Note whether any visited cell touches the Pacific edge (top/left) or the Atlantic edge (bottom/right).",
+      at: "flow",
+      nth: 3,
+    },
+    {
+      title: "Keep cells that reach both",
+      detail: "If the flood touches both edges, the cell belongs in the answer.",
+      at: "both",
+    },
+    {
+      title: "Cost",
+      detail: "Every cell may flood the whole grid, so this is O((m·n)²). The reverse approach removes the repetition.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
       const rows = heights.length;
@@ -156,6 +179,29 @@ const reverseDfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Flip the direction: start at each ocean's border and climb to equal-or-higher neighbors. Cells marked by both searches are the answer.",
+  approach: [
+    {
+      title: "Reverse the flow",
+      detail: "Instead of asking where water from a cell can go, ask which cells can drain into an ocean. Start at the Pacific border and walk uphill to equal-or-higher neighbors.",
+      at: "seedP",
+    },
+    {
+      title: "Mark reachable cells",
+      detail: "Each climb marks a cell that drains to this ocean. Marked cells are never revisited, so each ocean's search is O(m·n).",
+      at: "climb",
+      nth: 8,
+    },
+    {
+      title: "Repeat from the Atlantic",
+      detail: "Run the same climb from the bottom row and right column into a second grid.",
+      at: "seedA",
+    },
+    {
+      title: "Intersect",
+      detail: "Cells marked in both grids can drain to both oceans.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
       const rows = heights.length;
@@ -199,6 +245,29 @@ const reverseBfs = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "Same reverse idea with a queue: spread out from both oceans layer by layer.",
+  approach: [
+    {
+      title: "Seed the Pacific border",
+      detail: "Every top-row and left-column cell drains to the Pacific. Put them all in the queue.",
+      at: "seedP",
+    },
+    {
+      title: "Spread uphill layer by layer",
+      detail: "Pop a cell and enqueue any unmarked neighbor that is at least as high. Water from that neighbor can flow down to this cell and on to the ocean.",
+      at: "climb",
+      nth: 8,
+    },
+    {
+      title: "Repeat for the Atlantic",
+      detail: "Same BFS from the bottom row and right column.",
+      at: "seedA",
+    },
+    {
+      title: "Intersect the two maps",
+      detail: "Cells reachable from both seeds are the answer. Total O(m·n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
       const rows = heights.length;

@@ -19,6 +19,28 @@ const bellmanFord = defineSolution<Input>({
   time: "O(k · E)",
   space: "O(n)",
   idea: "Round r finds the cheapest prices using at most r flights. Relax from a copy of the previous round's prices so one round never chains two flights. After k + 1 rounds, read dst.",
+  approach: [
+    {
+      title: "Source price 0",
+      detail: "Everything else starts at ∞.",
+      at: "init",
+    },
+    {
+      title: "One round per flight",
+      detail: "Round r allows at most r + 1 flights.",
+      at: "round",
+    },
+    {
+      title: "Relax from the previous round's copy",
+      detail: "Reading the old prices stops one round from chaining two flights.",
+      at: "relax",
+    },
+    {
+      title: "Answer",
+      detail: "After k + 1 rounds, price[dst]. O(k·E).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findCheapestPrice(n: number, flights: number[][], src: number, dst: number, k: number): number {
       let price = new Array(n).fill(Infinity);
@@ -71,6 +93,28 @@ const bfs = defineSolution<Input>({
   time: "O(k · E)",
   space: "O(n + E)",
   idea: "Expand level by level, where level = flights taken. Keep the best known price per city and only re-queue a city when this level reaches it more cheaply. Stop after k + 1 levels.",
+  approach: [
+    {
+      title: "Level = flights taken",
+      detail: "Start at src with cost 0.",
+      at: "init",
+    },
+    {
+      title: "Expand one level",
+      detail: "Each level adds one more flight.",
+      at: "level",
+    },
+    {
+      title: "Re-queue only on improvement",
+      detail: "If this route reaches a city more cheaply, record it and expand it next level.",
+      at: "improve",
+    },
+    {
+      title: "Stop after k + 1 levels",
+      detail: "best[dst] or −1.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findCheapestPrice(n: number, flights: number[][], src: number, dst: number, k: number): number {
       const flightsFrom: [number, number][][] = Array.from({ length: n }, () => []);

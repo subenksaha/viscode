@@ -14,6 +14,22 @@ const threePasses = defineSolution<Input>({
   time: "O(81)",
   space: "O(9)",
   idea: "Run three passes over the board: one per row, one per column and one per 3×3 box. Each unit uses a fresh set; a repeated digit makes the board invalid.",
+  approach: [
+    {
+      title: "One unit at a time",
+      detail: "Rows, then columns, then boxes. Each unit gets a fresh set.",
+      at: "unit",
+    },
+    {
+      title: "Repeated digit",
+      detail: "A digit seen twice in the same unit makes the board invalid. Here 8 repeats in column 0.",
+      at: "dup",
+    },
+    {
+      title: "Fixed cost",
+      detail: "27 units × 9 cells, so constant time for a 9×9 board.",
+    },
+  ],
   code: code(`
     function isValidSudoku(board: string[][]): boolean {
       // Three ways to read "the k-th cell of unit number u": by row, by column, by 3x3 box.
@@ -80,6 +96,28 @@ const onePass = defineSolution<Input>({
   time: "O(81)",
   space: "O(81)",
   idea: "Visit each filled cell once and check three sets at the same time: its row, its column and its box (index ⌊r/3⌋·3 + ⌊c/3⌋).",
+  approach: [
+    {
+      title: "27 sets",
+      detail: "One per row, column and box.",
+      at: "init",
+    },
+    {
+      title: "Box index",
+      detail: "box = ⌊r/3⌋·3 + ⌊c/3⌋ numbers the boxes 0–8 left to right, top to bottom.",
+      at: "cell",
+    },
+    {
+      title: "Check all three, then record",
+      detail: "A filled cell must be new to its row, column and box.",
+      at: "add",
+    },
+    {
+      title: "First conflict",
+      detail: "Here 8 is already in box 0. Each cell is visited once.",
+      at: "dup",
+    },
+  ],
   code: code(`
     function isValidSudoku(board: string[][]): boolean {
       const rows = Array.from({ length: 9 }, () => new Set<string>());

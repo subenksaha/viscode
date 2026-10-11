@@ -12,6 +12,23 @@ const usedArray = defineSolution<Input>({
   time: "O(n · n!)",
   space: "O(n)",
   idea: "Fill the permutation one slot at a time. At each slot, try every number not used yet, recurse, then undo.",
+  approach: [
+    {
+      title: "Choose an unused number",
+      detail: "Fill the next slot with any number not yet in the path.",
+      at: "choose",
+    },
+    {
+      title: "Complete permutation",
+      detail: "When the path has n numbers, copy it to the result.",
+      at: "found",
+    },
+    {
+      title: "Undo",
+      detail: "Unmark and pop so the slot can try the next number. This gives n! leaves with O(n) work each.",
+      at: "undo",
+    },
+  ],
   code: code(`
     function permute(nums: number[]): number[][] {
       const result: number[][] = [];
@@ -73,6 +90,23 @@ const swapping = defineSolution<Input>({
   time: "O(n · n!)",
   space: "O(n)",
   idea: "Positions [0, k) are fixed. Swap each candidate from [k, n) into position k, recurse on k + 1, then swap back.",
+  approach: [
+    {
+      title: "Swap a candidate into position",
+      detail: "Positions [0, index) are fixed. Swap each remaining element into index.",
+      at: "swap",
+    },
+    {
+      title: "Recurse",
+      detail: "When index reaches n, the array itself is a permutation.",
+      at: "found",
+    },
+    {
+      title: "Swap back",
+      detail: "Restore the order before trying the next candidate, so siblings start from the same array.",
+      at: "unswap",
+    },
+  ],
   code: code(`
     function permute(nums: number[]): number[][] {
       const result: number[][] = [];

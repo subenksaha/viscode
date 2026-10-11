@@ -13,6 +13,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(h)",
   idea: "For every node, the best path peaking there is node + best downward path on the left + on the right (dropping negative sides). Downward paths are recomputed from scratch for each node.",
+  approach: [
+    {
+      title: "Each node as the peak",
+      detail: "The best path peaking at a node is its value plus the best downward path into each child. Drop a side whose gain is negative.",
+      at: "peak",
+    },
+    {
+      title: "Track the max",
+      detail: "Compare each peak sum with best.",
+      at: "best",
+    },
+    {
+      title: "Recomputation",
+      detail: "The downward paths are recomputed for every node, so this is O(n²) on a skewed tree.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxPathSum(root: TreeNode | null): number {
       // Best sum of a path that starts at node and goes straight down.
@@ -62,6 +79,30 @@ const dfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "One post-order DFS returns each node's best downward gain. At each node, update the answer with node + left gain + right gain, but return only node + the better of the two (a path cannot fork when passed upward).",
+  approach: [
+    {
+      title: "Post-order DFS",
+      detail: "Compute the children's gains first.",
+      at: "left",
+    },
+    {
+      title: "Clamp negative gains to 0",
+      detail: "A negative branch only lowers the sum, so skip it.",
+      at: "right",
+    },
+    {
+      title: "Update with the forked path",
+      detail: "node + leftGain + rightGain is the best path that peaks at this node.",
+      at: "best",
+      nth: -1,
+    },
+    {
+      title: "Return a single branch upward",
+      detail: "A parent can only extend one side, since a path can't fork twice. So return node + max(leftGain, rightGain). One pass, O(n).",
+      at: "ret",
+      nth: -1,
+    },
+  ],
   code: code(`
     function maxPathSum(root: TreeNode | null): number {
       let best = -Infinity;

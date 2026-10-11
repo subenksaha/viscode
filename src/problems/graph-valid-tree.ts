@@ -15,6 +15,28 @@ const unionFind = defineSolution<Input>({
   time: "O(E · α(n))",
   space: "O(n)",
   idea: "A tree has exactly n − 1 edges and no cycle. Union the endpoints of each edge; if they are already in the same set, that edge closes a cycle.",
+  approach: [
+    {
+      title: "Edge count check",
+      detail: "A tree on n nodes has exactly n − 1 edges. Any other count fails immediately.",
+      at: "count",
+    },
+    {
+      title: "Singleton sets",
+      detail: "Each node starts alone.",
+      at: "init",
+    },
+    {
+      title: "Union each edge",
+      detail: "Find both endpoints' roots and link them.",
+      at: "union",
+    },
+    {
+      title: "A shared root means a cycle",
+      detail: "If an edge's endpoints already share a root, it closes a cycle. n − 1 edges with no cycle means the graph is connected, so it is a tree.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
       if (edges.length !== n - 1) return false; //@count
@@ -72,6 +94,29 @@ const dfs = defineSolution<Input>({
   time: "O(n + E)",
   space: "O(n + E)",
   idea: "With exactly n − 1 edges, the graph is a tree if and only if it is connected. DFS from node 0 and check that every node was reached.",
+  approach: [
+    {
+      title: "Edge count check",
+      detail: "With exactly n − 1 edges, being connected is equivalent to being a tree.",
+      at: "count",
+    },
+    {
+      title: "Build adjacency",
+      detail: "Store undirected edges both ways.",
+      at: "build",
+    },
+    {
+      title: "DFS from 0",
+      detail: "Mark every reachable node.",
+      at: "visit",
+      nth: 2,
+    },
+    {
+      title: "Connected?",
+      detail: "If DFS reached all n nodes, it is a tree.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
       if (edges.length !== n - 1) return false; //@count
@@ -128,6 +173,33 @@ const bfs = defineSolution<Input>({
   time: "O(n + E)",
   space: "O(n + E)",
   idea: "BFS from 0. Reaching an already-seen node that is not the node we came from means a cycle. At the end, every node must be seen.",
+  approach: [
+    {
+      title: "Build adjacency",
+      detail: "Store undirected edges both ways.",
+      at: "build",
+    },
+    {
+      title: "BFS with parents",
+      detail: "Remember which node discovered each node.",
+      at: "pop",
+    },
+    {
+      title: "Skip the edge we came in on",
+      detail: "In an undirected graph the parent shows up as a neighbor. That isn't a cycle.",
+      at: "back",
+    },
+    {
+      title: "Discover children",
+      detail: "Any other already-seen neighbor would be a second path, which means a cycle. Otherwise record the parent and enqueue.",
+      at: "push",
+    },
+    {
+      title: "All nodes seen",
+      detail: "No cycle plus every node reached means it is a tree.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
       const neighbors: number[][] = Array.from({ length: n }, () => []);

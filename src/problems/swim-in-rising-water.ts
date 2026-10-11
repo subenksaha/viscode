@@ -19,6 +19,33 @@ const binary = defineSolution<Input>({
   time: "O(n² log n²)",
   space: "O(n²)",
   idea: "If you can cross at time T, you can cross at any later time. Binary-search the smallest T for which a DFS through cells with elevation ≤ T reaches the corner.",
+  approach: [
+    {
+      title: "Search over time",
+      detail: "The answer lies between grid[0][0] and n² − 1.",
+      at: "init",
+    },
+    {
+      title: "Feasibility check",
+      detail: "If you can cross at time T, you can cross at any later time. So binary search applies.",
+      at: "mid",
+    },
+    {
+      title: "DFS under the water level",
+      detail: "Only cells with elevation ≤ T are swimmable.",
+      at: "visit",
+    },
+    {
+      title: "Narrow",
+      detail: "Reachable means try earlier. Unreachable means you need more time.",
+      at: "yes",
+    },
+    {
+      title: "Answer",
+      detail: "O(n² log n²).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function swimInWater(grid: number[][]): number {
       const n = grid.length;
@@ -93,6 +120,28 @@ const dijkstra = defineSolution<Input>({
   time: "O(n² log n)",
   space: "O(n²)",
   idea: "The cost of a path is its highest elevation. Expand cells from a min-heap keyed by that cost; the first time the corner is popped, its cost is the answer.",
+  approach: [
+    {
+      title: "Path cost is its maximum",
+      detail: "The time needed for a path is its highest elevation.",
+      at: "init",
+    },
+    {
+      title: "Pop the cheapest frontier cell",
+      detail: "A min-heap keyed by that maximum.",
+      at: "pop",
+    },
+    {
+      title: "Push neighbors",
+      detail: "Each neighbor's cost is max(current cost, its elevation).",
+      at: "push",
+    },
+    {
+      title: "First pop of the corner",
+      detail: "Like Dijkstra, the first time the corner is popped, its cost is optimal.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function swimInWater(grid: number[][]): number {
       const n = grid.length;

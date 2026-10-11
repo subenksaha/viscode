@@ -17,6 +17,34 @@ const pushHeavy = defineSolution<Input>({
   time: "push O(n), others O(1)",
   space: "O(n)",
   idea: "Keep the oldest element on top of the main stack. To push, move everything to a helper stack, push the new value, then move everything back.",
+  approach: [
+    {
+      title: "Two stacks",
+      detail: "main always keeps the oldest element on top, so pop and peek are trivial.",
+      at: "ctor",
+    },
+    {
+      title: "Unload before pushing",
+      detail: "Move every element from main to temp. This reverses them and leaves main empty.",
+      at: "unload",
+    },
+    {
+      title: "Push at the bottom",
+      detail: "The new element goes onto the empty main, so it sits at the very bottom, which is the back of the queue.",
+      at: "push",
+      nth: 2,
+    },
+    {
+      title: "Reload",
+      detail: "Move everything back. The original order is restored, with the new element underneath. Every push costs O(n).",
+      at: "reload",
+    },
+    {
+      title: "Pop and peek read the top",
+      detail: "The front of the queue is always on top of main.",
+      at: "pop",
+    },
+  ],
   code: code(`
     class MyQueue {
       // The top of main (its last element) is always the front of the queue.
@@ -91,6 +119,34 @@ const amortized = defineSolution<Input>({
   time: "O(1) amortized",
   space: "O(n)",
   idea: "Push onto an inbox stack. When you need the front and the outbox is empty, pour the whole inbox into the outbox, which reverses the order. Each element moves at most once.",
+  approach: [
+    {
+      title: "Inbox and outbox",
+      detail: "Pushes go to the inbox. Pops come from the outbox.",
+      at: "ctor",
+    },
+    {
+      title: "Push is O(1)",
+      detail: "Just push onto the inbox.",
+      at: "push",
+    },
+    {
+      title: "Pour only when the outbox is empty",
+      detail: "If the outbox still has items, its top is already the oldest.",
+      at: "check",
+    },
+    {
+      title: "Pouring reverses the order",
+      detail: "Moving the inbox over one by one puts the oldest element on top of the outbox.",
+      at: "pour",
+    },
+    {
+      title: "Amortized O(1)",
+      detail: "Each element is pushed and popped at most twice across both stacks, so the average cost per operation is constant.",
+      at: "pop",
+      nth: 2,
+    },
+  ],
   code: code(`
     class MyQueue {
       inbox: number[] = []; // new items go here //@ctor

@@ -14,6 +14,22 @@ const regex = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Match optional whitespace, an optional sign and a run of digits with a regular expression, convert, then clamp to the 32-bit range.",
+  approach: [
+    {
+      title: "One regex does the parsing",
+      detail: "^ *([+-]?\\d+) skips leading spaces, captures an optional sign and the digits, and ignores everything after them.",
+      at: "match",
+    },
+    {
+      title: "Clamp",
+      detail: "Convert, then clamp into [−2³¹, 2³¹ − 1].",
+      at: "clamp",
+    },
+    {
+      title: "No match",
+      detail: "If there are no digits after the optional sign, the answer is 0.",
+    },
+  ],
   code: code(`
     function myAtoi(s: string): number {
       // Optional spaces, an optional sign, then digits.
@@ -47,6 +63,33 @@ const scan = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Skip spaces, read a sign, then fold digits into the result. Before each multiply-by-10, check whether it would overflow and clamp right away.",
+  approach: [
+    {
+      title: "Skip spaces",
+      detail: "Leading spaces are ignored.",
+      at: "space",
+    },
+    {
+      title: "Read the sign",
+      detail: "An optional '+' or '−'.",
+      at: "sign",
+    },
+    {
+      title: "Fold digits",
+      detail: "result = result · 10 + digit, stopping at the first non-digit.",
+      at: "fold",
+    },
+    {
+      title: "Check overflow before folding",
+      detail: "If result > (MAX − digit) / 10, the next fold would overflow, so clamp right away.",
+      at: "digit",
+    },
+    {
+      title: "Return",
+      detail: "Apply the sign. O(n) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function myAtoi(s: string): number {
       const MAX = 2 ** 31 - 1;

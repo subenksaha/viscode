@@ -12,6 +12,33 @@ const iterative = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Walk the list with prev and curr. Save curr.next, point curr back at prev, then move both one step forward.",
+  approach: [
+    {
+      title: "Two pointers",
+      detail: "prev is the reversed part (initially empty) and curr is the rest of the list.",
+      at: "init",
+    },
+    {
+      title: "Save next",
+      detail: "Remember curr.next before it gets overwritten.",
+      at: "save",
+    },
+    {
+      title: "Flip the pointer",
+      detail: "Point curr back at prev.",
+      at: "flip",
+    },
+    {
+      title: "Advance",
+      detail: "prev = curr and curr = next. Repeat until curr is null.",
+      at: "advance",
+    },
+    {
+      title: "New head",
+      detail: "prev now points at the old tail. O(n) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
       let prev: ListNode | null = null; //@init
@@ -54,6 +81,28 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Reverse the rest of the list first. The old next node is now the tail of the reversed part, so attach the current node after it.",
+  approach: [
+    {
+      title: "Recurse to the end",
+      detail: "Reverse everything after head first.",
+      at: "recurse",
+    },
+    {
+      title: "Base case",
+      detail: "A single node (the old tail) is already reversed. It becomes the new head.",
+      at: "base",
+    },
+    {
+      title: "Hang head after its old next",
+      detail: "After the recursion, head.next is the tail of the reversed rest, so point it back at head.",
+      at: "link",
+    },
+    {
+      title: "Cut the forward link",
+      detail: "Clear head.next so head is the new tail. The recursion stack uses O(n) space.",
+      at: "cut",
+    },
+  ],
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
       if (head === null || head.next === null) return head; //@base
@@ -99,6 +148,29 @@ const stackBased = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Push every node onto a stack, then pop them off and relink them in reverse order.",
+  approach: [
+    {
+      title: "Push every node",
+      detail: "The stack holds the nodes in last-in-first-out order, which is the reverse of the list.",
+      at: "push",
+      nth: -1,
+    },
+    {
+      title: "Pop to rebuild",
+      detail: "Append nodes as they come off the stack behind a dummy head.",
+      at: "pop",
+    },
+    {
+      title: "Terminate the tail",
+      detail: "The old head is now last. Set its next to null to cut the old link, or the list would contain a cycle.",
+      at: "end",
+    },
+    {
+      title: "Return",
+      detail: "O(n) extra space for the stack.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
       const stack: ListNode[] = [];

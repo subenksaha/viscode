@@ -12,6 +12,28 @@ const memo = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "count(i, j) = ways to form t[j..] from s[i..]. You can always skip s[i]; if s[i] = t[j] you may also use it to match t[j].",
+  approach: [
+    {
+      title: "Always try skipping s[i]",
+      detail: "count(i, j) includes count(i+1, j).",
+      at: "store",
+    },
+    {
+      title: "On a match, also use it",
+      detail: "Add count(i+1, j+1).",
+      at: "match",
+    },
+    {
+      title: "Base cases",
+      detail: "All of t matched: 1. s ran out first: 0.",
+      at: "full",
+    },
+    {
+      title: "Memoize",
+      detail: "O(m·n) states.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function numDistinct(s: string, t: string): number {
       const memo = new Map<string, number>();
@@ -73,6 +95,24 @@ const table = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m·n)",
   idea: "dp[i][j] = ways the first i chars of s form the first j chars of t. dp[i][j] = dp[i−1][j] (ignore s[i−1]) + dp[i−1][j−1] when s[i−1] = t[j−1].",
+  approach: [
+    {
+      title: "Empty t",
+      detail: "dp[i][0] = 1: the empty subsequence is formed one way.",
+      at: "init",
+    },
+    {
+      title: "Skip or use",
+      detail: "dp[i][j] = dp[i−1][j] + (s[i−1] === t[j−1] ? dp[i−1][j−1] : 0).",
+      at: "cell",
+      nth: 8,
+    },
+    {
+      title: "Answer",
+      detail: "dp[m][n].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function numDistinct(s: string, t: string): number {
       // dp[i][j] = ways to form the first j letters of t from the first i letters of s

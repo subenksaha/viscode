@@ -11,6 +11,28 @@ const bitByBit = defineSolution<Input>({
   time: "O(32)",
   space: "O(1)",
   idea: "Pop the lowest bit of n and push it onto result from the right, 32 times.",
+  approach: [
+    {
+      title: "Start with an empty result",
+      detail: "The result is built by shifting bits in from the right.",
+      at: "init",
+    },
+    {
+      title: "Push the lowest bit",
+      detail: "Shift result left to make room, then OR in n's lowest bit. Bits that leave n first end up at the top of result.",
+      at: "push",
+    },
+    {
+      title: "Pop it from n",
+      detail: "n >>> 1 drops the used bit so the next one is lowest.",
+      at: "pop",
+    },
+    {
+      title: "32 rounds reverse it",
+      detail: "After 32 iterations, bit k of n sits at bit 31 − k. >>> 0 reads the result as unsigned.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function reverseBits(n: number): number {
       let result = 0; //@init
@@ -49,6 +71,28 @@ const masks = defineSolution<Input>({
   time: "O(1)",
   space: "O(1)",
   idea: "Swap the two 16-bit halves, then the 8-bit halves inside each, then 4, 2 and 1. Five mask-and-shift steps reverse all 32 bits.",
+  approach: [
+    {
+      title: "Swap the 16-bit halves",
+      detail: "Reversing 32 bits is the same as swapping the two halves and then reversing inside each half.",
+      at: "s16",
+    },
+    {
+      title: "Swap bytes inside each half",
+      detail: "Masks select alternating 8-bit groups. Shift one set right and the other left, then OR them.",
+      at: "s8",
+    },
+    {
+      title: "Swap nibbles",
+      detail: "The same trick works with 4-bit groups.",
+      at: "s4",
+    },
+    {
+      title: "Swap pairs, then single bits",
+      detail: "After the 2-bit and 1-bit swaps, every bit has moved to its mirror position. Five constant-time steps, no loop.",
+      at: "s1",
+    },
+  ],
   code: code(`
     function reverseBits(n: number): number {
       // Swap halves, then swap halves inside each half, and so on down to single bits.

@@ -13,6 +13,28 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Swap the left and right child of the root, then invert both subtrees.",
+  approach: [
+    {
+      title: "Swap at the root",
+      detail: "Exchange the left and right children.",
+      at: "swap",
+    },
+    {
+      title: "Invert the new left subtree",
+      detail: "Recurse into each subtree to mirror it too.",
+      at: "left",
+    },
+    {
+      title: "Invert the new right subtree",
+      detail: "After both returns the whole subtree is mirrored.",
+      at: "right",
+    },
+    {
+      title: "Done",
+      detail: "Each node is swapped once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function invertTree(root: TreeNode | null): TreeNode | null {
       if (root === null) return null; //@base
@@ -50,6 +72,28 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Visit nodes level by level and swap each node's children.",
+  approach: [
+    {
+      title: "Queue the root",
+      detail: "Any visiting order works, since each node's swap is independent.",
+      at: "init",
+    },
+    {
+      title: "Visit a node",
+      detail: "Take the next node.",
+      at: "pop",
+    },
+    {
+      title: "Swap its children",
+      detail: "Mirror this node.",
+      at: "swap",
+    },
+    {
+      title: "Queue the children",
+      detail: "They are swapped when their turn comes.",
+      at: "push",
+    },
+  ],
   code: code(`
     function invertTree(root: TreeNode | null): TreeNode | null {
       const queue: TreeNode[] = []; //@init

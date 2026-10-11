@@ -15,6 +15,28 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Read tokens right to left. An operator's right operand is the expression just before it, and its left operand is the one before that, so evaluate them recursively.",
+  approach: [
+    {
+      title: "Read from the end",
+      detail: "The last token is the outermost operator, or a lone number.",
+      at: "read",
+    },
+    {
+      title: "Numbers are leaves",
+      detail: "A number token evaluates to itself.",
+      at: "num",
+    },
+    {
+      title: "An operator needs two operands",
+      detail: "The expression just before it (to its left) is its right operand. The one before that is its left operand. Evaluate them recursively, right first.",
+      at: "operands",
+    },
+    {
+      title: "Apply",
+      detail: "Combine with the operator. Division truncates toward zero, as required.",
+      at: "apply",
+    },
+  ],
   code: code(`
     function evalRPN(tokens: string[]): number {
       let pos = tokens.length - 1; // read from the end
@@ -73,6 +95,28 @@ const stack = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Push numbers. On an operator, pop the right then the left operand, apply it, and push the result. The last value on the stack is the answer.",
+  approach: [
+    {
+      title: "Operand stack",
+      detail: "RPN never needs parentheses: every operator works on the two most recent results.",
+      at: "init",
+    },
+    {
+      title: "Push numbers",
+      detail: "Operands wait on the stack.",
+      at: "push",
+    },
+    {
+      title: "Pop right, then left",
+      detail: "Order matters for − and /: the top of the stack is the right operand.",
+      at: "pop",
+    },
+    {
+      title: "Push the result",
+      detail: "The result becomes an operand for later operators. The final stack holds the answer.",
+      at: "apply",
+    },
+  ],
   code: code(`
     function evalRPN(tokens: string[]): number {
       const stack: number[] = []; //@init

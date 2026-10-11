@@ -12,6 +12,23 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Anagrams have the same letters, so sorted they are identical.",
+  approach: [
+    {
+      title: "Sort both strings",
+      detail: "Anagrams contain the same multiset of letters, so sorted they are identical. (Different lengths fail immediately.)",
+      at: "sort",
+    },
+    {
+      title: "Compare position by position",
+      detail: "Any mismatch means the letter counts differ.",
+      at: "cmp",
+    },
+    {
+      title: "Identical",
+      detail: "O(n log n) because of sorting.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len
@@ -47,6 +64,24 @@ const hashMap = defineSolution<Input>({
   time: "O(n)",
   space: "O(k)",
   idea: "Count letters of s up and letters of t down. Every count must end at zero.",
+  approach: [
+    {
+      title: "Count s up",
+      detail: "After this pass, count holds every letter frequency of s.",
+      at: "up",
+      nth: -1,
+    },
+    {
+      title: "Count t down",
+      detail: "Each letter of t uses up one available copy. Running out means t has an extra letter.",
+      at: "down",
+    },
+    {
+      title: "Every count balanced",
+      detail: "With equal lengths and no shortfall, every count is back at zero.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len
@@ -90,6 +125,22 @@ const fixedArray = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "For lowercase letters, a fixed array of 26 counters does the same job as a map. Increment for s and decrement for t in the same loop.",
+  approach: [
+    {
+      title: "26 counters",
+      detail: "Index each letter by its offset from 'a'. Add 1 for s[i] and subtract 1 for t[i] in the same loop.",
+      at: "loop",
+    },
+    {
+      title: "All zero means anagram",
+      detail: "Every letter appeared the same number of times in both strings.",
+      at: "ret",
+    },
+    {
+      title: "Why an array",
+      detail: "A fixed 26-slot array is faster than a hash map and uses O(1) space. It only works for a known small alphabet.",
+    },
+  ],
   code: code(`
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len

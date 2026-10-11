@@ -11,6 +11,28 @@ const recursive = defineSolution<Input>({
   time: "O(n)",
   space: "O(depth)",
   idea: "Parse a sum of signed terms. A term is a number or a parenthesized expression, which is parsed by a recursive call that stops at the matching ')'.",
+  approach: [
+    {
+      title: "A sum of signed terms",
+      detail: "Track the sign of the next term. A '−' flips it, and it resets to + after each term.",
+      at: "sign",
+    },
+    {
+      title: "Numbers",
+      detail: "Read all consecutive digits, then add sign × number to the running total.",
+      at: "num",
+    },
+    {
+      title: "Parentheses recurse",
+      detail: "'(' starts a nested evaluation that returns at the matching ')'. Its value is one signed term, so −(…) negates the whole group.",
+      at: "paren",
+    },
+    {
+      title: "Return at ')'",
+      detail: "Each level returns its total to the caller. The shared position moves past every character once: O(n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function calculate(s: string): number {
       let pos = 0;
@@ -98,6 +120,33 @@ const stack = defineSolution<Input>({
   time: "O(n)",
   space: "O(depth)",
   idea: "Accumulate result with the current sign. On '(' push the running result and the sign before it, then start fresh. On ')' multiply the inner result by the saved sign and add the saved result back.",
+  approach: [
+    {
+      title: "Running result and sign",
+      detail: "Without parentheses, result += sign × number is enough.",
+      at: "init",
+    },
+    {
+      title: "Fold on an operator",
+      detail: "On + or −, add the finished number with its sign, then remember the new sign.",
+      at: "op",
+    },
+    {
+      title: "Save state at '('",
+      detail: "Push the result so far and the sign in front of the parenthesis, then start fresh inside.",
+      at: "open",
+    },
+    {
+      title: "Restore at ')'",
+      detail: "Finish the inner result, then compute resultBefore + signBefore × inner.",
+      at: "close",
+    },
+    {
+      title: "Final number",
+      detail: "Add whatever number is still pending.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function calculate(s: string): number {
       const stack: number[] = [];

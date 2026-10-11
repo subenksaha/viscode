@@ -53,6 +53,28 @@ const backtracking = defineSolution<Input>({
   time: "O(m·n·3ᴸ)",
   space: "O(L)",
   idea: "From each cell, DFS in four directions matching one letter at a time. Temporarily mark cells on the current path so they are not reused, and restore them on the way back.",
+  approach: [
+    {
+      title: "Try every starting cell",
+      detail: "The word can begin anywhere, so launch the search from each cell.",
+      at: "start",
+    },
+    {
+      title: "Match and mark",
+      detail: "If the cell holds word[index], mark it with '#' so this path can't reuse it, then try all four neighbors for the next letter.",
+      at: "mark",
+    },
+    {
+      title: "Prune mismatches",
+      detail: "Out of bounds, already used, or the wrong letter: this branch fails immediately.",
+      at: "miss",
+    },
+    {
+      title: "Restore on the way back",
+      detail: "Each cell's letter is restored when its branch returns, so other paths can use it. Matching every letter means the word exists.",
+      at: "found",
+    },
+  ],
   code: code(`
     function exist(board: string[][], word: string): boolean {
       const rows = board.length;
@@ -89,6 +111,33 @@ const pruned = defineSolution<Input>({
   time: "O(m·n·3ᴸ)",
   space: "O(L)",
   idea: "Two cheap checks first: if the board lacks enough of some letter, fail immediately. If the word's last letter is rarer than its first, search for the reversed word, which cuts off more branches early.",
+  approach: [
+    {
+      title: "Count letters first",
+      detail: "If the word needs more of some letter than the board has, fail before searching at all.",
+      at: "count",
+    },
+    {
+      title: "Start from the rarer end",
+      detail: "The search fans out from every cell holding the first letter. If the last letter is rarer, search for the reversed word and start from fewer cells.",
+      at: "reverse",
+    },
+    {
+      title: "Same backtracking search",
+      detail: "Mark the cell, explore its four neighbors, and restore it afterwards.",
+      at: "mark",
+    },
+    {
+      title: "Many cheap misses",
+      detail: "Most starts fail on the first letter, which is cheap. The pruning cuts down the expensive deep searches.",
+      at: "miss",
+    },
+    {
+      title: "Found",
+      detail: "Every letter matched along one path.",
+      at: "found",
+    },
+  ],
   code: code(`
     function exist(board: string[][], word: string): boolean {
       // Quick checks before the expensive search.

@@ -11,6 +11,23 @@ const sorting = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(1)*",
   idea: "After sorting, nums[i] should equal i. The first index where it does not is the missing number.",
+  approach: [
+    {
+      title: "Sort",
+      detail: "In sorted order, a complete 0..n would have nums[i] === i at every index.",
+      at: "sort",
+    },
+    {
+      title: "Walk while values match indices",
+      detail: "Each match confirms that number is present.",
+      at: "loop",
+    },
+    {
+      title: "First mismatch is the gap",
+      detail: "At the first index where nums[i] ≠ i, the value i was skipped. If every index matches, n itself is missing.",
+      at: "found",
+    },
+  ],
   code: code(`
     function missingNumber(nums: number[]): number {
       nums.sort((a, b) => a - b); //@sort
@@ -41,6 +58,23 @@ const hashSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Put all numbers in a set, then check 0..n for the one that is absent.",
+  approach: [
+    {
+      title: "Store everything",
+      detail: "A set gives O(1) membership checks.",
+      at: "build",
+    },
+    {
+      title: "Probe 0..n",
+      detail: "Check each candidate value in order.",
+      at: "loop",
+    },
+    {
+      title: "The absent one is the answer",
+      detail: "Exactly one value in [0, n] is missing from the set.",
+      at: "found",
+    },
+  ],
   code: code(`
     function missingNumber(nums: number[]): number {
       const seen = new Set(nums); //@build
@@ -71,6 +105,24 @@ const gauss = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "0 + 1 + … + n = n(n+1)/2. Subtract the actual sum, and what is left is the missing number.",
+  approach: [
+    {
+      title: "Expected total",
+      detail: "0 + 1 + … + n = n(n + 1) / 2. This is what the sum would be with nothing missing.",
+      at: "expected",
+    },
+    {
+      title: "Subtract what is present",
+      detail: "Subtract every value in nums from the expected total.",
+      at: "loop",
+      nth: -1,
+    },
+    {
+      title: "The remainder is missing",
+      detail: "Everything present cancels, and the leftover is the missing number. O(n) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function missingNumber(nums: number[]): number {
       const n = nums.length;
@@ -98,6 +150,23 @@ const xor = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "XOR all indices 0..n and all values. Every present number cancels with its index (x ^ x = 0), leaving only the missing one.",
+  approach: [
+    {
+      title: "Seed with n",
+      detail: "Indices run 0..n−1, so n has no matching index. Start the accumulator with it.",
+      at: "init",
+    },
+    {
+      title: "XOR index and value together",
+      detail: "x ^ x = 0 and XOR is order-independent. So every number that appears both as an index and as a value cancels out.",
+      at: "xor",
+    },
+    {
+      title: "The survivor is missing",
+      detail: "The only number XORed once is the missing one. This avoids the overflow risk of the sum formula.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function missingNumber(nums: number[]): number {
       // XOR-ing a number twice cancels it out (a ^ a = 0).

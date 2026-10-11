@@ -11,6 +11,29 @@ const memo = defineSolution<Input>({
   time: "O(n³)",
   space: "O(n²)",
   idea: "Pad nums with 1 on both ends. For the open interval (l, r), choose which balloon k bursts last: its neighbors are then l and r, and the two sides are independent subproblems.",
+  approach: [
+    {
+      title: "Think about the last burst",
+      detail: "Choosing which balloon bursts first makes the subproblems depend on each other. Instead, choose which balloon k bursts last in the open interval (l, r). Its neighbors at that moment are exactly l and r.",
+      at: "last",
+    },
+    {
+      title: "Independent halves",
+      detail: "Then (l, k) and (k, r) are separate subproblems: best(l, k) + nums[l]·nums[k]·nums[r] + best(k, r).",
+      at: "last",
+      nth: 3,
+    },
+    {
+      title: "Memoize intervals",
+      detail: "O(n²) intervals with O(n) choices each: O(n³).",
+      at: "store",
+    },
+    {
+      title: "Reuse",
+      detail: "Overlapping intervals are cached.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function maxCoins(nums: number[]): number {
       const balloons = [1, ...nums, 1]; // pad with 1s so edges are easy
@@ -68,6 +91,28 @@ const intervalDp = defineSolution<Input>({
   time: "O(n³)",
   space: "O(n²)",
   idea: "Fill dp[l][r] for open intervals in order of increasing width, so both halves of every split are already known.",
+  approach: [
+    {
+      title: "Empty intervals are 0",
+      detail: "Pad with 1s on both ends.",
+      at: "init",
+    },
+    {
+      title: "Increasing width",
+      detail: "Smaller intervals are filled first.",
+      at: "width",
+    },
+    {
+      title: "Try every last balloon",
+      detail: "dp[l][r] = max over k of dp[l][k] + coins + dp[k][r].",
+      at: "cell",
+    },
+    {
+      title: "Answer",
+      detail: "dp[0][n−1].",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxCoins(nums: number[]): number {
       const balloons = [1, ...nums, 1]; // pad with 1s so edges are easy

@@ -29,6 +29,28 @@ const scanCheck = defineSolution<Input>({
   time: "O(n! · n)",
   space: "O(n)",
   idea: "Place one queen per row. Before placing at (r, c), scan the queens already placed for a shared column or diagonal.",
+  approach: [
+    {
+      title: "One queen per row",
+      detail: "Rows never conflict this way, so only columns and diagonals need checking.",
+      at: "place",
+    },
+    {
+      title: "Attacked?",
+      detail: "Scan the placed queens for the same column or |Δcol| = Δrow, which means a shared diagonal.",
+      at: "attacked",
+    },
+    {
+      title: "Recurse and lift",
+      detail: "After exploring with a queen at (r, c), remove it and try the next column.",
+      at: "remove",
+    },
+    {
+      title: "Solution",
+      detail: "Placing all n rows gives a board.",
+      at: "solved",
+    },
+  ],
   code: code(`
     function solveNQueens(n: number): string[][] {
       const solutions: string[][] = [];
@@ -94,6 +116,28 @@ const sets = defineSolution<Input>({
   time: "O(n!)",
   space: "O(n)",
   idea: "Every cell on a '\\' diagonal shares r − c, and every cell on a '/' diagonal shares r + c. Keep three sets so the attack check is O(1).",
+  approach: [
+    {
+      title: "O(1) attack checks",
+      detail: "Cells on a '\\' diagonal share r − c, and cells on a '/' diagonal share r + c. Keep sets for columns and both kinds of diagonal.",
+      at: "attacked",
+    },
+    {
+      title: "Place and mark",
+      detail: "Add the column and both diagonals to their sets.",
+      at: "place",
+    },
+    {
+      title: "Unmark on backtrack",
+      detail: "Remove them so other branches start clean.",
+      at: "remove",
+    },
+    {
+      title: "Solution",
+      detail: "Same search tree with cheaper checks.",
+      at: "solved",
+    },
+  ],
   code: code(`
     function solveNQueens(n: number): string[][] {
       const solutions: string[][] = [];

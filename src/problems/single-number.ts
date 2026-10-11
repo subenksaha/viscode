@@ -11,6 +11,23 @@ const hashSet = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "Add a number the first time it appears and remove it the second time. Only the single number is left in the set.",
+  approach: [
+    {
+      title: "Add on first sight",
+      detail: "The number is waiting for its pair.",
+      at: "add",
+    },
+    {
+      title: "Remove on second",
+      detail: "The pair cancels out.",
+      at: "remove",
+    },
+    {
+      title: "Survivor",
+      detail: "Only the single number remains. O(n) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function singleNumber(nums: number[]): number {
       const unpaired = new Set<number>();
@@ -44,6 +61,24 @@ const xor = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "x ^ x = 0 and x ^ 0 = x, and XOR is order-independent. XOR all numbers: every pair cancels, leaving the single number.",
+  approach: [
+    {
+      title: "Start at 0",
+      detail: "x ^ 0 = x.",
+      at: "init",
+    },
+    {
+      title: "XOR everything",
+      detail: "x ^ x = 0, and order doesn't matter, so pairs cancel.",
+      at: "xor",
+      nth: 3,
+    },
+    {
+      title: "Result",
+      detail: "The single number. O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function singleNumber(nums: number[]): number {
       // a ^ a = 0 and a ^ 0 = a, so every pair cancels out and only the single number is left.

@@ -13,6 +13,23 @@ const bfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(w)",
   idea: "Traverse level by level. The last node of each level is the one you see from the right.",
+  approach: [
+    {
+      title: "Level by level",
+      detail: "Process one level at a time.",
+      at: "level",
+    },
+    {
+      title: "Take the last node",
+      detail: "The rightmost node of each level is visible.",
+      at: "take",
+    },
+    {
+      title: "Build the next level",
+      detail: "Enqueue children left to right.",
+      at: "next",
+    },
+  ],
   code: code(`
     function rightSideView(root: TreeNode | null): number[] {
       const result: number[] = [];
@@ -60,6 +77,23 @@ const dfs = defineSolution<Input>({
   time: "O(n)",
   space: "O(h)",
   idea: "Visit right before left and track depth. The first node you meet at each depth is the visible one.",
+  approach: [
+    {
+      title: "First node at each depth",
+      detail: "Visiting right before left means the first node reached at a depth is the rightmost one.",
+      at: "first",
+    },
+    {
+      title: "Go right first",
+      detail: "Explore the right subtree.",
+      at: "right",
+    },
+    {
+      title: "Then left",
+      detail: "The left subtree can still add deeper levels the right side doesn't reach, like 7 here.",
+      at: "left",
+    },
+  ],
   code: code(`
     function rightSideView(root: TreeNode | null): number[] {
       const result: number[] = [];

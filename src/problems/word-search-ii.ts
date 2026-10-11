@@ -26,6 +26,28 @@ const perWord = defineSolution<Input>({
   time: "O(W · m·n · 4^L)",
   space: "O(L)",
   idea: "Run the classic Word Search backtracking once for every word: start from each cell, extend the path one matching letter at a time, and mark cells while they are in use.",
+  approach: [
+    {
+      title: "One search per word",
+      detail: "Run the Word Search backtracking separately for each word.",
+      at: "word",
+    },
+    {
+      title: "Mark cells on the path",
+      detail: "Mark each matched cell so it isn't reused, and restore it on backtrack.",
+      at: "visit",
+    },
+    {
+      title: "Found",
+      detail: "Add the word once it is spelled.",
+      at: "found",
+    },
+    {
+      title: "Repeated work",
+      detail: "Words with shared prefixes repeat the same board walks. This is what the trie avoids.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findWords(board: string[][], words: string[]): string[] {
       const rows = board.length;
@@ -102,6 +124,33 @@ const trieDfs = defineSolution<Input>({
   time: "O(m·n · 4^L)",
   space: "O(total chars)",
   idea: "Put all words in a trie and run one DFS from every cell, walking the board and the trie together. A path stops as soon as no word has it as a prefix; reaching a stored word records it once.",
+  approach: [
+    {
+      title: "Trie of all words",
+      detail: "One structure holds every word, so a single DFS can look for all of them at once.",
+      at: "build",
+    },
+    {
+      title: "DFS from every cell",
+      detail: "Walk the board and the trie in step.",
+      at: "start",
+    },
+    {
+      title: "Prune dead prefixes",
+      detail: "If no word continues with this letter, stop right away. This cuts off most of the search.",
+      at: "prune",
+    },
+    {
+      title: "Record complete words once",
+      detail: "When the trie node holds a word, add it and clear the node so it isn't reported twice.",
+      at: "found",
+    },
+    {
+      title: "Mark and restore",
+      detail: "'#' blocks reuse on the current path.",
+      at: "visit",
+    },
+  ],
   code: code(`
     function findWords(board: string[][], words: string[]): string[] {
       // Trie node: children by letter, and the full word if one ends here.

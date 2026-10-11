@@ -24,6 +24,25 @@ const sortedArray = defineSolution<Input>({
   time: "add O(n), find O(1)",
   space: "O(n)",
   idea: "Keep all numbers sorted. Binary search the insert position (shifting costs O(n)); the median is the middle element or the average of the middle two.",
+  approach: [
+    {
+      title: "Keep everything sorted",
+      detail: "The median is then just an index lookup.",
+      at: "ctor",
+    },
+    {
+      title: "Binary insert",
+      detail: "Binary search finds the position in O(log n), but splice shifts elements in O(n).",
+      at: "add",
+      nth: 3,
+    },
+    {
+      title: "Read the middle",
+      detail: "Odd count: the middle element. Even count: the average of the two middle elements.",
+      at: "median",
+      nth: 2,
+    },
+  ],
   code: code(`
     class MedianFinder {
       sorted: number[] = []; //@ctor
@@ -83,6 +102,34 @@ const twoHeaps = defineSolution<Input>({
   time: "add O(log n), find O(1)",
   space: "O(n)",
   idea: "A max-heap holds the smaller half and a min-heap the larger half, with the max-heap allowed one extra. The median is the max-heap's top, or the average of both tops.",
+  approach: [
+    {
+      title: "Two halves",
+      detail: "A max-heap holds the smaller half and a min-heap the larger half.",
+      at: "ctor",
+    },
+    {
+      title: "Insert through the small half",
+      detail: "Push into the max-heap first.",
+      at: "push-low",
+    },
+    {
+      title: "Move its top up",
+      detail: "This keeps every small number ≤ every large number.",
+      at: "move-up",
+    },
+    {
+      title: "Rebalance sizes",
+      detail: "If the large half gets bigger, move its smallest back. The small half has equal size or one extra.",
+      at: "rebalance",
+    },
+    {
+      title: "Median from the tops",
+      detail: "One extra element means its top is the median. Equal sizes means average both tops. O(log n) per add.",
+      at: "median",
+      nth: 2,
+    },
+  ],
   code: code(`
     class MedianFinder {
       smallHalf = new MaxPriorityQueue<number>(); // top = biggest of the small numbers

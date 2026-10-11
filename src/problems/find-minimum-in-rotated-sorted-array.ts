@@ -11,6 +11,22 @@ const linear = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "The minimum is the first element smaller than its predecessor (the rotation point), or nums[0] if there is no drop.",
+  approach: [
+    {
+      title: "Scan for the drop",
+      detail: "A rotated sorted array rises, drops once, then rises again. Compare each element with its predecessor.",
+      at: "loop",
+    },
+    {
+      title: "The drop is the minimum",
+      detail: "The first element smaller than its predecessor is where the rotation starts, so it is the minimum. With no drop, the array was never rotated and nums[0] is the answer.",
+      at: "drop",
+    },
+    {
+      title: "Why it's not enough",
+      detail: "In the worst case the drop is near the end, so this is O(n). It ignores the sorted halves that binary search exploits to reach O(log n).",
+    },
+  ],
   code: code(`
     function findMin(nums: number[]): number {
       for (let i = 1; i < nums.length; i++) { //@loop
@@ -44,6 +60,33 @@ const binarySearch = defineSolution<Input>({
   time: "O(log n)",
   space: "O(1)",
   idea: "Compare the middle with the right end. If nums[mid] > nums[right], the drop (and the minimum) is right of mid; otherwise it is at mid or to its left.",
+  approach: [
+    {
+      title: "Search the whole range",
+      detail: "The minimum is the rotation point. Binary search can find it because one half is always sorted.",
+      at: "init",
+    },
+    {
+      title: "Compare mid with the right end",
+      detail: "If nums[mid] > nums[right], the order breaks somewhere right of mid. Otherwise mid..right is sorted and the minimum is at mid or to its left.",
+      at: "mid",
+    },
+    {
+      title: "Drop the left half",
+      detail: "nums[mid] > nums[right] means mid is in the larger, upper part, so the minimum is strictly right of it: left = mid + 1.",
+      at: "right",
+    },
+    {
+      title: "Keep mid as a candidate",
+      detail: "Otherwise right = mid, not mid − 1, because mid itself could be the minimum.",
+      at: "left",
+    },
+    {
+      title: "Pointers meet on the answer",
+      detail: "When left === right the range holds one element: the minimum. Each step halves the range, so O(log n).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findMin(nums: number[]): number {
       let left = 0; //@init

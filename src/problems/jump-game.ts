@@ -11,6 +11,28 @@ const dp = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Work backwards: index i is good if some jump from i lands on a good index. The last index is good.",
+  approach: [
+    {
+      title: "The goal is good",
+      detail: "canReachEnd[n−1] = true.",
+      at: "init",
+    },
+    {
+      title: "Work backwards",
+      detail: "For each i from right to left, look at every index it can jump to.",
+      at: "i",
+    },
+    {
+      title: "Good if any target is good",
+      detail: "One reachable good index makes i good. O(n²) worst case.",
+      at: "hit",
+    },
+    {
+      title: "Answer",
+      detail: "canReachEnd[0] says whether the start works.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canJump(nums: number[]): boolean {
       const n = nums.length;
@@ -60,6 +82,23 @@ const greedyForward = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Track the farthest index reachable so far. If you ever stand past it, you are stuck.",
+  approach: [
+    {
+      title: "Track the farthest reach",
+      detail: "reach is the farthest index any jump so far can land on.",
+      at: "init",
+    },
+    {
+      title: "Extend the reach",
+      detail: "From index i, i + nums[i] is reachable, so update reach.",
+      at: "extend",
+    },
+    {
+      title: "Stuck check",
+      detail: "If some i lies beyond reach, it can't be reached and the answer is false. Getting through the loop means the last index is reachable. O(n), O(1).",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canJump(nums: number[]): boolean {
       let reach = 0; // farthest index we can reach so far //@init
@@ -94,6 +133,23 @@ const greedyBackward = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Walk from the end. Whenever index i can reach the current goal, i becomes the new goal. Success if the goal reaches 0.",
+  approach: [
+    {
+      title: "Goal starts at the end",
+      detail: "goal is the leftmost index known to reach the end.",
+      at: "init",
+    },
+    {
+      title: "Pull the goal left",
+      detail: "If i + nums[i] ≥ goal, i can reach the goal, so i becomes the new goal.",
+      at: "move",
+    },
+    {
+      title: "Success if goal hits 0",
+      detail: "The start can reach the end exactly when the goal moves all the way back to index 0.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function canJump(nums: number[]): boolean {
       let goal = nums.length - 1; // leftmost index known to reach the end //@init

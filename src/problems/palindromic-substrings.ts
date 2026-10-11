@@ -11,6 +11,23 @@ const bruteForce = defineSolution<Input>({
   time: "O(n³)",
   space: "O(1)",
   idea: "Test every substring for being a palindrome and count the hits.",
+  approach: [
+    {
+      title: "Every substring",
+      detail: "Check all n(n+1)/2 substrings.",
+      at: "init",
+    },
+    {
+      title: "Palindrome test",
+      detail: "Two pointers from both ends. Every success counts.",
+      at: "hit",
+    },
+    {
+      title: "Non-palindromes",
+      detail: "\"aaab\" fails because 'a' ≠ 'b' at the ends. Each test is O(n), so O(n³) overall.",
+      at: "check",
+    },
+  ],
   code: code(`
     function countSubstrings(s: string): number {
       let count = 0; //@init
@@ -56,6 +73,24 @@ const expand = defineSolution<Input>({
   time: "O(n²)",
   space: "O(1)",
   idea: "Every successful expansion step from one of the 2n − 1 centers is exactly one palindrome. Count them.",
+  approach: [
+    {
+      title: "Each center",
+      detail: "Try odd centers (a character) and even centers (a gap).",
+      at: "center",
+    },
+    {
+      title: "Each successful expansion is one palindrome",
+      detail: "Growing one step means s[left..right] is a new palindrome, so count++.",
+      at: "grow",
+      nth: 3,
+    },
+    {
+      title: "Total",
+      detail: "O(n²) time, O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function countSubstrings(s: string): number {
       let count = 0;
@@ -103,6 +138,24 @@ const dp = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n²)",
   idea: "dp[i][j] = s[i..j] is a palindrome: the ends match and the inside is a palindrome. Count the true cells.",
+  approach: [
+    {
+      title: "Fill from the bottom row up",
+      detail: "isPal[i][j] needs isPal[i+1][j−1], the row below, so iterate i from n−1 down to 0.",
+      at: "row",
+    },
+    {
+      title: "Recurrence",
+      detail: "The ends match and the inside is a palindrome (or has length ≤ 2).",
+      at: "cell",
+      nth: 5,
+    },
+    {
+      title: "Count the true cells",
+      detail: "Each true cell is one palindromic substring.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function countSubstrings(s: string): number {
       const n = s.length;

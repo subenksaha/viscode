@@ -15,6 +15,28 @@ const sortStack = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "Process cars from closest to the target backwards. A car whose arrival time is ≤ the fleet ahead of it catches up and joins that fleet; otherwise it leads a new fleet.",
+  approach: [
+    {
+      title: "Sort from the front",
+      detail: "Cars can't pass each other, so a car's fate depends only on the cars ahead of it. Process from the car closest to the target backward, computing each car's solo arrival time.",
+      at: "sort",
+    },
+    {
+      title: "Tentatively a new fleet",
+      detail: "Push this car's arrival time.",
+      at: "push",
+    },
+    {
+      title: "Catch up and merge",
+      detail: "If it would arrive no later than the fleet ahead, it catches that fleet before the target and moves at its speed. Pop it, since it adds no new fleet.",
+      at: "merge",
+    },
+    {
+      title: "Count",
+      detail: "The stack holds one arrival time per fleet.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function carFleet(target: number, position: number[], speed: number[]): number {
       const cars = position.map((pos, i) => ({
@@ -64,6 +86,28 @@ const sortCount = defineSolution<Input>({
   time: "O(n log n)",
   space: "O(n)",
   idea: "The stack only ever needs its top. Walk from the front car back, tracking the slowest arrival time ahead; a car that would arrive later than that starts a new fleet.",
+  approach: [
+    {
+      title: "Sort front to back",
+      detail: "Same ordering as the stack approach.",
+      at: "sort",
+    },
+    {
+      title: "Arrival time",
+      detail: "(target − position) / speed if nothing blocked the car.",
+      at: "time",
+    },
+    {
+      title: "Slower than the fleet ahead",
+      detail: "If it would arrive later than the lead fleet, it never catches up, so it starts a new fleet and becomes the new lead.",
+      at: "new",
+    },
+    {
+      title: "Count",
+      detail: "Only the top of the stack was ever used, so one variable is enough.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function carFleet(target: number, position: number[], speed: number[]): number {
       const carIndices = position.map((_, i) => i);

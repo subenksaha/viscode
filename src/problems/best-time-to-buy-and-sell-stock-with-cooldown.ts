@@ -11,6 +11,29 @@ const memo = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "best(i, holding): if not holding, buy today or wait; if holding, sell today (then skip a day of cooldown) or wait. Memoize on (day, holding).",
+  approach: [
+    {
+      title: "State: day and holding",
+      detail: "Not holding: buy today or wait. Holding: sell today or wait.",
+      at: "choose",
+    },
+    {
+      title: "Sell skips a day",
+      detail: "After selling, the next decision is on day + 2. That skipped day is the cooldown.",
+      at: "choose",
+      nth: 3,
+    },
+    {
+      title: "Memoize",
+      detail: "2n states.",
+      at: "store",
+    },
+    {
+      title: "Reuse",
+      detail: "Overlapping branches reuse cached states.",
+      at: "hit",
+    },
+  ],
   code: code(`
     function maxProfit(prices: number[]): number {
       const memo = new Map<string, number>();
@@ -62,6 +85,23 @@ const stateMachine = defineSolution<Input>({
   time: "O(n)",
   space: "O(1)",
   idea: "Track the best profit ending each day in three states: hold (own a share), sold (just sold, cooling down tomorrow) and rest (free to buy). Each day's states come from yesterday's.",
+  approach: [
+    {
+      title: "Three states",
+      detail: "hold: own a share. sold: sold today. rest: free to buy.",
+      at: "init",
+    },
+    {
+      title: "Transition daily",
+      detail: "sold = hold + price. hold = max(hold, rest − price). rest = max(rest, previous sold), which is the cooldown ending.",
+      at: "update",
+    },
+    {
+      title: "Answer",
+      detail: "max(sold, rest). Ending while still holding is never better. O(1) space.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function maxProfit(prices: number[]): number {
       let hold = -Infinity; // best profit while owning a share //@init

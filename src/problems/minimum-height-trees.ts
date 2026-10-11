@@ -23,6 +23,22 @@ const bruteForce = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Root the tree at each node in turn and measure its height with BFS. Return every root with the smallest height.",
+  approach: [
+    {
+      title: "Measure every root",
+      detail: "BFS from each node counts how many levels the tree has when rooted there.",
+      at: "height",
+    },
+    {
+      title: "Keep the minimum",
+      detail: "Return every root that achieves the smallest height.",
+      at: "ret",
+    },
+    {
+      title: "Cost",
+      detail: "n BFS runs of O(n) each is O(n²). The leaf-trimming method finds the same roots in O(n).",
+    },
+  ],
   code: code(`
     function findMinHeightTrees(n: number, edges: number[][]): number[] {
       const neighbors: number[][] = Array.from({ length: n }, () => []);
@@ -93,6 +109,28 @@ const trimLeaves = defineSolution<Input>({
   time: "O(n)",
   space: "O(n)",
   idea: "The best roots are the center of the longest path. Peel off all leaves layer by layer, like an onion. The last one or two nodes standing are the centers.",
+  approach: [
+    {
+      title: "Find the leaves",
+      detail: "Nodes with degree 1. The best roots are the middle of the longest path, as far as possible from every leaf.",
+      at: "init",
+    },
+    {
+      title: "Peel one layer",
+      detail: "Remove all current leaves at once, which shrinks every longest path from both ends by one.",
+      at: "layer",
+    },
+    {
+      title: "New leaves appear",
+      detail: "A neighbor whose degree drops to 1 becomes a leaf in the next layer.",
+      at: "new-leaf",
+    },
+    {
+      title: "One or two centers remain",
+      detail: "Stop when at most 2 nodes are left. They are the minimum-height roots.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function findMinHeightTrees(n: number, edges: number[][]): number[] {
       if (n <= 2) { //@small

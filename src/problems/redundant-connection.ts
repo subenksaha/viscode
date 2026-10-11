@@ -14,6 +14,28 @@ const dfsCheck = defineSolution<Input>({
   time: "O(n²)",
   space: "O(n)",
   idea: "Add edges one by one. Before adding (u, v), DFS from u over the edges so far: if v is already reachable, this edge closes a cycle and is the answer.",
+  approach: [
+    {
+      title: "Process edges in order",
+      detail: "Before adding (a, b), check whether a can already reach b.",
+      at: "edge",
+    },
+    {
+      title: "DFS",
+      detail: "Explore the graph built so far.",
+      at: "visit",
+    },
+    {
+      title: "Not connected: add it",
+      detail: "The edge joins two separate pieces.",
+      at: "add",
+    },
+    {
+      title: "Already connected: redundant",
+      detail: "This edge would close a cycle. Since edges are scanned in order, it is the last such edge. O(n²).",
+      at: "cycle",
+    },
+  ],
   code: code(`
     function findRedundantConnection(edges: number[][]): number[] {
       const neighbors = new Map<number, number[]>();
@@ -79,6 +101,28 @@ const unionFind = defineSolution<Input>({
   time: "O(n · α(n))",
   space: "O(n)",
   idea: "Union the endpoints of each edge. The first edge whose endpoints already share a root connects two nodes that were already connected: that edge is redundant.",
+  approach: [
+    {
+      title: "Singletons",
+      detail: "Every node starts in its own set.",
+      at: "init",
+    },
+    {
+      title: "Find both roots",
+      detail: "For each edge.",
+      at: "find",
+    },
+    {
+      title: "Union",
+      detail: "Different roots: merge them.",
+      at: "union",
+    },
+    {
+      title: "Same root: redundant",
+      detail: "The endpoints were already connected. O(n α(n)).",
+      at: "cycle",
+    },
+  ],
   code: code(`
     function findRedundantConnection(edges: number[][]): number[] {
       const parent = Array.from({ length: edges.length + 1 }, (_, node) => node); //@init

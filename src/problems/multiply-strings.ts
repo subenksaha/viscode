@@ -26,6 +26,28 @@ const partials = defineSolution<Input>({
   time: "O(m·n + n·(m + n))",
   space: "O(m + n)",
   idea: "Multiply num1 by one digit of num2 at a time (with a carry), shift it by that digit's place with trailing zeros, and add it to a running string sum.",
+  approach: [
+    {
+      title: "One digit of num2 at a time",
+      detail: "Multiply num1 by it with a running carry.",
+      at: "digit",
+    },
+    {
+      title: "Shift by place",
+      detail: "Append zeros for the digit's position.",
+      at: "row",
+    },
+    {
+      title: "Add to the total",
+      detail: "String addition with a carry.",
+      at: "add",
+    },
+    {
+      title: "Result",
+      detail: "Grade-school multiplication.",
+      at: "ret",
+    },
+  ],
   code: code(`
     function multiply(num1: string, num2: string): string {
       if (num1 === "0" || num2 === "0") return "0";
@@ -105,6 +127,28 @@ const positions = defineSolution<Input>({
   time: "O(m·n)",
   space: "O(m + n)",
   idea: "The product of num1[i] and num2[j] lands in positions i + j and i + j + 1 of an (m + n)-digit result. Add each product into place, push the carry left, then strip leading zeros.",
+  approach: [
+    {
+      title: "m + n digit slots",
+      detail: "The product has at most m + n digits.",
+      at: "init",
+    },
+    {
+      title: "Products land at i + j + 1",
+      detail: "num1[i]·num2[j] adds into digits[i + j + 1].",
+      at: "mul",
+    },
+    {
+      title: "Carry left",
+      detail: "Keep sum % 10 there and add the carry into digits[i + j].",
+      at: "carry",
+    },
+    {
+      title: "Strip leading zeros",
+      detail: "Then join. O(m·n) with no string additions.",
+      at: "strip",
+    },
+  ],
   code: code(`
     function multiply(num1: string, num2: string): string {
       const m = num1.length;
