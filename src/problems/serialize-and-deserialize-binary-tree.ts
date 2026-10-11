@@ -14,26 +14,34 @@ const preorder = defineSolution<Input>({
   space: "O(n)",
   idea: "Write values in pre-order and write '#' for every null child. The decoder reads tokens in the same order and rebuilds the tree recursively.",
   code: code(`
+    // Preorder: value, then left subtree, then right subtree. "#" marks an empty spot.
     function serialize(root: TreeNode | null): string {
-      const out: string[] = [];
-      const go = (n: TreeNode | null) => {
-        if (!n) { out.push("#"); return; } //@null
-        out.push(String(n.val)); //@write
-        go(n.left); go(n.right);
-      };
-      go(root);
-      return out.join(",");
+      const parts: string[] = [];
+      function write(node: TreeNode | null) {
+        if (node === null) { //@null
+          parts.push("#");
+          return;
+        }
+        parts.push(String(node.val)); //@write
+        write(node.left);
+        write(node.right);
+      }
+      write(root);
+      return parts.join(",");
     }
     function deserialize(data: string): TreeNode | null {
       const tokens = data.split(",");
-      let i = 0;
-      const build = (): TreeNode | null => {
-        const tok = tokens[i++]; //@read
-        if (tok === "#") return null;
-        const n = new TreeNode(Number(tok)); //@node
-        n.left = build(); n.right = build();
-        return n;
-      };
+      let pos = 0;
+      // Reads tokens in the same preorder they were written.
+      function build(): TreeNode | null {
+        const token = tokens[pos]; //@read
+        pos++;
+        if (token === "#") return null;
+        const node = new TreeNode(Number(token)); //@node
+        node.left = build();
+        node.right = build();
+        return node;
+      }
       return build(); //@ret
     }
   `),
@@ -83,25 +91,42 @@ const levelOrder = defineSolution<Input>({
   space: "O(n)",
   idea: "Write nodes in BFS order with '#' for null children (the LeetCode format). Decode by handing out children to queued parents two tokens at a time.",
   code: code(`
+    // Level order (BFS). "#" marks an empty spot.
     function serialize(root: TreeNode | null): string {
-      const out: string[] = [], queue = [root];
-      while (queue.length) { //@ser
-        const n = queue.shift()!;
-        out.push(n ? String(n.val) : "#");
-        if (n) queue.push(n.left, n.right);
+      const parts: string[] = [];
+      const queue: (TreeNode | null)[] = [root];
+      while (queue.length > 0) { //@ser
+        const node = queue.shift()!;
+        if (node === null) {
+          parts.push("#");
+        } else {
+          parts.push(String(node.val));
+          queue.push(node.left);
+          queue.push(node.right);
+        }
       }
-      return out.join(",");
+      return parts.join(",");
     }
     function deserialize(data: string): TreeNode | null {
       const tokens = data.split(",");
       if (tokens[0] === "#") return null;
-      const root = new TreeNode(Number(tokens[0])), queue = [root];
-      let i = 1;
-      while (queue.length) { //@parent
-        const n = queue.shift()!;
-        const l = tokens[i++], r = tokens[i++];
-        if (l !== "#") queue.push((n.left = new TreeNode(Number(l)))); //@children
-        if (r !== "#") queue.push((n.right = new TreeNode(Number(r))));
+      const root = new TreeNode(Number(tokens[0]));
+      const queue = [root];
+      let pos = 1;
+      // Each node in the queue takes the next two tokens as its children.
+      while (queue.length > 0) { //@parent
+        const node = queue.shift()!;
+        const leftToken = tokens[pos];
+        const rightToken = tokens[pos + 1];
+        pos += 2;
+        if (leftToken !== "#") { //@children
+          node.left = new TreeNode(Number(leftToken));
+          queue.push(node.left);
+        }
+        if (rightToken !== "#") {
+          node.right = new TreeNode(Number(rightToken));
+          queue.push(node.right);
+        }
       }
       return root; //@ret
     }

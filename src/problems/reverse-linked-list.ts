@@ -14,8 +14,9 @@ const iterative = defineSolution<Input>({
   idea: "Walk the list with prev and curr. Save curr.next, point curr back at prev, then move both one step forward.",
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
-      let prev: ListNode | null = null, curr = head; //@init
-      while (curr) { //@loop
+      let prev: ListNode | null = null; //@init
+      let curr = head;
+      while (curr !== null) { //@loop
         const next = curr.next; //@save
         curr.next = prev; //@flip
         prev = curr; //@advance
@@ -55,9 +56,11 @@ const recursive = defineSolution<Input>({
   idea: "Reverse the rest of the list first. The old next node is now the tail of the reversed part, so attach the current node after it.",
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
-      if (!head || !head.next) return head; //@base
+      if (head === null || head.next === null) return head; //@base
       const newHead = reverseList(head.next); //@recurse
-      head.next.next = head; //@link
+      // head.next is now the last node of the reversed rest; hang head after it.
+      const nextNode = head.next;
+      nextNode.next = head; //@link
       head.next = null; //@cut
       return newHead; //@ret
     }
@@ -99,15 +102,15 @@ const stackBased = defineSolution<Input>({
   code: code(`
     function reverseList(head: ListNode | null): ListNode | null {
       const stack: ListNode[] = [];
-      for (let n = head; n; n = n.next) stack.push(n); //@push
-      const dummy = new ListNode(0);
-      let tail = dummy; //@init
-      while (stack.length) { //@loop
+      for (let node = head; node !== null; node = node.next) stack.push(node); //@push
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead; //@init
+      while (stack.length > 0) { //@loop
         tail.next = stack.pop()!; //@pop
         tail = tail.next;
       }
       tail.next = null; //@end
-      return dummy.next; //@ret
+      return dummyHead.next; //@ret
     }
   `),
   run({ head }, t) {

@@ -15,12 +15,19 @@ const iterative = defineSolution<Input>({
   idea: "Start with [\"\"]. For each digit, replace the list with every existing prefix extended by each of the digit's letters.",
   code: code(`
     function letterCombinations(digits: string): string[] {
-      if (!digits) return []; //@empty
-      const keys = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"];
-      let res = [""]; //@init
-      for (const d of digits) //@digit
-        res = res.flatMap((prefix) => [...keys[+d]].map((c) => prefix + c)); //@expand
-      return res; //@ret
+      if (digits.length === 0) return []; //@empty
+      const lettersOf = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"];
+      let combinations = [""]; //@init
+      for (const digit of digits) { //@digit
+        const next: string[] = [];
+        for (const prefix of combinations) { //@expand
+          for (const letter of lettersOf[Number(digit)]) {
+            next.push(prefix + letter);
+          }
+        }
+        combinations = next;
+      }
+      return combinations; //@ret
     }
   `),
   run({ digits }, t) {
@@ -48,19 +55,23 @@ const backtrack = defineSolution<Input>({
   idea: "Pick a letter for the current digit, recurse on the next digit, then undo. When every digit has a letter, record the string.",
   code: code(`
     function letterCombinations(digits: string): string[] {
-      if (!digits) return []; //@empty
-      const keys = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"];
-      const res: string[] = [], path: string[] = [];
-      function dfs(i: number) {
-        if (i === digits.length) { res.push(path.join("")); return; } //@found
-        for (const c of keys[+digits[i]]) { //@try
-          path.push(c); //@choose
-          dfs(i + 1);
+      if (digits.length === 0) return []; //@empty
+      const lettersOf = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"];
+      const result: string[] = [];
+      const path: string[] = [];
+      function build(i: number) {
+        if (i === digits.length) { //@found
+          result.push(path.join(""));
+          return;
+        }
+        for (const letter of lettersOf[Number(digits[i])]) { //@try
+          path.push(letter); //@choose
+          build(i + 1);
           path.pop(); //@undo
         }
       }
-      dfs(0);
-      return res; //@ret
+      build(0);
+      return result; //@ret
     }
   `),
   run({ digits }, t) {

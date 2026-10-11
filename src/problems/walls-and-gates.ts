@@ -30,14 +30,23 @@ const perGate = defineSolution<Input>({
   idea: "From every gate, DFS outward writing distance d into each room, but only continue where d improves on what the room already holds.",
   code: code(`
     function wallsAndGates(rooms: number[][]): void {
-      const m = rooms.length, n = rooms[0].length;
-      const dfs = (r: number, c: number, d: number) => {
-        if (r < 0 || c < 0 || r >= m || c >= n || rooms[r][c] < d) return; //@stop
-        rooms[r][c] = d; //@write
-        dfs(r + 1, c, d + 1); dfs(r - 1, c, d + 1); dfs(r, c + 1, d + 1); dfs(r, c - 1, d + 1);
-      };
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        if (rooms[r][c] === 0) dfs(r, c, 0); //@gate
+      const rows = rooms.length;
+      const cols = rooms[0].length;
+      // Spread out from a gate, writing distances, but stop where a closer gate already reached.
+      function fill(row: number, col: number, distance: number) {
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || rooms[row][col] < distance) return; // walls are -1, so they stop here too //@stop
+        rooms[row][col] = distance; //@write
+        fill(row + 1, col, distance + 1);
+        fill(row - 1, col, distance + 1);
+        fill(row, col + 1, distance + 1);
+        fill(row, col - 1, distance + 1);
+      }
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (rooms[row][col] === 0) fill(row, col, 0); //@gate
+        }
+      }
     }
   `),
   run({ rooms }, t) {
@@ -68,14 +77,28 @@ const multiBfs = defineSolution<Input>({
   idea: "Start a BFS from all gates at once. BFS reaches each room first along a shortest path, so each empty room is written exactly once with its final distance.",
   code: code(`
     function wallsAndGates(rooms: number[][]): void {
-      const m = rooms.length, n = rooms[0].length, queue: number[][] = [];
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) if (rooms[r][c] === 0) queue.push([r, c]); //@seed
-      while (queue.length) {
-        const [r, c] = queue.shift()!; //@pop
-        for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-          if (x >= 0 && y >= 0 && x < m && y < n && rooms[x][y] === 2147483647) {
-            rooms[x][y] = rooms[r][c] + 1; queue.push([x, y]); //@fill
+      const EMPTY = 2147483647;
+      const rows = rooms.length;
+      const cols = rooms[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      // Start a BFS from every gate at once.
+      const queue: number[][] = [];
+      for (let row = 0; row < rows; row++) { //@seed
+        for (let col = 0; col < cols; col++) {
+          if (rooms[row][col] === 0) queue.push([row, col]);
+        }
+      }
+      while (queue.length > 0) {
+        const [row, col] = queue.shift()!; //@pop
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+          if (inside && rooms[nextRow][nextCol] === EMPTY) {
+            rooms[nextRow][nextCol] = rooms[row][col] + 1; //@fill
+            queue.push([nextRow, nextCol]);
           }
+        }
       }
     }
   `),

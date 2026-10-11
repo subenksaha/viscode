@@ -21,19 +21,32 @@ const memoDfs = defineSolution<Input>({
   idea: "len(r, c) = 1 + the best len of a strictly larger neighbor. Increasing paths can't loop, so each cell's answer is fixed; cache it and compute every cell once.",
   code: code(`
     function longestIncreasingPath(matrix: number[][]): number {
-      const m = matrix.length, n = matrix[0].length, memo = matrix.map((r) => r.map(() => 0));
-      const len = (r: number, c: number): number => {
-        if (memo[r][c]) return memo[r][c]; //@hit
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      // memo[row][col] = longest increasing path starting at that cell (0 = not computed yet)
+      const memo = matrix.map((line) => line.map(() => 0));
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      function longestFrom(row: number, col: number): number {
+        if (memo[row][col] !== 0) return memo[row][col]; //@hit
         let best = 1;
-        for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-          const x = r + dr, y = c + dc;
-          if (x >= 0 && y >= 0 && x < m && y < n && matrix[x][y] > matrix[r][c]) best = Math.max(best, 1 + len(x, y)); //@step
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+          if (inside && matrix[nextRow][nextCol] > matrix[row][col]) { //@step
+            best = Math.max(best, 1 + longestFrom(nextRow, nextCol));
+          }
         }
-        return (memo[r][c] = best); //@store
-      };
-      let res = 0;
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) res = Math.max(res, len(r, c)); //@start
-      return res; //@ret
+        memo[row][col] = best; //@store
+        return best;
+      }
+      let result = 0;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@start
+          result = Math.max(result, longestFrom(row, col));
+        }
+      }
+      return result; //@ret
     }
   `),
   run({ matrix }, t) {
@@ -86,19 +99,40 @@ const topo = defineSolution<Input>({
   idea: "Point an edge from each cell to every larger neighbor; the graph is a DAG. Repeatedly remove all cells with no smaller neighbors left (Kahn's algorithm). The number of layers peeled is the longest path.",
   code: code(`
     function longestIncreasingPath(matrix: number[][]): number {
-      const m = matrix.length, n = matrix[0].length, indeg = matrix.map((r) => r.map(() => 0));
-      const nbrs = (r: number, c: number) => [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]].filter(([x, y]) => x >= 0 && y >= 0 && x < m && y < n);
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        for (const [x, y] of nbrs(r, c)) if (matrix[x][y] < matrix[r][c]) indeg[r][c]++; //@indeg
-      let layer = [];
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) if (!indeg[r][c]) layer.push([r, c]);
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      function neighbors(row: number, col: number): number[][] {
+        const candidates = [[row + 1, col], [row - 1, col], [row, col + 1], [row, col - 1]];
+        return candidates.filter(([r, c]) => r >= 0 && c >= 0 && r < rows && c < cols);
+      }
+      // smallerNeighbors[row][col] = how many neighbors are smaller than this cell
+      const smallerNeighbors = matrix.map((line) => line.map(() => 0));
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          for (const [r, c] of neighbors(row, col)) { //@indeg
+            if (matrix[r][c] < matrix[row][col]) smallerNeighbors[row][col]++;
+          }
+        }
+      }
+      // Start with cells that have no smaller neighbor: every path can begin there.
+      let layer: number[][] = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (smallerNeighbors[row][col] === 0) layer.push([row, col]);
+        }
+      }
       let depth = 0;
-      while (layer.length) { //@layer
+      while (layer.length > 0) { //@layer
         depth++;
-        const next = [];
-        for (const [r, c] of layer)
-          for (const [x, y] of nbrs(r, c)) if (matrix[x][y] > matrix[r][c] && --indeg[x][y] === 0) next.push([x, y]); //@peel
-        layer = next;
+        const nextLayer: number[][] = [];
+        for (const [row, col] of layer) {
+          for (const [r, c] of neighbors(row, col)) { //@peel
+            if (matrix[r][c] <= matrix[row][col]) continue;
+            smallerNeighbors[r][c]--;
+            if (smallerNeighbors[r][c] === 0) nextLayer.push([r, c]);
+          }
+        }
+        layer = nextLayer;
       }
       return depth; //@ret
     }

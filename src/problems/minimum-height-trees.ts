@@ -25,17 +25,39 @@ const bruteForce = defineSolution<Input>({
   idea: "Root the tree at each node in turn and measure its height with BFS. Return every root with the smallest height.",
   code: code(`
     function findMinHeightTrees(n: number, edges: number[][]): number[] {
-      const adj: number[][] = Array.from({ length: n }, () => []);
-      for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); }
-      const height = (root: number) => {
-        let level = [root], h = -1;
-        const seen = new Set(level);
-        while (level.length) { h++; level = level.flatMap((u) => adj[u].filter((v) => !seen.has(v) && seen.add(v))); }
-        return h;
-      };
-      const heights = Array.from({ length: n }, (_, r) => height(r)); //@height
-      const best = Math.min(...heights);
-      return heights.flatMap((h, r) => (h === best ? [r] : [])); //@ret
+      const neighbors: number[][] = Array.from({ length: n }, () => []);
+      for (const [a, b] of edges) {
+        neighbors[a].push(b);
+        neighbors[b].push(a);
+      }
+      // Height of the tree when rooted at root, found with a level-by-level BFS.
+      function height(root: number): number {
+        let level = [root];
+        let levels = -1;
+        const visited = new Set([root]);
+        while (level.length > 0) {
+          levels++;
+          const nextLevel: number[] = [];
+          for (const node of level) {
+            for (const next of neighbors[node]) {
+              if (!visited.has(next)) {
+                visited.add(next);
+                nextLevel.push(next);
+              }
+            }
+          }
+          level = nextLevel;
+        }
+        return levels;
+      }
+      const heights: number[] = [];
+      for (let root = 0; root < n; root++) heights.push(height(root)); //@height
+      const smallest = Math.min(...heights);
+      const result: number[] = [];
+      for (let root = 0; root < n; root++) { //@ret
+        if (heights[root] === smallest) result.push(root);
+      }
+      return result;
     }
   `),
   run({ n, edges }, t) {
@@ -73,19 +95,31 @@ const trimLeaves = defineSolution<Input>({
   idea: "The best roots are the center of the longest path. Peel off all leaves layer by layer, like an onion. The last one or two nodes standing are the centers.",
   code: code(`
     function findMinHeightTrees(n: number, edges: number[][]): number[] {
-      if (n <= 2) return Array.from({ length: n }, (_, i) => i); //@small
-      const adj: Set<number>[] = Array.from({ length: n }, () => new Set());
-      for (const [a, b] of edges) { adj[a].add(b); adj[b].add(a); }
-      let leaves = adj.flatMap((s, i) => (s.size === 1 ? [i] : [])), remaining = n; //@init
+      if (n <= 2) { //@small
+        const all: number[] = [];
+        for (let node = 0; node < n; node++) all.push(node);
+        return all;
+      }
+      const neighbors: Set<number>[] = Array.from({ length: n }, () => new Set());
+      for (const [a, b] of edges) {
+        neighbors[a].add(b);
+        neighbors[b].add(a);
+      }
+      // Peel off leaves layer by layer, like an onion. The last 1 or 2 nodes are the centers.
+      let leaves: number[] = [];
+      for (let node = 0; node < n; node++) { //@init
+        if (neighbors[node].size === 1) leaves.push(node);
+      }
+      let remaining = n;
       while (remaining > 2) { //@layer
         remaining -= leaves.length;
-        const next: number[] = [];
+        const nextLeaves: number[] = [];
         for (const leaf of leaves) { //@trim
-          const [nb] = adj[leaf];
-          adj[nb].delete(leaf);
-          if (adj[nb].size === 1) next.push(nb); //@new-leaf
+          const onlyNeighbor = [...neighbors[leaf]][0];
+          neighbors[onlyNeighbor].delete(leaf);
+          if (neighbors[onlyNeighbor].size === 1) nextLeaves.push(onlyNeighbor); //@new-leaf
         }
-        leaves = next;
+        leaves = nextLeaves;
       }
       return leaves; //@ret
     }

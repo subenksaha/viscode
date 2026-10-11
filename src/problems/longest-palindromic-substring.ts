@@ -18,11 +18,21 @@ const bruteForce = defineSolution<Input>({
   idea: "Check every substring with a two-pointer palindrome test and keep the longest.",
   code: code(`
     function longestPalindrome(s: string): string {
-      const isPal = (i: number, j: number) => { while (i < j) if (s[i++] !== s[j--]) return false; return true; };
+      function isPalindrome(start: number, end: number): boolean {
+        while (start < end) {
+          if (s[start] !== s[end]) return false;
+          start++;
+          end--;
+        }
+        return true;
+      }
       let best = s[0]; //@init
-      for (let i = 0; i < s.length; i++)
-        for (let j = i + best.length; j < s.length; j++) //@check
-          if (isPal(i, j)) best = s.slice(i, j + 1); //@best
+      for (let i = 0; i < s.length; i++) {
+        // Only check substrings longer than the best one found so far.
+        for (let j = i + best.length; j < s.length; j++) { //@check
+          if (isPalindrome(i, j)) best = s.slice(i, j + 1); //@best
+        }
+      }
       return best; //@ret
     }
   `),
@@ -49,16 +59,26 @@ const expand = defineSolution<Input>({
   idea: "Every palindrome mirrors around a center: a character (odd length) or a gap between two characters (even length). Expand outward from each of the 2n − 1 centers.",
   code: code(`
     function longestPalindrome(s: string): string {
-      let lo = 0, hi = 0; //@init
-      const expand = (l: number, r: number) => {
-        while (l >= 0 && r < s.length && s[l] === s[r]) { l--; r++; } //@grow
-        if (r - l - 1 > hi - lo + 1) { lo = l + 1; hi = r - 1; } //@best
-      };
-      for (let i = 0; i < s.length; i++) { //@center
-        expand(i, i);
-        expand(i, i + 1);
+      let bestStart = 0; //@init
+      let bestEnd = 0;
+      // Grow outward from the center while both ends match.
+      function expand(left: number, right: number) {
+        while (left >= 0 && right < s.length && s[left] === s[right]) { //@grow
+          left--;
+          right++;
+        }
+        // The palindrome is s[left + 1 .. right - 1].
+        const length = right - left - 1;
+        if (length > bestEnd - bestStart + 1) { //@best
+          bestStart = left + 1;
+          bestEnd = right - 1;
+        }
       }
-      return s.slice(lo, hi + 1); //@ret
+      for (let center = 0; center < s.length; center++) { //@center
+        expand(center, center); // odd length, like "aba"
+        expand(center, center + 1); // even length, like "abba"
+      }
+      return s.slice(bestStart, bestEnd + 1); //@ret
     }
   `),
   run({ s }, t) {
@@ -67,7 +87,7 @@ const expand = defineSolution<Input>({
     const chars = [...s];
     const view = (l: number, r: number) => [
       vars({ best: `"${s.slice(lo, hi + 1)}"` }),
-      arr("s", chars, { window: l + 1 <= r - 1 ? [l + 1, r - 1] : null, tones: tones([l >= 0 ? l : null, "compare"], [r < s.length ? r : null, "compare"]), pointers: { l: l >= 0 ? l : null, r: r < s.length ? r : null } }),
+      arr("s", chars, { window: l + 1 <= r - 1 ? [l + 1, r - 1] : null, tones: tones([l >= 0 ? l : null, "compare"], [r < s.length ? r : null, "compare"]), pointers: { left: l >= 0 ? l : null, right: r < s.length ? r : null } }),
     ];
     t.step("init", "best = first character.", view(0, 0));
     const expandAt = (l: number, r: number) => {
@@ -102,16 +122,24 @@ const dp = defineSolution<Input>({
   idea: "dp[i][j] is true when s[i..j] is a palindrome: the ends match and the inside s[i+1..j−1] is a palindrome (or has length < 2). Fill by increasing length.",
   code: code(`
     function longestPalindrome(s: string): string {
-      const n = s.length, dp = Array.from({ length: n }, () => new Array(n).fill(false));
-      let lo = 0, len = 1;
-      for (let i = 0; i < n; i++) dp[i][i] = true; //@diag
-      for (let L = 2; L <= n; L++) //@len
-        for (let i = 0; i + L - 1 < n; i++) {
-          const j = i + L - 1;
-          dp[i][j] = s[i] === s[j] && (L === 2 || dp[i + 1][j - 1]); //@cell
-          if (dp[i][j] && L > len) { lo = i; len = L; } //@best
+      const n = s.length;
+      // isPal[i][j] = is s[i..j] a palindrome?
+      const isPal = Array.from({ length: n }, () => new Array(n).fill(false));
+      let bestStart = 0;
+      let bestLength = 1;
+      for (let i = 0; i < n; i++) isPal[i][i] = true; //@diag
+      for (let length = 2; length <= n; length++) { //@len
+        for (let i = 0; i + length - 1 < n; i++) {
+          const j = i + length - 1;
+          const innerIsPal = length === 2 || isPal[i + 1][j - 1];
+          isPal[i][j] = s[i] === s[j] && innerIsPal; //@cell
+          if (isPal[i][j] && length > bestLength) { //@best
+            bestStart = i;
+            bestLength = length;
+          }
         }
-      return s.slice(lo, lo + len); //@ret
+      }
+      return s.slice(bestStart, bestStart + bestLength); //@ret
     }
   `),
   run({ s }, t) {

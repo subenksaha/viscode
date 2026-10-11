@@ -16,19 +16,30 @@ const backtrack = defineSolution<Input>({
   idea: "From position start, try every end so that s[start..end] is a palindrome, cut it off, and recurse on the rest. Each check walks inward from both ends.",
   code: code(`
     function partition(s: string): string[][] {
-      const res: string[][] = [], path: string[] = [];
-      const isPal = (l: number, r: number) => { while (l < r) if (s[l++] !== s[r--]) return false; return true; };
-      function dfs(start: number) {
-        if (start === s.length) { res.push([...path]); return; } //@done
+      const result: string[][] = [];
+      const path: string[] = [];
+      function isPalindrome(left: number, right: number): boolean {
+        while (left < right) {
+          if (s[left] !== s[right]) return false;
+          left++;
+          right--;
+        }
+        return true;
+      }
+      function cutFrom(start: number) {
+        if (start === s.length) { //@done
+          result.push([...path]);
+          return;
+        }
         for (let end = start; end < s.length; end++) {
-          if (!isPal(start, end)) continue; //@check
+          if (!isPalindrome(start, end)) continue; //@check
           path.push(s.slice(start, end + 1)); //@cut
-          dfs(end + 1);
+          cutFrom(end + 1);
           path.pop(); //@undo
         }
       }
-      dfs(0);
-      return res; //@ret
+      cutFrom(0);
+      return result; //@ret
     }
   `),
   run({ s }, t) {
@@ -75,20 +86,32 @@ const dpTable = defineSolution<Input>({
   idea: "Precompute pal[i][j] = (s[i] = s[j]) and pal[i+1][j−1], so every palindrome check during the backtracking is a table lookup.",
   code: code(`
     function partition(s: string): string[][] {
-      const n = s.length, pal = Array.from({ length: n }, () => new Array(n).fill(false));
-      for (let i = n - 1; i >= 0; i--)
-        for (let j = i; j < n; j++)
-          pal[i][j] = s[i] === s[j] && (j - i < 2 || pal[i + 1][j - 1]); //@fill
-      const res: string[][] = [], path: string[] = [];
-      function dfs(start: number) {
-        if (start === n) { res.push([...path]); return; } //@done
-        for (let end = start; end < n; end++)
-          if (pal[start][end]) { //@lookup
-            path.push(s.slice(start, end + 1)); dfs(end + 1); path.pop();
-          }
+      const n = s.length;
+      // isPal[i][j] = is s[i..j] a palindrome? Filled from the bottom row up.
+      const isPal = Array.from({ length: n }, () => new Array(n).fill(false));
+      for (let i = n - 1; i >= 0; i--) {
+        for (let j = i; j < n; j++) {
+          const innerIsPal = j - i < 2 || isPal[i + 1][j - 1];
+          isPal[i][j] = s[i] === s[j] && innerIsPal; //@fill
+        }
       }
-      dfs(0);
-      return res; //@ret
+      const result: string[][] = [];
+      const path: string[] = [];
+      function cutFrom(start: number) {
+        if (start === n) { //@done
+          result.push([...path]);
+          return;
+        }
+        for (let end = start; end < n; end++) {
+          if (isPal[start][end]) { //@lookup
+            path.push(s.slice(start, end + 1));
+            cutFrom(end + 1);
+            path.pop();
+          }
+        }
+      }
+      cutFrom(0);
+      return result; //@ret
     }
   `),
   run({ s }, t) {

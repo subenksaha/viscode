@@ -14,15 +14,17 @@ const bounds = defineSolution<Input>({
   name: "Recursive Bounds",
   time: "O(n)",
   space: "O(h)",
-  idea: "Each node must lie strictly inside an open interval (lo, hi). Going left caps hi at the node's value; going right raises lo.",
+  idea: "Each node must lie strictly inside an open interval (low, high). Going left caps high at the node's value; going right raises low.",
   code: code(`
     function isValidBST(root: TreeNode | null): boolean {
-      function ok(n: TreeNode | null, lo: number, hi: number): boolean {
-        if (!n) return true; //@null
-        if (n.val <= lo || n.val >= hi) return false; //@check
-        return ok(n.left, lo, n.val) && ok(n.right, n.val, hi); //@recurse
+      // Every value in this subtree must be strictly between low and high.
+      function isValid(node: TreeNode | null, low: number, high: number): boolean {
+        if (node === null) return true; //@null
+        if (node.val <= low || node.val >= high) return false; //@check
+        // Left subtree must stay below node.val; right subtree must stay above it.
+        return isValid(node.left, low, node.val) && isValid(node.right, node.val, high); //@recurse
       }
-      return ok(root, -Infinity, Infinity); //@ret
+      return isValid(root, -Infinity, Infinity); //@ret
     }
   `),
   run({ root }, t) {
@@ -30,7 +32,7 @@ const bounds = defineSolution<Input>({
     const go = (n: TreeNode | null, lo: number, hi: number): boolean => {
       if (!n) return true;
       const bad = n.val <= lo || n.val >= hi;
-      t.step("check", `${n.val} must be in (${fmtBound(lo)}, ${fmtBound(hi)}): ${bad ? "it is not" : "ok"}.`, () => [vars({ lo: fmtBound(lo), hi: fmtBound(hi) }), tree("tree", root, { tones: [...good, [n, bad ? "danger" : "active"]] })]);
+      t.step("check", `${n.val} must be in (${fmtBound(lo)}, ${fmtBound(hi)}): ${bad ? "it is not" : "ok"}.`, () => [vars({ low: fmtBound(lo), high: fmtBound(hi) }), tree("tree", root, { tones: [...good, [n, bad ? "danger" : "active"]] })]);
       if (bad) return false;
       good.push([n, "success"]);
       t.step("recurse", `Left gets (${fmtBound(lo)}, ${n.val}); right gets (${n.val}, ${fmtBound(hi)}).`, () => [tree("tree", root, { tones: [...good, [n, "active"]] })]);
@@ -50,14 +52,19 @@ const inorder = defineSolution<Input>({
   idea: "An in-order walk of a BST visits values in strictly increasing order. Walk iteratively with a stack and compare each value with the previous one.",
   code: code(`
     function isValidBST(root: TreeNode | null): boolean {
+      // An in-order walk of a valid BST visits values in strictly increasing order.
       const stack: TreeNode[] = [];
-      let n = root, prev = -Infinity; //@init
-      while (n || stack.length) { //@loop
-        while (n) { stack.push(n); n = n.left; } //@left
-        n = stack.pop()!; //@visit
-        if (n.val <= prev) return false; //@cmp
-        prev = n.val;
-        n = n.right; //@right
+      let node = root; //@init
+      let previous = -Infinity;
+      while (node !== null || stack.length > 0) { //@loop
+        while (node !== null) { //@left
+          stack.push(node);
+          node = node.left;
+        }
+        node = stack.pop()!; //@visit
+        if (node.val <= previous) return false; //@cmp
+        previous = node.val;
+        node = node.right; //@right
       }
       return true; //@ret
     }
@@ -69,7 +76,7 @@ const inorder = defineSolution<Input>({
     const order: number[] = [];
     const done: [TreeNode, Tone][] = [];
     const view = (cur?: TreeNode | null, bad = false) => [
-      vars({ prev: fmtBound(prev) }),
+      vars({ previous: fmtBound(prev) }),
       tree("tree", root, { tones: [...done, ...stack.map((s) => [s, "compare"] as [TreeNode, Tone]), [cur, bad ? "danger" : "active"]] }),
       arr("in-order so far", order),
       arr("stack", stack.map((s) => s.val), { indexLabels: false }),

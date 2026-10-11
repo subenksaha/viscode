@@ -21,19 +21,26 @@ const boundaries = defineSolution<Input>({
   idea: "Keep top, bottom, left and right walls. Walk the top row, the right column, the bottom row and the left column, pulling each wall inward after its side is done.",
   code: code(`
     function spiralOrder(matrix: number[][]): number[] {
-      const out: number[] = [];
-      let top = 0, bottom = matrix.length - 1, left = 0, right = matrix[0].length - 1; //@init
+      const result: number[] = [];
+      let top = 0; //@init
+      let bottom = matrix.length - 1;
+      let left = 0;
+      let right = matrix[0].length - 1;
       while (top <= bottom && left <= right) { //@loop
-        for (let c = left; c <= right; c++) out.push(matrix[top][c]); //@top
+        for (let col = left; col <= right; col++) result.push(matrix[top][col]); //@top
         top++;
-        for (let r = top; r <= bottom; r++) out.push(matrix[r][right]); //@right
+        for (let row = top; row <= bottom; row++) result.push(matrix[row][right]); //@right
         right--;
-        if (top <= bottom) for (let c = right; c >= left; c--) out.push(matrix[bottom][c]); //@bottom
+        if (top <= bottom) { //@bottom
+          for (let col = right; col >= left; col--) result.push(matrix[bottom][col]);
+        }
         bottom--;
-        if (left <= right) for (let r = bottom; r >= top; r--) out.push(matrix[r][left]); //@left
+        if (left <= right) { //@left
+          for (let row = bottom; row >= top; row--) result.push(matrix[row][left]);
+        }
         left++;
       }
-      return out; //@ret
+      return result; //@ret
     }
   `),
   run({ matrix }, t) {
@@ -73,17 +80,25 @@ const simulate = defineSolution<Input>({
   idea: "Walk right, down, left, up in turn. Turn clockwise whenever the next cell is outside the grid or already visited.",
   code: code(`
     function spiralOrder(matrix: number[][]): number[] {
-      const m = matrix.length, n = matrix[0].length, out: number[] = [];
-      const seen = matrix.map((row) => row.map(() => false));
-      const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-      let r = 0, c = 0, d = 0; //@init
-      for (let k = 0; k < m * n; k++) { //@loop
-        out.push(matrix[r][c]); seen[r][c] = true; //@take
-        const [nr, nc] = [r + dirs[d][0], c + dirs[d][1]];
-        if (nr < 0 || nc < 0 || nr >= m || nc >= n || seen[nr][nc]) d = (d + 1) % 4; //@turn
-        r += dirs[d][0]; c += dirs[d][1]; //@move
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      const result: number[] = [];
+      const visited = matrix.map((line) => line.map(() => false));
+      const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]; // right, down, left, up
+      let row = 0; //@init
+      let col = 0;
+      let direction = 0;
+      for (let count = 0; count < rows * cols; count++) { //@loop
+        result.push(matrix[row][col]); //@take
+        visited[row][col] = true;
+        const nextRow = row + directions[direction][0];
+        const nextCol = col + directions[direction][1];
+        const blocked = nextRow < 0 || nextCol < 0 || nextRow >= rows || nextCol >= cols || visited[nextRow][nextCol];
+        if (blocked) direction = (direction + 1) % 4; // turn clockwise //@turn
+        row += directions[direction][0]; //@move
+        col += directions[direction][1];
       }
-      return out; //@ret
+      return result; //@ret
     }
   `),
   run({ matrix }, t) {

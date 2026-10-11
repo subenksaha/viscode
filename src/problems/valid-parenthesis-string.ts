@@ -11,23 +11,30 @@ const memo = defineSolution<Input>({
   name: "Top-down on (index, open count)",
   time: "O(n²)",
   space: "O(n²)",
-  idea: "ok(i, open): can s[i..] finish with open unmatched '('? A '*' branches three ways: '(' , ')' or nothing. open must never go negative.",
+  idea: "canBeValid(i, open): can s[i..] finish with open unmatched '('? A '*' branches three ways: '(' , ')' or nothing. open must never go negative.",
   code: code(`
     function checkValidString(s: string): boolean {
       const memo = new Map<string, boolean>();
-      const ok = (i: number, open: number): boolean => {
+      // Can s[i..] be valid if open "(" are still waiting to be closed?
+      function canBeValid(i: number, open: number): boolean {
         if (open < 0) return false; //@neg
         if (i === s.length) return open === 0; //@end
         const key = i + "," + open;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const c = s[i];
-        const res = c === "(" ? ok(i + 1, open + 1) //@branch
-          : c === ")" ? ok(i + 1, open - 1)
-          : ok(i + 1, open + 1) || ok(i + 1, open - 1) || ok(i + 1, open);
-        memo.set(key, res);
-        return res;
-      };
-      return ok(0, 0); //@ret
+        const char = s[i];
+        let result: boolean;
+        if (char === "(") { //@branch
+          result = canBeValid(i + 1, open + 1);
+        } else if (char === ")") {
+          result = canBeValid(i + 1, open - 1);
+        } else {
+          // "*" can be "(", ")" or nothing.
+          result = canBeValid(i + 1, open + 1) || canBeValid(i + 1, open - 1) || canBeValid(i + 1, open);
+        }
+        memo.set(key, result);
+        return result;
+      }
+      return canBeValid(0, 0); //@ret
     }
   `),
   run({ s }, t) {
@@ -71,21 +78,30 @@ const range = defineSolution<Input>({
   idea: "Track the smallest and largest possible number of unmatched '(' so far. '(' raises both, ')' lowers both, '*' widens the range by one each way. Fail if max < 0; clamp min at 0; succeed if min ends at 0.",
   code: code(`
     function checkValidString(s: string): boolean {
-      let lo = 0, hi = 0; //@init
-      for (const c of s) {
-        if (c === "(") { lo++; hi++; }
-        else if (c === ")") { lo--; hi--; }
-        else { lo--; hi++; } //@update
-        if (hi < 0) return false; //@fail
-        lo = Math.max(lo, 0); //@clamp
+      // Track the smallest and largest number of unclosed "(" we could have.
+      let minOpen = 0; //@init
+      let maxOpen = 0;
+      for (const char of s) {
+        if (char === "(") {
+          minOpen++;
+          maxOpen++;
+        } else if (char === ")") {
+          minOpen--;
+          maxOpen--;
+        } else { //@update
+          minOpen--; // treat "*" as ")"
+          maxOpen++; // or as "("
+        }
+        if (maxOpen < 0) return false; // too many ")" no matter what //@fail
+        minOpen = Math.max(minOpen, 0); //@clamp
       }
-      return lo === 0; //@ret
+      return minOpen === 0; //@ret
     }
   `),
   run({ s }, t) {
     let lo = 0,
       hi = 0;
-    const view = (i?: number, tone: Tone = "active") => [vars({ lo, hi }), arr("s", [...s], { tones: tones([i, tone]), pointers: { i } })];
+    const view = (i?: number, tone: Tone = "active") => [vars({ minOpen: lo, maxOpen: hi }), arr("s", [...s], { tones: tones([i, tone]), pointers: { i } })];
     t.step("init", "No open parentheses yet: range [0, 0].", view());
     for (let i = 0; i < s.length; i++) {
       const c = s[i];
@@ -106,7 +122,7 @@ const range = defineSolution<Input>({
       }
       if (lo < 0) {
         lo = 0;
-        t.step("clamp", "Can't have a negative count: clamp lo to 0.", view(i));
+        t.step("clamp", "Can't have a negative count: clamp minOpen to 0.", view(i));
       }
     }
     const res = lo === 0;

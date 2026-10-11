@@ -21,18 +21,21 @@ const simulate = defineSolution<Input>({
   code: code(`
     function leastInterval(tasks: string[], n: number): number {
       const count = new Map<string, number>();
-      for (const x of tasks) count.set(x, (count.get(x) ?? 0) + 1);
+      for (const task of tasks) count.set(task, (count.get(task) ?? 0) + 1);
+      // Tasks we can run now, by how many copies are left (most first).
       const ready = new MaxPriorityQueue<number>(); //@init
-      for (const c of count.values()) ready.enqueue(c);
-      const cooling: [number, number][] = []; // [remaining, availableAt]
+      for (const copies of count.values()) ready.enqueue(copies);
+      const cooling: [number, number][] = []; // [copies left, time it can run again]
       let time = 0;
-      while (ready.size() || cooling.length) { //@tick
+      while (ready.size() > 0 || cooling.length > 0) { //@tick
         time++;
-        if (ready.size()) { //@run
-          const left = ready.dequeue() - 1;
-          if (left) cooling.push([left, time + n]);
+        if (ready.size() > 0) { //@run
+          const copiesLeft = ready.dequeue() - 1;
+          if (copiesLeft > 0) cooling.push([copiesLeft, time + n]);
         }
-        if (cooling[0]?.[1] === time) ready.enqueue(cooling.shift()![0]); //@release
+        if (cooling.length > 0 && cooling[0][1] === time) { //@release
+          ready.enqueue(cooling.shift()![0]);
+        }
       }
       return time; //@ret
     }
@@ -88,10 +91,15 @@ const formula = defineSolution<Input>({
   code: code(`
     function leastInterval(tasks: string[], n: number): number {
       const count = new Map<string, number>();
-      for (const x of tasks) count.set(x, (count.get(x) ?? 0) + 1); //@count
-      const f = Math.max(...count.values()); //@max
-      const tied = [...count.values()].filter((c) => c === f).length; //@tied
-      return Math.max(tasks.length, (f - 1) * (n + 1) + tied); //@ret
+      for (const task of tasks) count.set(task, (count.get(task) ?? 0) + 1); //@count
+      const maxCount = Math.max(...count.values()); //@max
+      let tiedForMax = 0; //@tied
+      for (const copies of count.values()) {
+        if (copies === maxCount) tiedForMax++;
+      }
+      // The most common task needs (maxCount - 1) gaps of size n + 1, then one last round.
+      const framed = (maxCount - 1) * (n + 1) + tiedForMax;
+      return Math.max(tasks.length, framed); //@ret
     }
   `),
   run({ tasks, n }, t) {
@@ -99,15 +107,15 @@ const formula = defineSolution<Input>({
     t.step("count", "Count each task.", [map("count", count)]);
     const f = Math.max(...count.values());
     const top = [...count].filter(([, c]) => c === f).map(([x]) => x);
-    t.step("max", `The most frequent task appears f = ${f} times.`, [vars({ f }), map("count", count, tones(...top.map((x) => [x, "active"] as [string, "active"])))]);
-    t.step("tied", `${top.length} task(s) tie for the max: ${top.join(", ")}.`, [vars({ f, tied: top.length })]);
+    t.step("max", `The most frequent task appears maxCount = ${f} times.`, [vars({ maxCount: f }), map("count", count, tones(...top.map((x) => [x, "active"] as [string, "active"])))]);
+    t.step("tied", `${top.length} task(s) tie for the max: ${top.join(", ")}.`, [vars({ maxCount: f, tiedForMax: top.length })]);
     const frames = (f - 1) * (n + 1) + top.length;
     // Lay out the frames so the shape is visible.
     const rows: string[] = [];
     for (let k = 0; k < f; k++) rows.push(k < f - 1 ? [...top, ...Array(n + 1 - top.length).fill("_")].slice(0, Math.max(n + 1, top.length)).join(" ") : top.join(" "));
     const res = Math.max(tasks.length, frames);
     t.step("ret", frames >= tasks.length ? `(${f} − 1) × (${n} + 1) + ${top.length} = ${frames}.` : `Plenty of tasks to fill the gaps: answer is just ${tasks.length}.`, [
-      vars({ "frame bound": frames, tasks: tasks.length, answer: res }),
+      vars({ framed: frames, tasks: tasks.length, answer: res }),
       arr("frames (_ = slot for others or idle)", rows, { indexLabels: false }),
     ]);
     return res;

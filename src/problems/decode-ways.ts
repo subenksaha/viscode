@@ -18,10 +18,13 @@ const memo = defineSolution<Input>({
         if (i === s.length) return 1; //@end
         if (s[i] === "0") return 0; //@zero
         if (memo.has(i)) return memo.get(i)!; //@hit
-        let res = ways(i + 1); //@one
-        if (i + 1 < s.length && Number(s.slice(i, i + 2)) <= 26) res += ways(i + 2); //@two
-        memo.set(i, res); //@store
-        return res;
+        let count = ways(i + 1); // decode one digit //@one
+        const twoDigits = Number(s.slice(i, i + 2));
+        if (i + 1 < s.length && twoDigits <= 26) { //@two
+          count += ways(i + 2); // decode two digits
+        }
+        memo.set(i, count); //@store
+        return count;
       }
       return ways(0); //@ret
     }
@@ -69,12 +72,16 @@ const bottomUp = defineSolution<Input>({
   idea: "dp[i] = number of ways to decode the first i characters. Add dp[i−1] if the last digit is valid alone, and dp[i−2] if the last two form 10–26.",
   code: code(`
     function numDecodings(s: string): number {
+      // dp[i] = number of ways to decode the first i characters
       const dp = new Array(s.length + 1).fill(0);
       dp[0] = 1; //@init
       for (let i = 1; i <= s.length; i++) { //@loop
-        if (s[i - 1] !== "0") dp[i] += dp[i - 1]; //@one
-        const two = Number(s.slice(i - 2, i));
-        if (i >= 2 && two >= 10 && two <= 26) dp[i] += dp[i - 2]; //@two
+        const oneDigit = s[i - 1];
+        if (oneDigit !== "0") dp[i] += dp[i - 1]; //@one
+        if (i >= 2) {
+          const twoDigits = Number(s.slice(i - 2, i));
+          if (twoDigits >= 10 && twoDigits <= 26) dp[i] += dp[i - 2]; //@two
+        }
       }
       return dp[s.length]; //@ret
     }
@@ -112,21 +119,23 @@ const constant = defineSolution<Input>({
   idea: "The bottom-up recurrence only looks two steps back, so keep two counters.",
   code: code(`
     function numDecodings(s: string): number {
-      let prev2 = 1, prev1 = s[0] === "0" ? 0 : 1; //@init
+      let twoBack = 1; // ways to decode s[0..i-2) //@init
+      let oneBack = s[0] === "0" ? 0 : 1; // ways to decode s[0..i-1)
       for (let i = 2; i <= s.length; i++) { //@loop
-        let cur = s[i - 1] !== "0" ? prev1 : 0; //@one
-        const two = Number(s.slice(i - 2, i));
-        if (two >= 10 && two <= 26) cur += prev2; //@two
-        [prev2, prev1] = [prev1, cur]; //@shift
+        let current = s[i - 1] !== "0" ? oneBack : 0; //@one
+        const twoDigits = Number(s.slice(i - 2, i));
+        if (twoDigits >= 10 && twoDigits <= 26) current += twoBack; //@two
+        twoBack = oneBack; //@shift
+        oneBack = current;
       }
-      return prev1; //@ret
+      return oneBack; //@ret
     }
   `),
   run({ s }, t) {
     let prev2 = 1,
       prev1 = s[0] === "0" ? 0 : 1;
-    const view = (i?: number, cur?: number) => [vars({ prev2, prev1, cur }), arr("s", [...s], { tones: tones([i !== undefined ? i - 1 : null, "active"]) })];
-    t.step("init", `prev2 = 1, prev1 = ${prev1}.`, view());
+    const view = (i?: number, cur?: number) => [vars({ twoBack: prev2, oneBack: prev1, current: cur }), arr("s", [...s], { tones: tones([i !== undefined ? i - 1 : null, "active"]) })];
+    t.step("init", `twoBack = 1, oneBack = ${prev1}.`, view());
     for (let i = 2; i <= s.length; i++) {
       t.step("loop", `Character ${i - 1}: '${s[i - 1]}'.`, view(i));
       let cur = s[i - 1] !== "0" ? prev1 : 0;

@@ -14,10 +14,14 @@ const bruteForce = defineSolution<Input>({
   code: code(`
     function longestConsecutive(nums: number[]): number {
       let best = 0; //@init
-      for (const x of nums) { //@start
-        let cur = x, len = 1;
-        while (nums.includes(cur + 1)) { cur++; len++; } //@extend
-        best = Math.max(best, len); //@best
+      for (const num of nums) { //@start
+        let current = num;
+        let length = 1;
+        while (nums.includes(current + 1)) { //@extend
+          current++;
+          length++;
+        }
+        best = Math.max(best, length); //@best
       }
       return best; //@ret
     }
@@ -28,12 +32,12 @@ const bruteForce = defineSolution<Input>({
     nums.forEach((x, i) => {
       let cur = x,
         len = 1;
-      t.step("start", `Start a run at ${x}.`, () => [vars({ cur, len, best }), arr("nums", nums, { tones: tones([i, "active"]) })]);
+      t.step("start", `Start a run at ${x}.`, () => [vars({ current: cur, length: len, best }), arr("nums", nums, { tones: tones([i, "active"]) })]);
       while (nums.includes(cur + 1)) {
         cur++;
         len++;
         const at = nums.indexOf(cur);
-        t.step("extend", `${cur} exists. len = ${len}.`, () => [vars({ cur, len, best }), arr("nums", nums, { tones: tones([i, "active"], [at, "success"]) })]);
+        t.step("extend", `${cur} exists. length = ${len}.`, () => [vars({ current: cur, length: len, best }), arr("nums", nums, { tones: tones([i, "active"], [at, "success"]) })]);
       }
       best = Math.max(best, len);
       t.step("best", `Run from ${x} has length ${len}. best = ${best}.`, () => [vars({ best }), arr("nums", nums, { tones: tones([i, "active"]) })]);
@@ -51,14 +55,18 @@ const sorting = defineSolution<Input>({
   idea: "Sort, then walk once: a +1 step extends the run, an equal value is skipped, and anything else starts a new run.",
   code: code(`
     function longestConsecutive(nums: number[]): number {
-      if (!nums.length) return 0;
+      if (nums.length === 0) return 0;
       nums.sort((a, b) => a - b); //@sort
-      let best = 1, len = 1;
+      let best = 1;
+      let length = 1; // length of the run ending at nums[i]
       for (let i = 1; i < nums.length; i++) { //@loop
         if (nums[i] === nums[i - 1]) continue; //@dup
-        if (nums[i] === nums[i - 1] + 1) len++; //@extend
-        else len = 1; //@reset
-        best = Math.max(best, len); //@best
+        if (nums[i] === nums[i - 1] + 1) {
+          length++; //@extend
+        } else {
+          length = 1; //@reset
+        }
+        best = Math.max(best, length); //@best
       }
       return best; //@ret
     }
@@ -72,7 +80,7 @@ const sorting = defineSolution<Input>({
     let best = 1,
       len = 1,
       start = 0;
-    const view = (i?: number) => [vars({ len, best }), arr("nums (sorted)", nums, { window: i !== undefined ? [start, i] : null, tones: tones([i, "active"]), pointers: { i } })];
+    const view = (i?: number) => [vars({ length: len, best }), arr("nums (sorted)", nums, { window: i !== undefined ? [start, i] : null, tones: tones([i, "active"]), pointers: { i } })];
     t.step("sort", "Sort the numbers.", view());
     for (let i = 1; i < nums.length; i++) {
       t.step("loop", `Compare ${nums[i - 1]} and ${nums[i]}.`, view(i));
@@ -104,13 +112,13 @@ const hashSet = defineSolution<Input>({
   idea: "Put everything in a set. Only start counting at x when x − 1 is absent (x starts a run), then walk x+1, x+2, … Each number is visited a constant number of times.",
   code: code(`
     function longestConsecutive(nums: number[]): number {
-      const set = new Set(nums); //@build
+      const numSet = new Set(nums); //@build
       let best = 0;
-      for (const x of set) { //@loop
-        if (set.has(x - 1)) continue; //@skip
-        let len = 1; //@start
-        while (set.has(x + len)) len++; //@extend
-        best = Math.max(best, len); //@best
+      for (const num of numSet) { //@loop
+        if (numSet.has(num - 1)) continue; // not the start of a run //@skip
+        let length = 1; //@start
+        while (numSet.has(num + length)) length++; //@extend
+        best = Math.max(best, length); //@best
       }
       return best; //@ret
     }
@@ -124,7 +132,7 @@ const hashSet = defineSolution<Input>({
         for (let k = 0; k < len; k++) tn[x + k] = "success";
         tn[x] = skip ? "muted" : "active";
       }
-      return [vars({ x, len: len || undefined, best }), map("set", set, tn)];
+      return [vars({ num: x, length: len || undefined, best }), map("numSet", set, tn)];
     };
     t.step("build", "Put every number in a set.", view());
     for (const x of set) {

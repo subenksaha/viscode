@@ -14,15 +14,20 @@ const sortedCounts = defineSolution<Input>({
   idea: "The smallest card left must start a group. Count the cards, walk the distinct values in increasing order, and for each value still in hand, consume that many runs of k consecutive cards.",
   code: code(`
     function isNStraightHand(hand: number[], k: number): boolean {
-      if (hand.length % k) return false;
+      if (hand.length % k !== 0) return false;
       const count = new Map<number, number>();
-      for (const x of hand) count.set(x, (count.get(x) ?? 0) + 1); //@count
-      for (const x of [...count.keys()].sort((a, b) => a - b)) { //@start
-        const need = count.get(x)!;
-        if (!need) continue;
-        for (let v = x; v < x + k; v++) { //@take
-          if ((count.get(v) ?? 0) < need) return false; //@fail
-          count.set(v, count.get(v)! - need);
+      for (const card of hand) { //@count
+        count.set(card, (count.get(card) ?? 0) + 1);
+      }
+      const distinctCards = [...count.keys()].sort((a, b) => a - b);
+      for (const card of distinctCards) { //@start
+        // The smallest card left must start a group, so start that many groups here.
+        const groupsToStart = count.get(card)!;
+        if (groupsToStart === 0) continue;
+        for (let value = card; value < card + k; value++) { //@take
+          const available = count.get(value) ?? 0;
+          if (available < groupsToStart) return false; //@fail
+          count.set(value, available - groupsToStart);
         }
       }
       return true; //@ret
@@ -67,15 +72,17 @@ const sortGreedy = defineSolution<Input>({
   idea: "Sort the hand. Repeatedly take the smallest unused card and pull the next k − 1 consecutive values out of the remaining cards; fail if one is missing.",
   code: code(`
     function isNStraightHand(hand: number[], k: number): boolean {
-      if (hand.length % k) return false;
+      if (hand.length % k !== 0) return false;
       hand.sort((a, b) => a - b); //@sort
       const used = new Array(hand.length).fill(false);
       for (let i = 0; i < hand.length; i++) {
         if (used[i]) continue;
-        let want = hand[i], j = i; //@group
-        for (let got = 0; got < k; got++, want++) {
-          while (j < hand.length && (used[j] || hand[j] < want)) j++;
-          if (j === hand.length || hand[j] !== want) return false; //@fail
+        // Build the group hand[i], hand[i] + 1, ..., hand[i] + k - 1.
+        let j = i; //@group
+        for (let offset = 0; offset < k; offset++) {
+          const wanted = hand[i] + offset;
+          while (j < hand.length && (used[j] || hand[j] < wanted)) j++;
+          if (j === hand.length || hand[j] !== wanted) return false; //@fail
           used[j] = true; //@use
         }
       }

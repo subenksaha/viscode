@@ -52,9 +52,9 @@ const memo = defineSolution<Input>({
     function climbStairs(n: number, memo = new Map<number, number>()): number {
       if (n <= 2) return n; //@base
       if (memo.has(n)) return memo.get(n)!; //@hit
-      const res = climbStairs(n - 1, memo) + climbStairs(n - 2, memo); //@recurse
-      memo.set(n, res); //@store
-      return res;
+      const ways = climbStairs(n - 1, memo) + climbStairs(n - 2, memo); //@recurse
+      memo.set(n, ways); //@store
+      return ways;
     }
   `),
   run({ n }, t) {
@@ -94,8 +94,10 @@ const bottomUp = defineSolution<Input>({
   idea: "Fill dp[i] = dp[i−1] + dp[i−2] from the bottom up.",
   code: code(`
     function climbStairs(n: number): number {
+      // dp[i] = number of ways to reach step i
       const dp = new Array(n + 1).fill(0);
-      dp[0] = 1; dp[1] = 1; //@init
+      dp[0] = 1; //@init
+      dp[1] = 1;
       for (let i = 2; i <= n; i++) { //@loop
         dp[i] = dp[i - 1] + dp[i - 2]; //@fill
       }
@@ -127,21 +129,24 @@ const twoVars = defineSolution<Input>({
   idea: "Only the previous two values matter, so keep just those.",
   code: code(`
     function climbStairs(n: number): number {
-      let a = 1, b = 1; //@init
+      let twoStepsBack = 1; // ways to reach step i - 2 //@init
+      let oneStepBack = 1;  // ways to reach step i - 1
       for (let i = 2; i <= n; i++) { //@loop
-        [a, b] = [b, a + b]; //@shift
+        const current = oneStepBack + twoStepsBack; //@shift
+        twoStepsBack = oneStepBack;
+        oneStepBack = current;
       }
-      return b; //@ret
+      return oneStepBack; //@ret
     }
   `),
   run({ n }, t) {
     let a = 1,
       b = 1;
-    t.step("init", "a = ways(i−2) = 1, b = ways(i−1) = 1.", [vars({ a, b })]);
+    t.step("init", "twoStepsBack = 1, oneStepBack = 1.", [vars({ twoStepsBack: a, oneStepBack: b })]);
     for (let i = 2; i <= n; i++) {
-      t.step("loop", `i = ${i}.`, [vars({ i, a, b })]);
+      t.step("loop", `i = ${i}.`, [vars({ i, twoStepsBack: a, oneStepBack: b })]);
       [a, b] = [b, a + b];
-      t.step("shift", `ways(${i}) = ${b}.`, [vars({ i, a, b })]);
+      t.step("shift", `ways(${i}) = ${b}.`, [vars({ i, twoStepsBack: a, oneStepBack: b })]);
     }
     t.step("ret", `Return ${b}.`, [vars({ answer: b })]);
     return b;

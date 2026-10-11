@@ -13,11 +13,16 @@ const stack = defineSolution<Input>({
   idea: "Push each opening bracket. A closing bracket must match the top of the stack. At the end, the stack must be empty.",
   code: code(`
     function isValid(s: string): boolean {
-      const pairs: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
-      const stack: string[] = []; //@init
-      for (const ch of s) { //@loop
-        if (!(ch in pairs)) stack.push(ch); //@push
-        else if (stack.pop() !== pairs[ch]) return false; //@pop
+      const openerFor: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+      const stack: string[] = []; // openers still waiting to be closed //@init
+      for (const char of s) { //@loop
+        const isCloser = char in openerFor;
+        if (!isCloser) {
+          stack.push(char); //@push
+        } else {
+          const lastOpen = stack.pop(); //@pop
+          if (lastOpen !== openerFor[char]) return false;
+        }
       }
       return stack.length === 0; //@ret
     }
@@ -57,9 +62,10 @@ const replace = defineSolution<Input>({
   idea: "A valid string always contains an adjacent pair like (), [] or {}. Delete such pairs until nothing changes. Valid strings shrink to empty.",
   code: code(`
     function isValid(s: string): boolean {
-      let prev = ""; //@init
-      while (s !== prev) { //@loop
-        prev = s;
+      // Keep deleting adjacent pairs like "()" until nothing changes.
+      let previous = ""; //@init
+      while (s !== previous) { //@loop
+        previous = s;
         s = s.replace("()", "").replace("[]", "").replace("{}", ""); //@strip
       }
       return s === ""; //@ret

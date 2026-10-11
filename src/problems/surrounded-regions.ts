@@ -28,16 +28,30 @@ const borderDfs = defineSolution<Input>({
   idea: "An 'O' survives exactly when it connects to the border. DFS from every border 'O' and mark it safe; then flip every unmarked 'O' to 'X' and restore the safe ones.",
   code: code(`
     function solve(board: string[][]): void {
-      const m = board.length, n = board[0].length;
-      const mark = (r: number, c: number) => {
-        if (r < 0 || c < 0 || r >= m || c >= n || board[r][c] !== "O") return;
-        board[r][c] = "S"; //@mark
-        mark(r + 1, c); mark(r - 1, c); mark(r, c + 1); mark(r, c - 1);
-      };
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        if (r === 0 || c === 0 || r === m - 1 || c === n - 1) mark(r, c); //@border
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        board[r][c] = board[r][c] === "S" ? "O" : "X"; //@flip
+      const rows = board.length;
+      const cols = board[0].length;
+      // Mark every "O" connected to the border as safe ("S").
+      function markSafe(row: number, col: number) {
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || board[row][col] !== "O") return;
+        board[row][col] = "S"; //@mark
+        markSafe(row + 1, col);
+        markSafe(row - 1, col);
+        markSafe(row, col + 1);
+        markSafe(row, col - 1);
+      }
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const onBorder = row === 0 || col === 0 || row === rows - 1 || col === cols - 1;
+          if (onBorder) markSafe(row, col); //@border
+        }
+      }
+      // Safe cells go back to "O"; every other "O" was surrounded and becomes "X".
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          board[row][col] = board[row][col] === "S" ? "O" : "X"; //@flip
+        }
+      }
     }
   `),
   run({ board }, t) {
@@ -73,16 +87,38 @@ const borderBfs = defineSolution<Input>({
   idea: "Same idea with one multi-source BFS: seed the queue with every border 'O', spread through 'O' neighbors, then flip what was never reached.",
   code: code(`
     function solve(board: string[][]): void {
-      const m = board.length, n = board[0].length, queue: number[][] = [];
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        if ((r === 0 || c === 0 || r === m - 1 || c === n - 1) && board[r][c] === "O") { board[r][c] = "S"; queue.push([r, c]); } //@seed
-      while (queue.length) {
-        const [r, c] = queue.shift()!; //@pop
-        for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-          if (x >= 0 && y >= 0 && x < m && y < n && board[x][y] === "O") { board[x][y] = "S"; queue.push([x, y]); } //@spread
+      const rows = board.length;
+      const cols = board[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const queue: number[][] = [];
+      // Start from every "O" on the border and mark it safe ("S").
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const onBorder = row === 0 || col === 0 || row === rows - 1 || col === cols - 1;
+          if (onBorder && board[row][col] === "O") { //@seed
+            board[row][col] = "S";
+            queue.push([row, col]);
+          }
+        }
       }
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        board[r][c] = board[r][c] === "S" ? "O" : "X"; //@flip
+      // Spread "safe" to every connected "O".
+      while (queue.length > 0) {
+        const [row, col] = queue.shift()!; //@pop
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+          if (inside && board[nextRow][nextCol] === "O") { //@spread
+            board[nextRow][nextCol] = "S";
+            queue.push([nextRow, nextCol]);
+          }
+        }
+      }
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          board[row][col] = board[row][col] === "S" ? "O" : "X"; //@flip
+        }
+      }
     }
   `),
   run({ board }, t) {

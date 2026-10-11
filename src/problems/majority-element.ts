@@ -14,9 +14,9 @@ const hashCount = defineSolution<Input>({
   code: code(`
     function majorityElement(nums: number[]): number {
       const count = new Map<number, number>(); //@init
-      for (const x of nums) { //@loop
-        count.set(x, (count.get(x) ?? 0) + 1); //@count
-        if (count.get(x)! > nums.length / 2) return x; //@found
+      for (const num of nums) { //@loop
+        count.set(num, (count.get(num) ?? 0) + 1); //@count
+        if (count.get(num)! > nums.length / 2) return num; //@found
       }
       return -1;
     }
@@ -52,7 +52,9 @@ const sorting = defineSolution<Input>({
   code: code(`
     function majorityElement(nums: number[]): number {
       nums.sort((a, b) => a - b); //@sort
-      return nums[nums.length >> 1]; //@ret
+      // The majority fills more than half the array, so it must cover the middle.
+      const middle = Math.floor(nums.length / 2);
+      return nums[middle]; //@ret
     }
   `),
   run({ nums }, t) {
@@ -77,10 +79,13 @@ const boyerMoore = defineSolution<Input>({
   idea: "Keep a candidate and a counter. Matching values vote for it, others vote against. When the counter hits zero, pick the current value. The majority survives all cancellations.",
   code: code(`
     function majorityElement(nums: number[]): number {
-      let candidate = 0, count = 0; //@init
-      for (const x of nums) { //@loop
-        if (count === 0) candidate = x; //@pick
-        count += x === candidate ? 1 : -1; //@vote
+      let candidate = 0; //@init
+      let count = 0;
+      for (const num of nums) { //@loop
+        if (count === 0) candidate = num; //@pick
+        // Votes for the candidate add one; votes against cancel one out.
+        if (num === candidate) count++; //@vote
+        else count--;
       }
       return candidate; //@ret
     }

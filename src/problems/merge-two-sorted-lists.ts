@@ -14,16 +14,22 @@ const iterative = defineSolution<Input>({
   space: "O(1)",
   idea: "Keep a tail pointer behind a dummy node. Repeatedly attach the smaller of the two front nodes, then attach whatever is left.",
   code: code(`
-    function mergeTwoLists(a: ListNode | null, b: ListNode | null): ListNode | null {
-      const dummy = new ListNode(0);
-      let tail = dummy; //@init
-      while (a && b) { //@loop
-        if (a.val <= b.val) { tail.next = a; a = a.next; } //@takeA
-        else { tail.next = b; b = b.next; } //@takeB
+    function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead; //@init
+      while (list1 !== null && list2 !== null) { //@loop
+        if (list1.val <= list2.val) {
+          tail.next = list1; //@takeA
+          list1 = list1.next;
+        } else {
+          tail.next = list2; //@takeB
+          list2 = list2.next;
+        }
         tail = tail.next; //@advance
       }
-      tail.next = a ?? b; //@rest
-      return dummy.next; //@ret
+      // One list is empty; attach whatever is left of the other.
+      tail.next = list1 !== null ? list1 : list2; //@rest
+      return dummyHead.next; //@ret
     }
   `),
   run({ list1, list2 }, t) {
@@ -33,8 +39,8 @@ const iterative = defineSolution<Input>({
     const restA = () => listNodes(a),
       restB = () => listNodes(b);
     const view = () => [
-      list("list1 (remaining)", restA(), { tones: [[a, "active"]], pointers: { a } }),
-      list("list2 (remaining)", restB(), { tones: [[b, "compare"]], pointers: { b } }),
+      list("list1 (remaining)", restA(), { tones: [[a, "active"]], pointers: { list1: a } }),
+      list("list2 (remaining)", restB(), { tones: [[b, "compare"]], pointers: { list2: b } }),
       list("merged", merged, { tones: [[merged.at(-1), "success"]], pointers: { tail: merged.at(-1) } }),
     ];
     t.step("init", "dummy → (empty); tail = dummy.", view());
@@ -70,19 +76,22 @@ const recursive = defineSolution<Input>({
   space: "O(n + m)",
   idea: "The smaller head goes first; its next is the merge of the remaining nodes.",
   code: code(`
-    function mergeTwoLists(a: ListNode | null, b: ListNode | null): ListNode | null {
-      if (!a) return b; //@baseA
-      if (!b) return a; //@baseB
-      if (a.val <= b.val) { a.next = mergeTwoLists(a.next, b); return a; } //@pickA
-      b.next = mergeTwoLists(a, b.next); //@pickB
-      return b;
+    function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
+      if (list1 === null) return list2; //@baseA
+      if (list2 === null) return list1; //@baseB
+      if (list1.val <= list2.val) {
+        list1.next = mergeTwoLists(list1.next, list2); //@pickA
+        return list1;
+      }
+      list2.next = mergeTwoLists(list1, list2.next); //@pickB
+      return list2;
     }
   `),
   run({ list1, list2 }, t) {
     const stack: string[] = [];
     const view = (a: ListNode | null, b: ListNode | null) => [
-      list("list1 (from a)", listNodes(a), { tones: [[a, "active"]], pointers: { a } }),
-      list("list2 (from b)", listNodes(b), { tones: [[b, "compare"]], pointers: { b } }),
+      list("list1 (from a)", listNodes(a), { tones: [[a, "active"]], pointers: { list1: a } }),
+      list("list2 (from b)", listNodes(b), { tones: [[b, "compare"]], pointers: { list2: b } }),
       arr("call stack", stack, { indexLabels: false }),
     ];
     const merge = (a: ListNode | null, b: ListNode | null): ListNode | null => {

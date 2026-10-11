@@ -17,8 +17,10 @@ const viaString = defineSolution<Input>({
   code: code(`
     function reverse(x: number): number {
       const digits = String(Math.abs(x)).split("").reverse(); //@split
-      const r = Math.sign(x) * Number(digits.join("")); //@join
-      return r < -(2 ** 31) || r > 2 ** 31 - 1 ? 0 : r; //@ret
+      const reversed = Math.sign(x) * Number(digits.join("")); //@join
+      const MIN = -(2 ** 31);
+      const MAX = 2 ** 31 - 1;
+      return reversed < MIN || reversed > MAX ? 0 : reversed; //@ret
     }
   `),
   run({ x }, t) {
@@ -26,7 +28,7 @@ const viaString = defineSolution<Input>({
     t.step("split", `Digits of |x|: ${digits.join("")}.`, [arr("digits", digits)]);
     digits.reverse();
     const r = (Math.sign(x) || 1) * Number(digits.join(""));
-    t.step("join", `Reversed with sign: ${r}.`, [arr("reversed", digits), vars({ r })]);
+    t.step("join", `Reversed with sign: ${r}.`, [arr("digits", digits), vars({ reversed: r })]);
     const res = r < MIN || r > MAX ? 0 : r;
     t.step("ret", res === r ? `${r} fits in 32 bits.` : `${r} overflows 32 bits: return 0.`, [vars({ result: res })]);
     return res;
@@ -41,18 +43,22 @@ const popPush = defineSolution<Input>({
   idea: "Pop the last digit with % 10 and push it onto the result with ×10 +. Before pushing, check that the result can grow by one more digit without leaving the 32-bit range.",
   code: code(`
     function reverse(x: number): number {
-      let r = 0; //@init
+      const MAX_BEFORE_PUSH = Math.trunc((2 ** 31 - 1) / 10);
+      const MIN_BEFORE_PUSH = Math.trunc(-(2 ** 31) / 10);
+      let reversed = 0; //@init
       while (x !== 0) {
-        const d = x % 10; x = Math.trunc(x / 10); //@pop
-        if (r > Math.trunc((2 ** 31 - 1) / 10) || r < Math.trunc(-(2 ** 31) / 10)) return 0; //@overflow
-        r = r * 10 + d; //@push
+        const lastDigit = x % 10; //@pop
+        x = Math.trunc(x / 10);
+        // Multiplying by 10 would leave the 32-bit range.
+        if (reversed > MAX_BEFORE_PUSH || reversed < MIN_BEFORE_PUSH) return 0; //@overflow
+        reversed = reversed * 10 + lastDigit; //@push
       }
-      return r; //@ret
+      return reversed; //@ret
     }
   `),
   run({ x }, t) {
     let r = 0;
-    const view = (d?: number) => [vars({ x, d, r })];
+    const view = (d?: number) => [vars({ x, lastDigit: d, reversed: r })];
     t.step("init", "r = 0.", view());
     while (x !== 0) {
       const d = x % 10;

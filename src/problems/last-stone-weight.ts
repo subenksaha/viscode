@@ -15,8 +15,9 @@ const resort = defineSolution<Input>({
     function lastStoneWeight(stones: number[]): number {
       while (stones.length > 1) {
         stones.sort((a, b) => a - b); //@sort
-        const y = stones.pop()!, x = stones.pop()!; //@smash
-        if (y !== x) stones.push(y - x); //@rest
+        const heaviest = stones.pop()!; //@smash
+        const secondHeaviest = stones.pop()!;
+        if (heaviest !== secondHeaviest) stones.push(heaviest - secondHeaviest); //@rest
       }
       return stones[0] ?? 0; //@ret
     }
@@ -28,10 +29,10 @@ const resort = defineSolution<Input>({
       t.step("sort", "Sort; the two heaviest are at the end.", [arr("stones", stones, { tones: tones([n - 1, "active"], [n - 2, "compare"]) })]);
       const y = stones.pop()!,
         x = stones.pop()!;
-      t.step("smash", `Smash ${y} and ${x}.`, [vars({ y, x }), arr("stones", stones)]);
+      t.step("smash", `Smash ${y} and ${x}.`, [vars({ heaviest: y, secondHeaviest: x }), arr("stones", stones)]);
       if (y !== x) {
         stones.push(y - x);
-        t.step("rest", `${y} − ${x} = ${y - x} survives.`, [vars({ y, x }), arr("stones", stones, { tones: tones([stones.length - 1, "success"]) })]);
+        t.step("rest", `${y} − ${x} = ${y - x} survives.`, [vars({ heaviest: y, secondHeaviest: x }), arr("stones", stones, { tones: tones([stones.length - 1, "success"]) })]);
       }
     }
     const res = stones[0] ?? 0;
@@ -49,12 +50,13 @@ const maxHeap = defineSolution<Input>({
   code: code(`
     function lastStoneWeight(stones: number[]): number {
       const heap = new MaxPriorityQueue<number>();
-      for (const s of stones) heap.enqueue(s); //@build
+      for (const stone of stones) heap.enqueue(stone); //@build
       while (heap.size() > 1) {
-        const y = heap.dequeue(), x = heap.dequeue(); //@smash
-        if (y !== x) heap.enqueue(y - x); //@rest
+        const heaviest = heap.dequeue(); //@smash
+        const secondHeaviest = heap.dequeue();
+        if (heaviest !== secondHeaviest) heap.enqueue(heaviest - secondHeaviest); //@rest
       }
-      return heap.size() ? heap.front() : 0; //@ret
+      return heap.size() > 0 ? heap.front() : 0; //@ret
     }
   `),
   run({ stones }, t) {
@@ -65,13 +67,13 @@ const maxHeap = defineSolution<Input>({
     while (heap.length > 1) {
       const y = heap.shift()!,
         x = heap.shift()!;
-      t.step("smash", `Pop ${y} and ${x}.`, view({ y, x }));
+      t.step("smash", `Pop ${y} and ${x}.`, view({ heaviest: y, secondHeaviest: x }));
       if (y !== x) {
         let i = 0;
         while (i < heap.length && heap[i] > y - x) i++;
         heap.splice(i, 0, y - x);
-        t.step("rest", `Push the leftover ${y - x}.`, view({ y, x }, i));
-      } else t.step("rest", "Equal weights: both destroyed.", view({ y, x }));
+        t.step("rest", `Push the leftover ${y - x}.`, view({ heaviest: y, secondHeaviest: x }, i));
+      } else t.step("rest", "Equal weights: both destroyed.", view({ heaviest: y, secondHeaviest: x }));
     }
     const res = heap[0] ?? 0;
     t.step("ret", `Return ${res}.`, view());

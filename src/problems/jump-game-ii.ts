@@ -13,11 +13,15 @@ const dp = defineSolution<Input>({
   idea: "jumps[i] = fewest jumps to reach i. From each reachable i, every index up to i + nums[i] can be reached with jumps[i] + 1.",
   code: code(`
     function jump(nums: number[]): number {
+      // jumps[i] = fewest jumps needed to reach index i
       const jumps = new Array(nums.length).fill(Infinity);
       jumps[0] = 0; //@init
-      for (let i = 0; i < nums.length; i++) //@from
-        for (let j = i + 1; j <= Math.min(i + nums[i], nums.length - 1); j++)
+      for (let i = 0; i < nums.length; i++) { //@from
+        const farthest = Math.min(i + nums[i], nums.length - 1);
+        for (let j = i + 1; j <= farthest; j++) {
           jumps[j] = Math.min(jumps[j], jumps[i] + 1); //@relax
+        }
+      }
       return jumps[nums.length - 1]; //@ret
     }
   `),
@@ -51,10 +55,15 @@ const greedyBfs = defineSolution<Input>({
   idea: "Indices reachable with exactly k jumps form a contiguous window. Scan the current window, track the farthest index reachable from it, and when the window ends, take a jump: the next window ends at that farthest point.",
   code: code(`
     function jump(nums: number[]): number {
-      let jumps = 0, end = 0, far = 0; //@init
+      let jumps = 0; //@init
+      let currentEnd = 0; // farthest index reachable with the current number of jumps
+      let farthest = 0;   // farthest index reachable with one more jump
       for (let i = 0; i < nums.length - 1; i++) {
-        far = Math.max(far, i + nums[i]); //@far
-        if (i === end) { jumps++; end = far; } //@jump
+        farthest = Math.max(farthest, i + nums[i]); //@far
+        if (i === currentEnd) { //@jump
+          jumps++;
+          currentEnd = farthest;
+        }
       }
       return jumps; //@ret
     }
@@ -65,8 +74,8 @@ const greedyBfs = defineSolution<Input>({
       far = 0,
       start = 0;
     const view = (i?: number) => [
-      vars({ jumps, end, far }),
-      arr("nums", nums, { window: [start, Math.min(end, nums.length - 1)], tones: tones([i, "active"], [Math.min(far, nums.length - 1), "compare"]), pointers: { i, end: Math.min(end, nums.length - 1) } }),
+      vars({ jumps, currentEnd: end, farthest: far }),
+      arr("nums", nums, { window: [start, Math.min(end, nums.length - 1)], tones: tones([i, "active"], [Math.min(far, nums.length - 1), "compare"]), pointers: { i, currentEnd: Math.min(end, nums.length - 1) } }),
     ];
     t.step("init", "Window for 0 jumps is just index 0.", view());
     for (let i = 0; i < nums.length - 1; i++) {

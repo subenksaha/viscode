@@ -18,14 +18,19 @@ const bruteForce = defineSolution<Input>({
   code: code(`
     function minWindow(s: string, t: string): string {
       const need = new Map<string, number>();
-      for (const ch of t) need.set(ch, (need.get(ch) ?? 0) + 1); //@need
+      for (const char of t) need.set(char, (need.get(char) ?? 0) + 1); //@need
       let best = "";
       for (let i = 0; i < s.length; i++) { //@i
-        const win = new Map<string, number>();
+        const window = new Map<string, number>();
         for (let j = i; j < s.length; j++) { //@j
-          win.set(s[j], (win.get(s[j]) ?? 0) + 1);
-          if ([...need].every(([c, n]) => (win.get(c) ?? 0) >= n)) { //@covers
-            if (!best || j - i + 1 < best.length) best = s.slice(i, j + 1); //@best
+          window.set(s[j], (window.get(s[j]) ?? 0) + 1);
+          let coversT = true;
+          for (const [char, count] of need) {
+            if ((window.get(char) ?? 0) < count) coversT = false;
+          }
+          if (coversT) { //@covers
+            const isShorter = best === "" || j - i + 1 < best.length;
+            if (isShorter) best = s.slice(i, j + 1); //@best
             break;
           }
         }
@@ -67,21 +72,30 @@ const slidingWindow = defineSolution<Input>({
   code: code(`
     function minWindow(s: string, t: string): string {
       const need = new Map<string, number>();
-      for (const ch of t) need.set(ch, (need.get(ch) ?? 0) + 1); //@need
-      let have = 0, lo = 0, bestLo = 0, bestLen = Infinity;
-      const win = new Map<string, number>();
-      for (let hi = 0; hi < s.length; hi++) { //@hi
-        const c = s[hi];
-        win.set(c, (win.get(c) ?? 0) + 1);
-        if (win.get(c) === need.get(c)) have++; //@have
+      for (const char of t) need.set(char, (need.get(char) ?? 0) + 1); //@need
+      let have = 0; // letters of t whose count the window fully covers
+      let left = 0;
+      let bestStart = 0;
+      let bestLength = Infinity;
+      const window = new Map<string, number>();
+      for (let right = 0; right < s.length; right++) { //@hi
+        const char = s[right];
+        window.set(char, (window.get(char) ?? 0) + 1);
+        if (window.get(char) === need.get(char)) have++; //@have
+        // While the window covers t, record it and try to shrink from the left.
         while (have === need.size) { //@valid
-          if (hi - lo + 1 < bestLen) { bestLen = hi - lo + 1; bestLo = lo; } //@best
-          const d = s[lo++];
-          win.set(d, win.get(d)! - 1);
-          if (need.has(d) && win.get(d)! < need.get(d)!) have--; //@shrink
+          const length = right - left + 1;
+          if (length < bestLength) { //@best
+            bestLength = length;
+            bestStart = left;
+          }
+          const removed = s[left];
+          left++;
+          window.set(removed, window.get(removed)! - 1);
+          if (need.has(removed) && window.get(removed)! < need.get(removed)!) have--; //@shrink
         }
       }
-      return bestLen === Infinity ? "" : s.slice(bestLo, bestLo + bestLen); //@ret
+      return bestLength === Infinity ? "" : s.slice(bestStart, bestStart + bestLength); //@ret
     }
   `),
   run({ s, t: target }, t) {
@@ -95,7 +109,7 @@ const slidingWindow = defineSolution<Input>({
     const chars = [...s];
     const view = (hi: number) => [
       vars({ have, required: need.size, best: bestLen === Infinity ? '""' : `"${s.slice(bestLo, bestLo + bestLen)}"` }),
-      arr("s", chars, { window: lo <= hi ? [lo, hi] : null, tones: tones(...chars.map((ch, i) => [need.has(ch) ? i : null, "compare"] as [number | null, "compare"]), [hi, "active"]), pointers: { lo, hi } }),
+      arr("s", chars, { window: lo <= hi ? [lo, hi] : null, tones: tones(...chars.map((ch, i) => [need.has(ch) ? i : null, "compare"] as [number | null, "compare"]), [hi, "active"]), pointers: { left: lo, right: hi } }),
       map("window counts / need", [...need].map(([ch, n]) => [ch, `${win.get(ch) ?? 0} / ${n}`]), tones(...[...need].map(([ch, n]) => [(win.get(ch) ?? 0) >= n ? ch : null, "success"] as [string | null, "success"]))),
     ];
     t.step("need", `t needs ${need.size} distinct letter(s).`, [map("need", need), arr("s", chars)]);

@@ -16,16 +16,17 @@ const linear = defineSolution<Input>({
   idea: "Try k = 1, 2, 3, … and return the first speed that finishes all piles within h hours.",
   code: code(`
     function minEatingSpeed(piles: number[], h: number): number {
-      for (let k = 1; ; k++) { //@try
-        const hours = piles.reduce((s, p) => s + Math.ceil(p / k), 0); //@hours
-        if (hours <= h) return k; //@ret
+      for (let speed = 1; ; speed++) { //@try
+        let hours = 0;
+        for (const pile of piles) hours += Math.ceil(pile / speed); //@hours
+        if (hours <= h) return speed; //@ret
       }
     }
   `),
   run({ piles, h }, t) {
     for (let k = 1; ; k++) {
       const hours = hoursAt(piles, k);
-      const view = [vars({ k, hours, h }), arr("hours per pile", piles.map((p) => Math.ceil(p / k)), { indexLabels: piles.map(String) })];
+      const view = [vars({ speed: k, hours, h }), arr("hours per pile", piles.map((p) => Math.ceil(p / k)), { indexLabels: piles.map(String) })];
       if (hours <= h) {
         t.step("ret", `At k = ${k}, Koko needs ${hours} ≤ ${h} hours. Answer: ${k}.`, view);
         return k;
@@ -43,21 +44,26 @@ const binary = defineSolution<Input>({
   idea: "Hours needed only go down as k goes up, so binary-search k in [1, max(piles)] for the smallest speed that fits in h hours.",
   code: code(`
     function minEatingSpeed(piles: number[], h: number): number {
-      let lo = 1, hi = Math.max(...piles); //@init
-      while (lo < hi) {
-        const k = (lo + hi) >> 1;
-        const hours = piles.reduce((s, p) => s + Math.ceil(p / k), 0); //@mid
-        if (hours <= h) hi = k; //@fits
-        else lo = k + 1; //@slow
+      let low = 1; //@init
+      let high = Math.max(...piles);
+      while (low < high) {
+        const speed = Math.floor((low + high) / 2);
+        let hours = 0;
+        for (const pile of piles) hours += Math.ceil(pile / speed); //@mid
+        if (hours <= h) {
+          high = speed; // fast enough; try slower //@fits
+        } else {
+          low = speed + 1; // too slow //@slow
+        }
       }
-      return lo; //@ret
+      return low; //@ret
     }
   `),
   run({ piles, h }, t) {
     let lo = 1,
       hi = Math.max(...piles);
     const view = (k?: number, hours?: number) => [
-      vars({ lo, hi, k, hours, h }),
+      vars({ low: lo, high: hi, speed: k, hours, h }),
       arr("piles", piles),
       ...(k ? [arr(`hours per pile at k = ${k}`, piles.map((p) => Math.ceil(p / k)), { indexLabels: false })] : []),
     ];

@@ -86,15 +86,39 @@ const sortAll = defineSolution<Input>({
   space: "O(total tweets)",
   idea: "Store each user's tweets with a global timestamp. For a feed, gather all tweets from the user and their followees, sort by time and take the 10 newest.",
   code: code(`
+    type Tweet = { time: number; id: number };
+
     class Twitter {
-      time = 0; tweets = new Map<number, [number, number][]>(); follows = new Map<number, Set<number>>(); //@ctor
-      postTweet(u: number, id: number) { (this.tweets.get(u) ?? this.tweets.set(u, []).get(u)!).push([this.time++, id]); } //@post
-      getNewsFeed(u: number): number[] {
-        const all = [u, ...(this.follows.get(u) ?? [])].flatMap((x) => this.tweets.get(x) ?? []); //@collect
-        return all.sort((a, b) => b[0] - a[0]).slice(0, 10).map(([, id]) => id); //@sort @feed
+      time = 0; //@ctor
+      tweetsByUser = new Map<number, Tweet[]>(); // oldest first
+      followees = new Map<number, Set<number>>();
+
+      postTweet(userId: number, tweetId: number) {
+        if (!this.tweetsByUser.has(userId)) this.tweetsByUser.set(userId, []);
+        this.tweetsByUser.get(userId)!.push({ time: this.time, id: tweetId }); //@post
+        this.time++;
       }
-      follow(a: number, b: number) { if (a !== b) (this.follows.get(a) ?? this.follows.set(a, new Set()).get(a)!).add(b); } //@follow
-      unfollow(a: number, b: number) { this.follows.get(a)?.delete(b); } //@unfollow
+
+      getNewsFeed(userId: number): number[] {
+        const people = [userId, ...(this.followees.get(userId) ?? [])];
+        const allTweets: Tweet[] = [];
+        for (const person of people) { //@collect
+          allTweets.push(...(this.tweetsByUser.get(person) ?? []));
+        }
+        allTweets.sort((a, b) => b.time - a.time); // newest first //@sort
+        const newestTen = allTweets.slice(0, 10);
+        return newestTen.map((tweet) => tweet.id); //@feed
+      }
+
+      follow(followerId: number, followeeId: number) {
+        if (followerId === followeeId) return; //@follow
+        if (!this.followees.has(followerId)) this.followees.set(followerId, new Set());
+        this.followees.get(followerId)!.add(followeeId);
+      }
+
+      unfollow(followerId: number, followeeId: number) {
+        this.followees.get(followerId)?.delete(followeeId); //@unfollow
+      }
     }
   `),
   run: (input, t) => simulate(input, t, false),
@@ -107,24 +131,53 @@ const kWayMerge = defineSolution<Input>({
   space: "O(total tweets)",
   idea: "Each user's tweets are already in time order. Put the newest tweet of every followed user in a max-heap and pop 10 times, pushing the next older tweet from the same user each time.",
   code: code(`
+    type Tweet = { time: number; id: number };
+
     class Twitter {
-      time = 0; tweets = new Map<number, [number, number][]>(); follows = new Map<number, Set<number>>(); //@ctor
-      postTweet(u: number, id: number) { (this.tweets.get(u) ?? this.tweets.set(u, []).get(u)!).push([this.time++, id]); } //@post
-      getNewsFeed(u: number): number[] {
-        const heap = new MaxPriorityQueue<[number, number, number]>((e) => e[0]); // [time, user, index]
-        for (const x of [u, ...(this.follows.get(u) ?? [])]) { //@seed
-          const ts = this.tweets.get(x);
-          if (ts?.length) heap.enqueue([ts.at(-1)![0], x, ts.length - 1]);
+      time = 0; //@ctor
+      tweetsByUser = new Map<number, Tweet[]>(); // oldest first
+      followees = new Map<number, Set<number>>();
+
+      postTweet(userId: number, tweetId: number) {
+        if (!this.tweetsByUser.has(userId)) this.tweetsByUser.set(userId, []);
+        this.tweetsByUser.get(userId)!.push({ time: this.time, id: tweetId }); //@post
+        this.time++;
+      }
+
+      getNewsFeed(userId: number): number[] {
+        // Max-heap by time. Each entry points at one tweet: tweetsByUser.get(person)[index].
+        type Entry = { time: number; person: number; index: number };
+        const heap = new MaxPriorityQueue<Entry>((entry) => entry.time);
+        const people = [userId, ...(this.followees.get(userId) ?? [])];
+        for (const person of people) { //@seed
+          const tweets = this.tweetsByUser.get(person) ?? [];
+          if (tweets.length > 0) {
+            const newestIndex = tweets.length - 1;
+            heap.enqueue({ time: tweets[newestIndex].time, person, index: newestIndex });
+          }
         }
         const feed: number[] = [];
-        while (heap.size() && feed.length < 10) {
-          const [, x, i] = heap.dequeue(); feed.push(this.tweets.get(x)![i][1]); //@pop
-          if (i > 0) heap.enqueue([this.tweets.get(x)![i - 1][0], x, i - 1]);
+        while (heap.size() > 0 && feed.length < 10) {
+          const newest = heap.dequeue(); //@pop
+          const tweets = this.tweetsByUser.get(newest.person)!;
+          feed.push(tweets[newest.index].id);
+          if (newest.index > 0) {
+            const olderIndex = newest.index - 1;
+            heap.enqueue({ time: tweets[olderIndex].time, person: newest.person, index: olderIndex });
+          }
         }
         return feed; //@feed
       }
-      follow(a: number, b: number) { if (a !== b) (this.follows.get(a) ?? this.follows.set(a, new Set()).get(a)!).add(b); } //@follow
-      unfollow(a: number, b: number) { this.follows.get(a)?.delete(b); } //@unfollow
+
+      follow(followerId: number, followeeId: number) {
+        if (followerId === followeeId) return; //@follow
+        if (!this.followees.has(followerId)) this.followees.set(followerId, new Set());
+        this.followees.get(followerId)!.add(followeeId);
+      }
+
+      unfollow(followerId: number, followeeId: number) {
+        this.followees.get(followerId)?.delete(followeeId); //@unfollow
+      }
     }
   `),
   run: (input, t) => simulate(input, t, true),

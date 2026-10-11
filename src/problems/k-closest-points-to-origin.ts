@@ -17,7 +17,9 @@ const sorting = defineSolution<Input>({
   idea: "Sort all points by squared distance (no need for the square root) and take the first k.",
   code: code(`
     function kClosest(points: number[][], k: number): number[][] {
-      points.sort((a, b) => a[0] ** 2 + a[1] ** 2 - (b[0] ** 2 + b[1] ** 2)); //@sort
+      // Squared distance is enough for comparing; no need for a square root.
+      const squaredDistance = (point: number[]) => point[0] * point[0] + point[1] * point[1];
+      points.sort((a, b) => squaredDistance(a) - squaredDistance(b)); //@sort
       return points.slice(0, k); //@ret
     }
   `),
@@ -37,11 +39,12 @@ const maxHeap = defineSolution<Input>({
   idea: "Keep the k closest points seen so far in a max-heap keyed by distance. A new point that is closer than the heap's farthest replaces it.",
   code: code(`
     function kClosest(points: number[][], k: number): number[][] {
-      const dist = (p: number[]) => p[0] ** 2 + p[1] ** 2;
-      const heap = new MaxPriorityQueue<number[]>(dist); //@init
-      for (const p of points) { //@loop
-        heap.enqueue(p); //@push
-        if (heap.size() > k) heap.dequeue(); //@evict
+      const squaredDistance = (point: number[]) => point[0] * point[0] + point[1] * point[1];
+      // Max-heap of the k closest points so far. The top is the farthest of them.
+      const heap = new MaxPriorityQueue<number[]>(squaredDistance); //@init
+      for (const point of points) { //@loop
+        heap.enqueue(point); //@push
+        if (heap.size() > k) heap.dequeue(); // drop the farthest //@evict
       }
       return heap.toArray(); //@ret
     }

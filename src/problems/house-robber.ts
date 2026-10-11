@@ -14,12 +14,15 @@ const memo = defineSolution<Input>({
   code: code(`
     function rob(nums: number[]): number {
       const memo = new Map<number, number>();
+      // Most money we can get from houses i, i + 1, ...
       function best(i: number): number {
         if (i >= nums.length) return 0; //@base
         if (memo.has(i)) return memo.get(i)!; //@hit
-        const res = Math.max(best(i + 1), nums[i] + best(i + 2)); //@choose
-        memo.set(i, res); //@store
-        return res;
+        const skipHouse = best(i + 1);
+        const robHouse = nums[i] + best(i + 2);
+        const result = Math.max(skipHouse, robHouse); //@choose
+        memo.set(i, result); //@store
+        return result;
       }
       return best(0); //@ret
     }
@@ -59,10 +62,13 @@ const table = defineSolution<Input>({
   idea: "dp[i] = best loot from the first i houses = max(dp[i−1], dp[i−2] + nums[i−1]).",
   code: code(`
     function rob(nums: number[]): number {
+      // dp[i] = most money from the first i houses
       const dp = new Array(nums.length + 1).fill(0);
       dp[1] = nums[0]; //@init
       for (let i = 2; i <= nums.length; i++) { //@loop
-        dp[i] = Math.max(dp[i - 1], dp[i - 2] + nums[i - 1]); //@fill
+        const skipHouse = dp[i - 1];
+        const robHouse = dp[i - 2] + nums[i - 1];
+        dp[i] = Math.max(skipHouse, robHouse); //@fill
       }
       return dp[nums.length]; //@ret
     }
@@ -90,22 +96,23 @@ const twoVars = defineSolution<Input>({
   name: "Two Variables",
   time: "O(n)",
   space: "O(1)",
-  idea: "Keep only the best totals for i−1 houses (prev1) and i−2 houses (prev2).",
+  idea: "Keep only the best totals for i−1 houses (bestOneBack) and i−2 houses (bestTwoBack).",
   code: code(`
     function rob(nums: number[]): number {
-      let prev2 = 0, prev1 = 0; //@init
-      for (const x of nums) { //@loop
-        const cur = Math.max(prev1, prev2 + x); //@cur
-        prev2 = prev1; //@shift
-        prev1 = cur;
+      let bestTwoBack = 0; // best total up to two houses ago //@init
+      let bestOneBack = 0; // best total up to the previous house
+      for (const money of nums) { //@loop
+        const current = Math.max(bestOneBack, bestTwoBack + money); //@cur
+        bestTwoBack = bestOneBack; //@shift
+        bestOneBack = current;
       }
-      return prev1; //@ret
+      return bestOneBack; //@ret
     }
   `),
   run({ nums }, t) {
     let prev2 = 0,
       prev1 = 0;
-    const view = (i?: number, cur?: number) => [vars({ prev2, prev1, cur }), arr("houses", nums, { tones: tones([i, "active"]), pointers: { i } })];
+    const view = (i?: number, cur?: number) => [vars({ bestTwoBack: prev2, bestOneBack: prev1, current: cur }), arr("houses", nums, { tones: tones([i, "active"]), pointers: { i } })];
     t.step("init", "Nothing robbed yet.", view());
     nums.forEach((x, i) => {
       t.step("loop", `House ${i} holds ${x}.`, view(i));

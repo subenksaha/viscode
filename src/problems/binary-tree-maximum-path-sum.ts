@@ -15,15 +15,23 @@ const bruteForce = defineSolution<Input>({
   idea: "For every node, the best path peaking there is node + best downward path on the left + on the right (dropping negative sides). Downward paths are recomputed from scratch for each node.",
   code: code(`
     function maxPathSum(root: TreeNode | null): number {
-      const down = (n: TreeNode | null): number =>
-        n ? n.val + Math.max(0, down(n.left), down(n.right)) : 0;
+      // Best sum of a path that starts at node and goes straight down.
+      function bestDownwardPath(node: TreeNode | null): number {
+        if (node === null) return 0;
+        const bestChildPath = Math.max(bestDownwardPath(node.left), bestDownwardPath(node.right));
+        return node.val + Math.max(0, bestChildPath);
+      }
+
       let best = -Infinity;
-      const visit = (n: TreeNode | null) => {
-        if (!n) return;
-        const peak = n.val + Math.max(0, down(n.left)) + Math.max(0, down(n.right)); //@peak
+      function visit(node: TreeNode | null) {
+        if (node === null) return;
+        const leftGain = Math.max(0, bestDownwardPath(node.left));
+        const rightGain = Math.max(0, bestDownwardPath(node.right));
+        const peak = node.val + leftGain + rightGain; //@peak
         best = Math.max(best, peak); //@best
-        visit(n.left); visit(n.right);
-      };
+        visit(node.left);
+        visit(node.right);
+      }
       visit(root);
       return best; //@ret
     }
@@ -57,12 +65,14 @@ const dfs = defineSolution<Input>({
   code: code(`
     function maxPathSum(root: TreeNode | null): number {
       let best = -Infinity;
-      function gain(n: TreeNode | null): number {
-        if (!n) return 0; //@base
-        const left = Math.max(0, gain(n.left)); //@left
-        const right = Math.max(0, gain(n.right)); //@right
-        best = Math.max(best, n.val + left + right); //@best
-        return n.val + Math.max(left, right); //@ret
+      // Best sum of a path that starts at node and goes straight down.
+      function gain(node: TreeNode | null): number {
+        if (node === null) return 0; //@base
+        const leftGain = Math.max(0, gain(node.left)); //@left
+        const rightGain = Math.max(0, gain(node.right)); //@right
+        const pathThroughNode = node.val + leftGain + rightGain;
+        best = Math.max(best, pathThroughNode); //@best
+        return node.val + Math.max(leftGain, rightGain); //@ret
       }
       gain(root);
       return best; //@done

@@ -15,11 +15,11 @@ const removeEach = defineSolution<Input>({
   idea: "For each letter of the note, find an unused copy in the magazine and cross it out. If one is missing, the note can't be built.",
   code: code(`
     function canConstruct(ransomNote: string, magazine: string): boolean {
-      const mag = [...magazine]; //@init
-      for (const c of ransomNote) { //@loop
-        const k = mag.indexOf(c); //@find
-        if (k < 0) return false; //@missing
-        mag[k] = ""; //@use
+      const letters = magazine.split(""); //@init
+      for (const letter of ransomNote) { //@loop
+        const position = letters.indexOf(letter); //@find
+        if (position === -1) return false; //@missing
+        letters[position] = ""; // used up //@use
       }
       return true; //@ret
     }
@@ -58,11 +58,11 @@ const counting = defineSolution<Input>({
   code: code(`
     function canConstruct(ransomNote: string, magazine: string): boolean {
       const count = new Map<string, number>();
-      for (const c of magazine) count.set(c, (count.get(c) ?? 0) + 1); //@count
-      for (const c of ransomNote) { //@loop
-        const left = (count.get(c) ?? 0) - 1; //@spend
-        if (left < 0) return false; //@missing
-        count.set(c, left);
+      for (const letter of magazine) count.set(letter, (count.get(letter) ?? 0) + 1); //@count
+      for (const letter of ransomNote) { //@loop
+        const remaining = (count.get(letter) ?? 0) - 1; //@spend
+        if (remaining < 0) return false; //@missing
+        count.set(letter, remaining);
       }
       return true; //@ret
     }

@@ -15,9 +15,11 @@ const sortWindows = defineSolution<Input>({
   idea: "A permutation of s1 sorts to the same string as s1. Sort each window of length |s1| in s2 and compare.",
   code: code(`
     function checkInclusion(s1: string, s2: string): boolean {
-      const key = [...s1].sort().join(""); //@key
-      for (let i = 0; i + s1.length <= s2.length; i++) { //@window
-        if ([...s2.slice(i, i + s1.length)].sort().join("") === key) return true; //@found
+      const sortLetters = (word: string) => word.split("").sort().join("");
+      const target = sortLetters(s1); //@key
+      for (let start = 0; start + s1.length <= s2.length; start++) { //@window
+        const window = s2.slice(start, start + s1.length);
+        if (sortLetters(window) === target) return true; //@found
       }
       return false; //@none
     }
@@ -25,11 +27,11 @@ const sortWindows = defineSolution<Input>({
   run({ s1, s2 }, t) {
     const key = [...s1].sort().join("");
     const m = s1.length;
-    t.step("key", `Sorted s1 = "${key}".`, [vars({ key }), arr("s2", [...s2])]);
+    t.step("key", `Sorted s1 = "${key}".`, [vars({ target: key }), arr("s2", [...s2])]);
     for (let i = 0; i + m <= s2.length; i++) {
       const w = [...s2.slice(i, i + m)].sort().join("");
       const hit = w === key;
-      const view = [vars({ key, window: w }), arr("s2", [...s2], { window: [i, i + m - 1], tones: hit ? tones(...Array.from({ length: m }, (_, k) => [i + k, "success"] as [number, Tone])) : {} })];
+      const view = [vars({ target: key, window: w }), arr("s2", [...s2], { window: [i, i + m - 1], tones: hit ? tones(...Array.from({ length: m }, (_, k) => [i + k, "success"] as [number, Tone])) : {} })];
       if (hit) {
         t.step("found", `Window "${s2.slice(i, i + m)}" sorts to "${w}". Match.`, view);
         return true;
@@ -50,15 +52,30 @@ const sliding = defineSolution<Input>({
   code: code(`
     function checkInclusion(s1: string, s2: string): boolean {
       if (s1.length > s2.length) return false;
-      const a = new Array(26).fill(0), b = new Array(26).fill(0), idx = (c: string) => c.charCodeAt(0) - 97;
-      for (let i = 0; i < s1.length; i++) { a[idx(s1[i])]++; b[idx(s2[i])]++; } //@init
+      const letterIndex = (letter: string) => letter.charCodeAt(0) - "a".charCodeAt(0);
+      const need = new Array(26).fill(0); // letter counts of s1
+      const window = new Array(26).fill(0); // letter counts of the current window in s2
+      for (let i = 0; i < s1.length; i++) { //@init
+        need[letterIndex(s1[i])]++;
+        window[letterIndex(s2[i])]++;
+      }
+      // matches = how many of the 26 letters have the same count in both.
       let matches = 0;
-      for (let k = 0; k < 26; k++) if (a[k] === b[k]) matches++; //@matches
-      for (let r = s1.length; r < s2.length; r++) {
+      for (let k = 0; k < 26; k++) { //@matches
+        if (need[k] === window[k]) matches++;
+      }
+      for (let right = s1.length; right < s2.length; right++) {
         if (matches === 26) return true; //@check
-        const add = idx(s2[r]), drop = idx(s2[r - s1.length]);
-        b[add]++; if (b[add] === a[add]) matches++; else if (b[add] === a[add] + 1) matches--; //@add
-        b[drop]--; if (b[drop] === a[drop]) matches++; else if (b[drop] === a[drop] - 1) matches--; //@drop
+        // Add s2[right] to the window.
+        const added = letterIndex(s2[right]);
+        window[added]++; //@add
+        if (window[added] === need[added]) matches++;
+        else if (window[added] === need[added] + 1) matches--;
+        // Remove the letter that just left the window.
+        const removed = letterIndex(s2[right - s1.length]);
+        window[removed]--; //@drop
+        if (window[removed] === need[removed]) matches++;
+        else if (window[removed] === need[removed] - 1) matches--;
       }
       return matches === 26; //@ret
     }

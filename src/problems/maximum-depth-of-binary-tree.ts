@@ -15,10 +15,10 @@ const recursive = defineSolution<Input>({
   idea: "The depth of a tree is 1 + the deeper of its two subtrees. An empty tree has depth 0.",
   code: code(`
     function maxDepth(root: TreeNode | null): number {
-      if (!root) return 0; //@base
-      const left = maxDepth(root.left); //@left
-      const right = maxDepth(root.right); //@right
-      return 1 + Math.max(left, right); //@ret
+      if (root === null) return 0; //@base
+      const leftDepth = maxDepth(root.left); //@left
+      const rightDepth = maxDepth(root.right); //@right
+      return 1 + Math.max(leftDepth, rightDepth); //@ret
     }
   `),
   run({ root }, t) {
@@ -55,16 +55,17 @@ const bfs = defineSolution<Input>({
   idea: "Process the tree level by level with a queue. The number of levels is the depth.",
   code: code(`
     function maxDepth(root: TreeNode | null): number {
-      if (!root) return 0;
-      let queue = [root], depth = 0; //@init
-      while (queue.length) { //@level
+      if (root === null) return 0;
+      let level = [root]; //@init
+      let depth = 0;
+      while (level.length > 0) { //@level
         depth++;
-        const next: TreeNode[] = [];
-        for (const n of queue) { //@node
-          if (n.left) next.push(n.left);
-          if (n.right) next.push(n.right);
+        const nextLevel: TreeNode[] = [];
+        for (const node of level) { //@node
+          if (node.left !== null) nextLevel.push(node.left);
+          if (node.right !== null) nextLevel.push(node.right);
         }
-        queue = next;
+        level = nextLevel;
       }
       return depth; //@ret
     }
@@ -104,13 +105,14 @@ const iterativeDfs = defineSolution<Input>({
   idea: "Push (node, depth) pairs onto a stack and track the largest depth seen.",
   code: code(`
     function maxDepth(root: TreeNode | null): number {
-      const stack: [TreeNode | null, number][] = [[root, 1]];
+      const stack: [TreeNode | null, number][] = [[root, 1]]; // [node, its depth]
       let best = 0; //@init
-      while (stack.length) { //@loop
-        const [n, d] = stack.pop()!; //@pop
-        if (!n) continue;
-        best = Math.max(best, d); //@best
-        stack.push([n.left, d + 1], [n.right, d + 1]); //@push
+      while (stack.length > 0) { //@loop
+        const [node, depth] = stack.pop()!; //@pop
+        if (node === null) continue;
+        best = Math.max(best, depth); //@best
+        stack.push([node.left, depth + 1]); //@push
+        stack.push([node.right, depth + 1]);
       }
       return best; //@ret
     }

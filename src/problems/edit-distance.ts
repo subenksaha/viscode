@@ -13,20 +13,27 @@ const memo = defineSolution<Input>({
   space: "O(m·n)",
   idea: "dist(i, j) converts word1[i..] into word2[j..]. Equal letters cost nothing; otherwise pay 1 and take the best of insert (j+1), delete (i+1) or replace (both +1).",
   code: code(`
-    function minDistance(a: string, b: string): number {
+    function minDistance(word1: string, word2: string): number {
       const memo = new Map<string, number>();
-      const dist = (i: number, j: number): number => {
-        if (i === a.length) return b.length - j; //@base-a
-        if (j === b.length) return a.length - i; //@base-b
+      // Fewest edits to turn word1[i..] into word2[j..].
+      function distance(i: number, j: number): number {
+        if (i === word1.length) return word2.length - j; //@base-a
+        if (j === word2.length) return word1.length - i; //@base-b
         const key = i + "," + j;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const res = a[i] === b[j] //@cmp
-          ? dist(i + 1, j + 1)
-          : 1 + Math.min(dist(i, j + 1), dist(i + 1, j), dist(i + 1, j + 1));
-        memo.set(key, res); //@store
-        return res;
-      };
-      return dist(0, 0); //@ret
+        let result: number;
+        if (word1[i] === word2[j]) { //@cmp
+          result = distance(i + 1, j + 1);
+        } else {
+          const insert = distance(i, j + 1);
+          const remove = distance(i + 1, j);
+          const replace = distance(i + 1, j + 1);
+          result = 1 + Math.min(insert, remove, replace);
+        }
+        memo.set(key, result); //@store
+        return result;
+      }
+      return distance(0, 0); //@ret
     }
   `),
   run({ word1: a, word2: b }, t) {
@@ -69,14 +76,26 @@ const table = defineSolution<Input>({
   space: "O(m·n)",
   idea: "dp[i][j] = edits to turn the first i letters of word1 into the first j of word2. Matching letters copy the diagonal; otherwise 1 + min(left = insert, up = delete, diagonal = replace).",
   code: code(`
-    function minDistance(a: string, b: string): number {
-      const dp = Array.from({ length: a.length + 1 }, (_, i) => Array.from({ length: b.length + 1 }, (_, j) => (i ? (j ? 0 : i) : j))); //@init
-      for (let i = 1; i <= a.length; i++)
-        for (let j = 1; j <= b.length; j++) //@cell
-          dp[i][j] = a[i - 1] === b[j - 1]
-            ? dp[i - 1][j - 1]
-            : 1 + Math.min(dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1]);
-      return dp[a.length][b.length]; //@ret
+    function minDistance(word1: string, word2: string): number {
+      const rows = word1.length;
+      const cols = word2.length;
+      // dp[i][j] = fewest edits to turn the first i letters of word1 into the first j of word2
+      const dp = Array.from({ length: rows + 1 }, () => new Array(cols + 1).fill(0)); //@init
+      for (let i = 0; i <= rows; i++) dp[i][0] = i; // delete everything
+      for (let j = 0; j <= cols; j++) dp[0][j] = j; // insert everything
+      for (let i = 1; i <= rows; i++) {
+        for (let j = 1; j <= cols; j++) { //@cell
+          if (word1[i - 1] === word2[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1];
+          } else {
+            const insert = dp[i][j - 1];
+            const remove = dp[i - 1][j];
+            const replace = dp[i - 1][j - 1];
+            dp[i][j] = 1 + Math.min(insert, remove, replace);
+          }
+        }
+      }
+      return dp[rows][cols]; //@ret
     }
   `),
   run({ word1: a, word2: b }, t) {

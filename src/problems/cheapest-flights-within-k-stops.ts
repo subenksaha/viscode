@@ -23,11 +23,15 @@ const bellmanFord = defineSolution<Input>({
     function findCheapestPrice(n: number, flights: number[][], src: number, dst: number, k: number): number {
       let price = new Array(n).fill(Infinity);
       price[src] = 0; //@init
-      for (let r = 0; r <= k; r++) { //@round
-        const next = [...price];
-        for (const [u, v, w] of flights)
-          if (price[u] + w < next[v]) next[v] = price[u] + w; //@relax
-        price = next;
+      // Round r finds the cheapest prices using at most r + 1 flights.
+      for (let round = 0; round <= k; round++) { //@round
+        const nextPrice = [...price];
+        for (const [from, to, cost] of flights) {
+          if (price[from] + cost < nextPrice[to]) {
+            nextPrice[to] = price[from] + cost; //@relax
+          }
+        }
+        price = nextPrice;
       }
       return price[dst] === Infinity ? -1 : price[dst]; //@ret
     }
@@ -69,17 +73,23 @@ const bfs = defineSolution<Input>({
   idea: "Expand level by level, where level = flights taken. Keep the best known price per city and only re-queue a city when this level reaches it more cheaply. Stop after k + 1 levels.",
   code: code(`
     function findCheapestPrice(n: number, flights: number[][], src: number, dst: number, k: number): number {
-      const adj: [number, number][][] = Array.from({ length: n }, () => []);
-      for (const [u, v, w] of flights) adj[u].push([v, w]);
+      const flightsFrom: [number, number][][] = Array.from({ length: n }, () => []);
+      for (const [from, to, cost] of flights) flightsFrom[from].push([to, cost]);
       const best = new Array(n).fill(Infinity);
       best[src] = 0;
-      let level: [number, number][] = [[src, 0]]; //@init
-      for (let stops = 0; stops <= k && level.length; stops++) { //@level
-        const next: [number, number][] = [];
-        for (const [u, cost] of level)
-          for (const [v, w] of adj[u])
-            if (cost + w < best[v]) { best[v] = cost + w; next.push([v, cost + w]); } //@improve
-        level = next;
+      let level: [number, number][] = [[src, 0]]; // [city, cost so far] //@init
+      for (let stops = 0; stops <= k && level.length > 0; stops++) { //@level
+        const nextLevel: [number, number][] = [];
+        for (const [city, costSoFar] of level) {
+          for (const [nextCity, flightCost] of flightsFrom[city]) {
+            const newCost = costSoFar + flightCost;
+            if (newCost < best[nextCity]) { //@improve
+              best[nextCity] = newCost;
+              nextLevel.push([nextCity, newCost]);
+            }
+          }
+        }
+        level = nextLevel;
       }
       return best[dst] === Infinity ? -1 : best[dst]; //@ret
     }

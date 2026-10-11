@@ -16,9 +16,10 @@ const sortByCount = defineSolution<Input>({
   code: code(`
     function topKFrequent(nums: number[], k: number): number[] {
       const count = new Map<number, number>();
-      for (const x of nums) count.set(x, (count.get(x) ?? 0) + 1); //@count
-      const keys = [...count.keys()].sort((a, b) => count.get(b)! - count.get(a)!); //@sort
-      return keys.slice(0, k); //@ret
+      for (const num of nums) count.set(num, (count.get(num) ?? 0) + 1); //@count
+      const distinct = [...count.keys()];
+      distinct.sort((a, b) => count.get(b)! - count.get(a)!); // most frequent first //@sort
+      return distinct.slice(0, k); //@ret
     }
   `),
   run({ nums, k }, t) {
@@ -46,13 +47,18 @@ const bucket = defineSolution<Input>({
   code: code(`
     function topKFrequent(nums: number[], k: number): number[] {
       const count = new Map<number, number>();
-      for (const x of nums) count.set(x, (count.get(x) ?? 0) + 1); //@count
+      for (const num of nums) count.set(num, (count.get(num) ?? 0) + 1); //@count
+      // buckets[f] = numbers that appear exactly f times
       const buckets: number[][] = Array.from({ length: nums.length + 1 }, () => []);
-      for (const [x, c] of count) buckets[c].push(x); //@bucket
-      const res: number[] = [];
-      for (let f = nums.length; f > 0 && res.length < k; f--) //@scan
-        for (const x of buckets[f]) if (res.length < k) res.push(x); //@take
-      return res; //@ret
+      for (const [num, frequency] of count) buckets[frequency].push(num); //@bucket
+      const result: number[] = [];
+      // Walk from the highest frequency down until we have k numbers.
+      for (let frequency = nums.length; frequency > 0 && result.length < k; frequency--) { //@scan
+        for (const num of buckets[frequency]) {
+          if (result.length < k) result.push(num); //@take
+        }
+      }
+      return result; //@ret
     }
   `),
   run({ nums, k }, t) {
@@ -63,7 +69,7 @@ const bucket = defineSolution<Input>({
     const res: number[] = [];
     const view = (f?: number) => [
       vars({ k }),
-      arr("buckets (index = frequency)", buckets.map((b) => (b.length ? `[${b}]` : "")), { tones: tones([f, "active"]), pointers: { f } }),
+      arr("buckets (index = frequency)", buckets.map((b) => (b.length ? `[${b}]` : "")), { tones: tones([f, "active"]), pointers: { frequency: f } }),
       arr("result", res, { indexLabels: false }),
     ];
     for (const [x, c] of count) {

@@ -15,8 +15,11 @@ const sorting = defineSolution<Input>({
   code: code(`
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len
-      const a = [...s].sort(), b = [...t].sort(); //@sort
-      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; //@cmp
+      const sortedS = s.split("").sort(); //@sort
+      const sortedT = t.split("").sort();
+      for (let i = 0; i < sortedS.length; i++) { //@cmp
+        if (sortedS[i] !== sortedT[i]) return false;
+      }
       return true; //@ret
     }
   `),
@@ -48,10 +51,11 @@ const hashMap = defineSolution<Input>({
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len
       const count = new Map<string, number>();
-      for (const ch of s) count.set(ch, (count.get(ch) ?? 0) + 1); //@up
-      for (const ch of t) { //@down
-        if (!count.get(ch)) return false; //@fail
-        count.set(ch, count.get(ch)! - 1);
+      for (const letter of s) count.set(letter, (count.get(letter) ?? 0) + 1); //@up
+      for (const letter of t) { //@down
+        const available = count.get(letter) ?? 0;
+        if (available === 0) return false; //@fail
+        count.set(letter, available - 1);
       }
       return true; //@ret
     }
@@ -89,12 +93,14 @@ const fixedArray = defineSolution<Input>({
   code: code(`
     function isAnagram(s: string, t: string): boolean {
       if (s.length !== t.length) return false; //@len
-      const cnt = new Array(26).fill(0);
+      const letterIndex = (letter: string) => letter.charCodeAt(0) - "a".charCodeAt(0);
+      // +1 for each letter in s, -1 for each letter in t. Anagrams cancel out to all zeros.
+      const balance = new Array(26).fill(0);
       for (let i = 0; i < s.length; i++) { //@loop
-        cnt[s.charCodeAt(i) - 97]++;
-        cnt[t.charCodeAt(i) - 97]--;
+        balance[letterIndex(s[i])]++;
+        balance[letterIndex(t[i])]--;
       }
-      return cnt.every((c) => c === 0); //@ret
+      return balance.every((value) => value === 0); //@ret
     }
   `),
   run({ s, t: u }, t) {

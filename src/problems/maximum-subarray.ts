@@ -54,10 +54,12 @@ const kadane = defineSolution<Input>({
   idea: "At each index, either extend the current subarray or start fresh, whichever is larger. A negative running sum only hurts, so drop it.",
   code: code(`
     function maxSubArray(nums: number[]): number {
-      let cur = nums[0], best = nums[0]; //@init
+      let current = nums[0]; // best sum of a subarray ending at i //@init
+      let best = nums[0];
       for (let i = 1; i < nums.length; i++) { //@loop
-        cur = Math.max(nums[i], cur + nums[i]); //@cur
-        best = Math.max(best, cur); //@best
+        // Either extend the previous subarray or start fresh at nums[i].
+        current = Math.max(nums[i], current + nums[i]); //@cur
+        best = Math.max(best, current); //@best
       }
       return best; //@ret
     }
@@ -68,7 +70,7 @@ const kadane = defineSolution<Input>({
       start = 0,
       bestRange: [number, number] = [0, 0];
     const view = (i: number) => [
-      vars({ cur, best }),
+      vars({ current: cur, best }),
       arr("nums", nums, { window: [start, i], tones: tones(...range(bestRange[0], bestRange[1], "success"), [i, "active"]), pointers: { i } }),
     ];
     t.step("init", `cur = best = nums[0] = ${nums[0]}.`, view(0));
@@ -99,22 +101,34 @@ const divideConquer = defineSolution<Input>({
   idea: "The best subarray lies in the left half, in the right half, or crosses the middle. Solve both halves recursively and compute the best crossing sum directly.",
   code: code(`
     function maxSubArray(nums: number[]): number {
-      function solve(lo: number, hi: number): number {
-        if (lo === hi) return nums[lo]; //@base
-        const mid = (lo + hi) >> 1; //@split
-        let left = -Infinity, right = -Infinity, s = 0;
-        for (let i = mid; i >= lo; i--) left = Math.max(left, (s += nums[i])); //@left
-        s = 0;
-        for (let i = mid + 1; i <= hi; i++) right = Math.max(right, (s += nums[i])); //@right
-        return Math.max(solve(lo, mid), solve(mid + 1, hi), left + right); //@combine
+      // Best subarray sum inside nums[start..end].
+      function solve(start: number, end: number): number {
+        if (start === end) return nums[start]; //@base
+        const mid = Math.floor((start + end) / 2); //@split
+        // Best sum that ends exactly at mid, going left.
+        let bestLeft = -Infinity;
+        let sum = 0;
+        for (let i = mid; i >= start; i--) { //@left
+          sum += nums[i];
+          bestLeft = Math.max(bestLeft, sum);
+        }
+        // Best sum that starts exactly at mid + 1, going right.
+        let bestRight = -Infinity;
+        sum = 0;
+        for (let i = mid + 1; i <= end; i++) { //@right
+          sum += nums[i];
+          bestRight = Math.max(bestRight, sum);
+        }
+        const crossing = bestLeft + bestRight;
+        return Math.max(solve(start, mid), solve(mid + 1, end), crossing); //@combine
       }
       return solve(0, nums.length - 1); //@ret
     }
   `),
   run({ nums }, t) {
     const view = (lo: number, hi: number, mid?: number, extra: Record<string, unknown> = {}) => [
-      vars({ lo, hi, mid, ...extra }),
-      arr("nums", nums, { window: [lo, hi], tones: tones([mid, "active"]), pointers: { lo, hi } }),
+      vars({ start: lo, end: hi, mid, ...extra }),
+      arr("nums", nums, { window: [lo, hi], tones: tones([mid, "active"]), pointers: { start: lo, end: hi } }),
     ];
     function solve(lo: number, hi: number): number {
       if (lo === hi) {

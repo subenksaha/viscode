@@ -14,15 +14,22 @@ const memo = defineSolution<Input>({
   code: code(`
     function maxProfit(prices: number[]): number {
       const memo = new Map<string, number>();
-      const best = (i: number, holding: boolean): number => {
-        if (i >= prices.length) return 0; //@end
-        const key = i + "," + holding;
+      // Best profit from this day onward, given whether we own a share.
+      function best(day: number, holding: boolean): number {
+        if (day >= prices.length) return 0; //@end
+        const key = day + "," + holding;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const wait = best(i + 1, holding);
-        const act = holding ? prices[i] + best(i + 2, false) : -prices[i] + best(i + 1, true); //@choose
-        memo.set(key, Math.max(wait, act)); //@store
-        return memo.get(key)!;
-      };
+        const waitProfit = best(day + 1, holding);
+        let actProfit: number;
+        if (holding) { //@choose
+          actProfit = prices[day] + best(day + 2, false); // sell, then skip a cooldown day
+        } else {
+          actProfit = -prices[day] + best(day + 1, true); // buy
+        }
+        const result = Math.max(waitProfit, actProfit);
+        memo.set(key, result); //@store
+        return result;
+      }
       return best(0, false); //@ret
     }
   `),
@@ -57,13 +64,14 @@ const stateMachine = defineSolution<Input>({
   idea: "Track the best profit ending each day in three states: hold (own a share), sold (just sold, cooling down tomorrow) and rest (free to buy). Each day's states come from yesterday's.",
   code: code(`
     function maxProfit(prices: number[]): number {
-      let hold = -Infinity, sold = 0, rest = 0; //@init
-      for (const p of prices) { //@day
-        const prevSold = sold;
-        sold = hold + p;                 // sell today
-        hold = Math.max(hold, rest - p); // keep holding, or buy from rest
-        // rest: cooldown ends (or keep resting)
-        rest = Math.max(rest, prevSold); //@update
+      let hold = -Infinity; // best profit while owning a share //@init
+      let sold = 0;         // best profit if we sold today
+      let rest = 0;         // best profit while free to buy
+      for (const price of prices) { //@day
+        const previousSold = sold;
+        sold = hold + price;                 // sell the share we hold
+        hold = Math.max(hold, rest - price); // keep holding, or buy today
+        rest = Math.max(rest, previousSold); // keep resting, or finish cooldown //@update
       }
       return Math.max(sold, rest); //@ret
     }

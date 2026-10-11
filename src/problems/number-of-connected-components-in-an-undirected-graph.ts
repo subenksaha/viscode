@@ -18,15 +18,25 @@ const dfs = defineSolution<Input>({
   idea: "Every DFS started from an unvisited node explores exactly one component. Count the starts.",
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
-      const adj: number[][] = Array.from({ length: n }, () => []);
-      for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); } //@build
-      const seen = new Array(n).fill(false);
-      const visit = (u: number) => {
-        seen[u] = true; //@visit
-        for (const v of adj[u]) if (!seen[v]) visit(v);
-      };
+      const neighbors: number[][] = Array.from({ length: n }, () => []);
+      for (const [a, b] of edges) { //@build
+        neighbors[a].push(b);
+        neighbors[b].push(a);
+      }
+      const visited = new Array(n).fill(false);
+      function visit(node: number) {
+        visited[node] = true; //@visit
+        for (const next of neighbors[node]) {
+          if (!visited[next]) visit(next);
+        }
+      }
       let count = 0;
-      for (let i = 0; i < n; i++) if (!seen[i]) { count++; visit(i); } //@start
+      for (let node = 0; node < n; node++) {
+        if (!visited[node]) { //@start
+          count++; // a new component
+          visit(node);
+        }
+      }
       return count; //@ret
     }
   `),
@@ -69,12 +79,19 @@ const unionFind = defineSolution<Input>({
   idea: "Start with n components. Each edge that joins two different sets merges them, so subtract one.",
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
-      const parent = Array.from({ length: n }, (_, i) => i); //@init
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      let count = n;
+      const parent = Array.from({ length: n }, (_, node) => node); //@init
+      function findRoot(node: number): number {
+        while (parent[node] !== node) node = parent[node];
+        return node;
+      }
+      let count = n; // every node starts as its own component
       for (const [a, b] of edges) { //@edge
-        const ra = find(a), rb = find(b);
-        if (ra !== rb) { parent[ra] = rb; count--; } //@union
+        const rootA = findRoot(a);
+        const rootB = findRoot(b);
+        if (rootA !== rootB) { //@union
+          parent[rootA] = rootB; // join the two components
+          count--;
+        }
       }
       return count; //@ret
     }
@@ -112,17 +129,26 @@ const bfs = defineSolution<Input>({
   idea: "Same counting idea as DFS, but explore each component with a queue.",
   code: code(`
     function countComponents(n: number, edges: number[][]): number {
-      const adj: number[][] = Array.from({ length: n }, () => []);
-      for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); } //@build
-      const seen = new Array(n).fill(false);
+      const neighbors: number[][] = Array.from({ length: n }, () => []);
+      for (const [a, b] of edges) { //@build
+        neighbors[a].push(b);
+        neighbors[b].push(a);
+      }
+      const visited = new Array(n).fill(false);
       let count = 0;
-      for (let i = 0; i < n; i++) {
-        if (seen[i]) continue;
-        count++; seen[i] = true; //@start
-        const queue = [i];
-        while (queue.length) {
-          const u = queue.shift()!; //@pop
-          for (const v of adj[u]) if (!seen[v]) { seen[v] = true; queue.push(v); }
+      for (let start = 0; start < n; start++) {
+        if (visited[start]) continue;
+        count++; // a new component //@start
+        visited[start] = true;
+        const queue = [start];
+        while (queue.length > 0) {
+          const node = queue.shift()!; //@pop
+          for (const next of neighbors[node]) {
+            if (!visited[next]) {
+              visited[next] = true;
+              queue.push(next);
+            }
+          }
         }
       }
       return count; //@ret

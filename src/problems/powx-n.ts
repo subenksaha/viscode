@@ -19,10 +19,13 @@ const linear = defineSolution<Input>({
   idea: "Multiply x into the result |n| times; for negative n, invert x first.",
   code: code(`
     function myPow(x: number, n: number): number {
-      if (n < 0) { x = 1 / x; n = -n; } //@neg
-      let res = 1;
-      for (let i = 0; i < n; i++) res *= x; //@mul
-      return res; //@ret
+      if (n < 0) { //@neg
+        x = 1 / x;
+        n = -n;
+      }
+      let result = 1;
+      for (let i = 0; i < n; i++) result *= x; //@mul
+      return result; //@ret
     }
   `),
   run({ x, n }, t) {
@@ -38,9 +41,9 @@ const linear = defineSolution<Input>({
     let res = 1;
     for (let i = 0; i < n; i++) {
       res *= x;
-      t.step("mul", `Multiply #${i + 1}: res = ${fmtN(res)}.`, [vars({ x: fmtN(x), i: i + 1, res: fmtN(res) })]);
+      t.step("mul", `Multiply #${i + 1}: result = ${fmtN(res)}.`, [vars({ x: fmtN(x), i: i + 1, result: fmtN(res) })]);
     }
-    t.step("ret", `Return ${fmtN(res)}.`, [vars({ res: fmtN(res) })]);
+    t.step("ret", `Return ${fmtN(res)}.`, [vars({ result: fmtN(res) })]);
     return res;
   },
 });
@@ -53,13 +56,15 @@ const fast = defineSolution<Input>({
   idea: "Write n in binary. Square x at every step; whenever the current bit of n is 1, multiply that power of x into the result. x^13 = x^8 · x^4 · x^1.",
   code: code(`
     function myPow(x: number, n: number): number {
-      let e = Math.abs(n), res = 1; //@init
-      while (e > 0) {
-        if (e & 1) res *= x; //@bit
-        x *= x; //@square
-        e = Math.floor(e / 2); //@shift
+      // Write the exponent in binary: x^13 = x^8 * x^4 * x^1.
+      let exponent = Math.abs(n); //@init
+      let result = 1;
+      while (exponent > 0) {
+        if (exponent % 2 === 1) result *= x; // this power of x is part of the answer //@bit
+        x *= x; // x, x^2, x^4, x^8, ... //@square
+        exponent = Math.floor(exponent / 2); //@shift
       }
-      return n < 0 ? 1 / res : res; //@ret
+      return n < 0 ? 1 / result : result; //@ret
     }
   `),
   run({ x, n }, t) {
@@ -68,14 +73,14 @@ const fast = defineSolution<Input>({
       p = 0;
     const width = Math.max(1, Math.abs(n).toString(2).length);
     const view = (bitTone?: Tone) => [
-      vars({ "x^(2^k)": fmtN(x), res: fmtN(res), k: p }),
+      vars({ "x^(2^k)": fmtN(x), result: fmtN(res), k: p }),
       bits("|n| in binary", Math.abs(n) % 2 ** 30, Math.min(width, 30), bitTone && p < 30 ? { [p]: bitTone } : {}),
     ];
     t.step("init", `|n| = ${e} = ${e.toString(2)}₂.`, view());
     while (e > 0) {
       if (e & 1) {
         res *= x;
-        t.step("bit", `Bit ${p} is 1: res *= ${fmtN(x)} → ${fmtN(res)}.`, view("success"));
+        t.step("bit", `Bit ${p} is 1: result *= ${fmtN(x)} → ${fmtN(res)}.`, view("success"));
       } else t.step("bit", `Bit ${p} is 0: skip.`, view("muted"));
       x *= x;
       t.step("square", `Square: x = ${fmtN(x)}.`, view());

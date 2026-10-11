@@ -18,14 +18,25 @@ const pairs = defineSolution<Input>({
   idea: "Store each value together with the minimum of the stack at the moment it was pushed. The top pair always knows the current minimum.",
   code: code(`
     class MinStack {
-      s: [number, number][] = []; //@ctor
+      // Each entry stores [value, smallest value at or below it].
+      stack: [number, number][] = []; //@ctor
+
       push(val: number): void {
-        const min = this.s.length ? Math.min(val, this.s.at(-1)![1]) : val;
-        this.s.push([val, min]); //@push
+        const minBelow = this.stack.length > 0 ? this.stack[this.stack.length - 1][1] : val;
+        this.stack.push([val, Math.min(val, minBelow)]); //@push
       }
-      pop(): void { this.s.pop(); } //@pop
-      top(): number { return this.s.at(-1)![0]; } //@top
-      getMin(): number { return this.s.at(-1)![1]; } //@min
+
+      pop(): void {
+        this.stack.pop(); //@pop
+      }
+
+      top(): number {
+        return this.stack[this.stack.length - 1][0]; //@top
+      }
+
+      getMin(): number {
+        return this.stack[this.stack.length - 1][1]; //@min
+      }
     }
   `),
   run({ ops, args }, t) {
@@ -71,16 +82,27 @@ const twoStacks = defineSolution<Input>({
   idea: "Push onto a second stack only when the value is ≤ the current min. Popping a value equal to that min pops it there too.",
   code: code(`
     class MinStack {
-      s: number[] = []; mins: number[] = []; //@ctor
+      stack: number[] = []; //@ctor
+      mins: number[] = []; // top is always the current minimum
+
       push(val: number): void {
-        this.s.push(val); //@push
-        if (!this.mins.length || val <= this.mins.at(-1)!) this.mins.push(val); //@push-min
+        this.stack.push(val); //@push
+        const currentMin = this.mins[this.mins.length - 1];
+        if (this.mins.length === 0 || val <= currentMin) this.mins.push(val); //@push-min
       }
+
       pop(): void {
-        if (this.s.pop() === this.mins.at(-1)) this.mins.pop(); //@pop
+        const removed = this.stack.pop(); //@pop
+        if (removed === this.mins[this.mins.length - 1]) this.mins.pop();
       }
-      top(): number { return this.s.at(-1)!; } //@top
-      getMin(): number { return this.mins.at(-1)!; } //@min
+
+      top(): number {
+        return this.stack[this.stack.length - 1]; //@top
+      }
+
+      getMin(): number {
+        return this.mins[this.mins.length - 1]; //@min
+      }
     }
   `),
   run({ ops, args }, t) {

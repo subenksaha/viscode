@@ -15,10 +15,11 @@ const minHeap = defineSolution<Input>({
   idea: "Stream the numbers through a min-heap capped at k entries. After the pass it holds the k largest, and its top is the kth largest.",
   code: code(`
     function findKthLargest(nums: number[], k: number): number {
+      // Min-heap holding the k largest values seen so far.
       const heap = new MinPriorityQueue<number>();
-      for (const x of nums) { //@loop
-        heap.enqueue(x); //@push
-        if (heap.size() > k) heap.dequeue(); //@evict
+      for (const num of nums) { //@loop
+        heap.enqueue(num); //@push
+        if (heap.size() > k) heap.dequeue(); // drop the smallest //@evict
       }
       return heap.front()!; //@ret
     }
@@ -53,18 +54,33 @@ const quickselect = defineSolution<Input>({
   idea: "The kth largest sits at index n − k in sorted order. Partition around a pivot like quicksort, then continue only in the side that contains that index.",
   code: code(`
     function findKthLargest(nums: number[], k: number): number {
-      const target = nums.length - k;
-      let lo = 0, hi = nums.length - 1; //@init
+      const target = nums.length - k; // index of the answer if nums were sorted
+      let left = 0; //@init
+      let right = nums.length - 1;
       while (true) {
-        const pivot = nums[hi];
-        let p = lo;
-        for (let i = lo; i < hi; i++) //@scan
-          if (nums[i] <= pivot) { [nums[i], nums[p]] = [nums[p], nums[i]]; p++; } //@swap
-        [nums[p], nums[hi]] = [nums[hi], nums[p]]; //@place
-        if (p === target) return nums[p]; //@ret
-        if (p < target) lo = p + 1; //@right
-        else hi = p - 1; //@left
+        // Partition nums[left..right] around pivot = nums[right].
+        const pivot = nums[right];
+        let smallEnd = left; // nums[left..smallEnd-1] are all <= pivot
+        for (let i = left; i < right; i++) { //@scan
+          if (nums[i] <= pivot) { //@swap
+            swap(nums, i, smallEnd);
+            smallEnd++;
+          }
+        }
+        swap(nums, smallEnd, right); // the pivot lands in its sorted position //@place
+        if (smallEnd === target) return nums[smallEnd]; //@ret
+        if (smallEnd < target) {
+          left = smallEnd + 1; //@right
+        } else {
+          right = smallEnd - 1; //@left
+        }
       }
+    }
+
+    function swap(nums: number[], a: number, b: number) {
+      const temp = nums[a];
+      nums[a] = nums[b];
+      nums[b] = temp;
     }
   `),
   run({ nums, k }, t) {
@@ -73,7 +89,7 @@ const quickselect = defineSolution<Input>({
       hi = nums.length - 1;
     const view = (p: number | undefined, i: number | undefined, extra: [number | undefined, Tone][] = []) => [
       vars({ target, pivot: nums[hi] }),
-      arr("nums", nums, { window: [lo, hi], tones: tones(...(p !== undefined ? range(lo, p - 1, "compare") : []), [hi, "active"], ...extra), pointers: { p, i, target } }),
+      arr("nums", nums, { window: [lo, hi], tones: tones(...(p !== undefined ? range(lo, p - 1, "compare") : []), [hi, "active"], ...extra), pointers: { smallEnd: p, i, target } }),
     ];
     t.step("init", `Sorted, the answer is at index ${target}.`, view(undefined, undefined));
     while (true) {
@@ -87,7 +103,7 @@ const quickselect = defineSolution<Input>({
         } else t.step("scan", `${nums[i]} > pivot ${pivot}: leave it.`, view(p, i));
       }
       [nums[p], nums[hi]] = [nums[hi], nums[p]];
-      t.step("place", `Put the pivot ${pivot} in its final place, index ${p}.`, () => [vars({ target, pivot }), arr("nums", nums, { window: [lo, hi], tones: tones([p, "success"]), pointers: { p, target } })]);
+      t.step("place", `Put the pivot ${pivot} in its final place, index ${p}.`, () => [vars({ target, pivot }), arr("nums", nums, { window: [lo, hi], tones: tones([p, "success"]), pointers: { smallEnd: p, target } })]);
       if (p === target) {
         t.step("ret", `Index ${p} is the target. Answer: ${nums[p]}.`, () => [arr("nums", nums, { tones: tones([p, "success"]) })]);
         return nums[p];

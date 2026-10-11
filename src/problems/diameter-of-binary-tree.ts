@@ -16,13 +16,16 @@ const naive = defineSolution<Input>({
   space: "O(h)",
   idea: "The longest path through a node is depth(left) + depth(right). Compute that from scratch for every node and keep the max.",
   code: code(`
-    function depth(n: TreeNode | null): number {
-      return n ? 1 + Math.max(depth(n.left), depth(n.right)) : 0;
+    function depth(node: TreeNode | null): number {
+      if (node === null) return 0;
+      return 1 + Math.max(depth(node.left), depth(node.right));
     }
     function diameterOfBinaryTree(root: TreeNode | null): number {
-      if (!root) return 0; //@base
-      const through = depth(root.left) + depth(root.right); //@through
-      return Math.max(through, diameterOfBinaryTree(root.left), diameterOfBinaryTree(root.right)); //@max
+      if (root === null) return 0; //@base
+      const throughRoot = depth(root.left) + depth(root.right); //@through
+      const bestInLeft = diameterOfBinaryTree(root.left);
+      const bestInRight = diameterOfBinaryTree(root.right);
+      return Math.max(throughRoot, bestInLeft, bestInRight); //@max
     }
   `),
   run({ root }, t) {
@@ -56,13 +59,15 @@ const onePass = defineSolution<Input>({
   code: code(`
     function diameterOfBinaryTree(root: TreeNode | null): number {
       let best = 0; //@init
-      function dfs(n: TreeNode | null): number {
-        if (!n) return 0; //@base
-        const l = dfs(n.left), r = dfs(n.right); //@children
-        best = Math.max(best, l + r); //@best
-        return 1 + Math.max(l, r); //@ret
+      // Returns the depth of node's subtree and updates best along the way.
+      function depth(node: TreeNode | null): number {
+        if (node === null) return 0; //@base
+        const leftDepth = depth(node.left); //@children
+        const rightDepth = depth(node.right);
+        best = Math.max(best, leftDepth + rightDepth); //@best
+        return 1 + Math.max(leftDepth, rightDepth); //@ret
       }
-      dfs(root);
+      depth(root);
       return best; //@answer
     }
   `),

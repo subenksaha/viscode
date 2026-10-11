@@ -31,12 +31,16 @@ const dfs = defineSolution<Input>({
   idea: "Remember the starting color. Recolor the start pixel, then recurse into each 4-directional neighbor that still has the starting color.",
   code: code(`
     function floodFill(image: number[][], sr: number, sc: number, color: number): number[][] {
-      const start = image[sr][sc]; //@start
-      if (start === color) return image; //@same
-      function fill(r: number, c: number) {
-        if (r < 0 || c < 0 || r >= image.length || c >= image[0].length || image[r][c] !== start) return;
-        image[r][c] = color; //@paint
-        fill(r + 1, c); fill(r - 1, c); fill(r, c + 1); fill(r, c - 1);
+      const originalColor = image[sr][sc]; //@start
+      if (originalColor === color) return image; //@same
+      function fill(row: number, col: number) {
+        const outside = row < 0 || col < 0 || row >= image.length || col >= image[0].length;
+        if (outside || image[row][col] !== originalColor) return;
+        image[row][col] = color; //@paint
+        fill(row + 1, col);
+        fill(row - 1, col);
+        fill(row, col + 1);
+        fill(row, col - 1);
       }
       fill(sr, sc);
       return image; //@ret
@@ -71,14 +75,22 @@ const bfs = defineSolution<Input>({
   idea: "Same idea, iteratively: paint a pixel as soon as it is queued so it is never queued twice.",
   code: code(`
     function floodFill(image: number[][], sr: number, sc: number, color: number): number[][] {
-      const start = image[sr][sc];
-      if (start === color) return image; //@same
+      const originalColor = image[sr][sc];
+      if (originalColor === color) return image; //@same
       image[sr][sc] = color;
       const queue = [[sr, sc]]; //@init
-      while (queue.length) {
-        const [r, c] = queue.shift()!; //@pop
-        for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-          if (image[x]?.[y] === start) { image[x][y] = color; queue.push([x, y]); } //@push
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      while (queue.length > 0) {
+        const [row, col] = queue.shift()!; //@pop
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const inside = nextRow >= 0 && nextCol >= 0 && nextRow < image.length && nextCol < image[0].length;
+          if (inside && image[nextRow][nextCol] === originalColor) { //@push
+            image[nextRow][nextCol] = color;
+            queue.push([nextRow, nextCol]);
+          }
+        }
       }
       return image; //@ret
     }

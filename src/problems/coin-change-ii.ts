@@ -14,11 +14,19 @@ const table = defineSolution<Input>({
   idea: "dp[i][a] = ways to make a using only the first i coin types. Either skip coin i (dp[i−1][a]) or use it at least once more (dp[i][a − coin]).",
   code: code(`
     function change(amount: number, coins: number[]): number {
+      // dp[i][total] = ways to make total using only the first i coins
       const dp = Array.from({ length: coins.length + 1 }, () => new Array(amount + 1).fill(0));
-      for (let i = 0; i <= coins.length; i++) dp[i][0] = 1; //@init
-      for (let i = 1; i <= coins.length; i++)
-        for (let a = 1; a <= amount; a++) //@cell
-          dp[i][a] = dp[i - 1][a] + (a >= coins[i - 1] ? dp[i][a - coins[i - 1]] : 0);
+      for (let i = 0; i <= coins.length; i++) { //@init
+        dp[i][0] = 1;
+      }
+      for (let i = 1; i <= coins.length; i++) {
+        const coin = coins[i - 1];
+        for (let total = 1; total <= amount; total++) { //@cell
+          const withoutCoin = dp[i - 1][total];
+          const withCoin = total >= coin ? dp[i][total - coin] : 0;
+          dp[i][total] = withoutCoin + withCoin;
+        }
+      }
       return dp[coins.length][amount]; //@ret
     }
   `),
@@ -49,10 +57,14 @@ const oneD = defineSolution<Input>({
   idea: "Process one coin type at a time and add its ways into dp[a] += dp[a − coin]. Putting coins in the outer loop counts each combination once, regardless of order.",
   code: code(`
     function change(amount: number, coins: number[]): number {
+      // dp[total] = ways to make total with the coins seen so far
       const dp = new Array(amount + 1).fill(0);
       dp[0] = 1; //@init
-      for (const c of coins) //@coin
-        for (let a = c; a <= amount; a++) dp[a] += dp[a - c]; //@add
+      for (const coin of coins) { //@coin
+        for (let total = coin; total <= amount; total++) {
+          dp[total] += dp[total - coin]; //@add
+        }
+      }
       return dp[amount]; //@ret
     }
   `),

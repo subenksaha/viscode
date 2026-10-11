@@ -18,12 +18,16 @@ const unionFind = defineSolution<Input>({
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
       if (edges.length !== n - 1) return false; //@count
-      const parent = Array.from({ length: n }, (_, i) => i); //@init
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      for (const [a, b] of edges) { //@edge
-        const ra = find(a), rb = find(b);
-        if (ra === rb) return false; //@cycle
-        parent[ra] = rb; //@union
+      const parent = Array.from({ length: n }, (_, node) => node); //@init
+      function findRoot(node: number): number {
+        while (parent[node] !== node) node = parent[node];
+        return node;
+      }
+      for (const [nodeA, nodeB] of edges) { //@edge
+        const rootA = findRoot(nodeA);
+        const rootB = findRoot(nodeB);
+        if (rootA === rootB) return false; // already connected, so this edge makes a cycle //@cycle
+        parent[rootA] = rootB; //@union
       }
       return true; //@ret
     }
@@ -71,15 +75,20 @@ const dfs = defineSolution<Input>({
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
       if (edges.length !== n - 1) return false; //@count
-      const adj: number[][] = Array.from({ length: n }, () => []);
-      for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); } //@build
-      const seen = new Set<number>();
-      const visit = (u: number) => {
-        seen.add(u); //@visit
-        for (const v of adj[u]) if (!seen.has(v)) visit(v);
-      };
+      const neighbors: number[][] = Array.from({ length: n }, () => []);
+      for (const [nodeA, nodeB] of edges) { //@build
+        neighbors[nodeA].push(nodeB);
+        neighbors[nodeB].push(nodeA);
+      }
+      const visited = new Set<number>();
+      function visit(node: number) {
+        visited.add(node); //@visit
+        for (const next of neighbors[node]) {
+          if (!visited.has(next)) visit(next);
+        }
+      }
       visit(0);
-      return seen.size === n; //@ret
+      return visited.size === n; // n - 1 edges and connected means it's a tree //@ret
     }
   `),
   run({ n, edges }, t) {
@@ -121,15 +130,21 @@ const bfs = defineSolution<Input>({
   idea: "BFS from 0. Reaching an already-seen node that is not the node we came from means a cycle. At the end, every node must be seen.",
   code: code(`
     function validTree(n: number, edges: number[][]): boolean {
-      const adj: number[][] = Array.from({ length: n }, () => []);
-      for (const [a, b] of edges) { adj[a].push(b); adj[b].push(a); } //@build
-      const parent = new Map([[0, -1]]), queue = [0];
-      while (queue.length) { //@loop
-        const u = queue.shift()!; //@pop
-        for (const v of adj[u]) {
-          if (v === parent.get(u)) continue; //@back
-          if (parent.has(v)) return false; //@cycle
-          parent.set(v, u); queue.push(v); //@push
+      const neighbors: number[][] = Array.from({ length: n }, () => []);
+      for (const [nodeA, nodeB] of edges) { //@build
+        neighbors[nodeA].push(nodeB);
+        neighbors[nodeB].push(nodeA);
+      }
+      const parent = new Map<number, number>(); // node -> the node we reached it from
+      parent.set(0, -1);
+      const queue = [0];
+      while (queue.length > 0) { //@loop
+        const node = queue.shift()!; //@pop
+        for (const next of neighbors[node]) {
+          if (next === parent.get(node)) continue; // the edge we came in on //@back
+          if (parent.has(next)) return false; // reached twice: a cycle //@cycle
+          parent.set(next, node); //@push
+          queue.push(next);
         }
       }
       return parent.size === n; //@ret

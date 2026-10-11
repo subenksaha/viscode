@@ -14,11 +14,13 @@ const bruteForce = defineSolution<Input>({
   code: code(`
     function maxArea(height: number[]): number {
       let best = 0; //@init
-      for (let i = 0; i < height.length; i++) //@i
+      for (let i = 0; i < height.length; i++) { //@i
         for (let j = i + 1; j < height.length; j++) { //@j
-          const area = (j - i) * Math.min(height[i], height[j]); //@area
+          const width = j - i;
+          const area = width * Math.min(height[i], height[j]); //@area
           best = Math.max(best, area); //@best
         }
+      }
       return best; //@ret
     }
   `),
@@ -51,12 +53,19 @@ const twoPointers = defineSolution<Input>({
   idea: "Start with the widest container. The shorter line limits the area, and moving the taller one inward can never help, so always move the shorter line.",
   code: code(`
     function maxArea(height: number[]): number {
-      let lo = 0, hi = height.length - 1, best = 0; //@init
-      while (lo < hi) { //@loop
-        const area = (hi - lo) * Math.min(height[lo], height[hi]); //@area
+      let left = 0; //@init
+      let right = height.length - 1;
+      let best = 0;
+      while (left < right) { //@loop
+        const width = right - left;
+        const area = width * Math.min(height[left], height[right]); //@area
         best = Math.max(best, area); //@best
-        if (height[lo] < height[hi]) lo++; //@lo
-        else hi--; //@hi
+        // Move the shorter wall: keeping it can never give a bigger area.
+        if (height[left] < height[right]) {
+          left++; //@lo
+        } else {
+          right--; //@hi
+        }
       }
       return best; //@ret
     }
@@ -67,7 +76,7 @@ const twoPointers = defineSolution<Input>({
       best = 0;
     const view = (area?: number) => [
       vars({ area, best }),
-      arr("height", height, { window: [lo, hi], tones: tones([lo, "active"], [hi, "compare"]), pointers: { lo, hi } }),
+      arr("height", height, { window: [lo, hi], tones: tones([lo, "active"], [hi, "compare"]), pointers: { left: lo, right: hi } }),
     ];
     t.step("init", "Start with the widest pair.", view());
     while (lo < hi) {

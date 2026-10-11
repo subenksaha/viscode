@@ -14,13 +14,16 @@ const counts = defineSolution<Input>({
   code: code(`
     function longestPalindrome(s: string): number {
       const count = new Map<string, number>();
-      for (const c of s) count.set(c, (count.get(c) ?? 0) + 1); //@count
-      let len = 0, odd = false; //@init
-      for (const n of count.values()) { //@loop
-        len += n - (n % 2); //@pairs
-        if (n % 2) odd = true; //@odd
+      for (const char of s) count.set(char, (count.get(char) ?? 0) + 1); //@count
+      let length = 0; //@init
+      let hasOddCount = false;
+      for (const times of count.values()) { //@loop
+        const pairs = Math.floor(times / 2);
+        length += pairs * 2; // pairs go on both sides //@pairs
+        if (times % 2 === 1) hasOddCount = true; //@odd
       }
-      return len + (odd ? 1 : 0); //@ret
+      // One leftover letter can sit in the middle.
+      return hasOddCount ? length + 1 : length; //@ret
     }
   `),
   run({ s }, t) {
@@ -28,7 +31,7 @@ const counts = defineSolution<Input>({
     for (const c of s) count.set(c, (count.get(c) ?? 0) + 1);
     let len = 0,
       odd = false;
-    const view = (key?: string) => [vars({ len, odd }), map("count", count, tones([key, "active"]))];
+    const view = (key?: string) => [vars({ length: len, hasOddCount: odd }), map("count", count, tones([key, "active"]))];
     t.step("count", "Count every character.", view());
     t.step("init", "len = 0, no odd count seen yet.", view());
     for (const [c, n] of count) {
@@ -53,20 +56,25 @@ const toggleSet = defineSolution<Input>({
   idea: "Walk the string, keeping the set of characters seen an odd number of times. Seeing one already in the set completes a pair (+2).",
   code: code(`
     function longestPalindrome(s: string): number {
-      const open = new Set<string>(); //@init
-      let len = 0;
-      for (const c of s) { //@loop
-        if (open.has(c)) { open.delete(c); len += 2; } //@pair
-        else open.add(c); //@open
+      const unpaired = new Set<string>(); //@init
+      let length = 0;
+      for (const char of s) { //@loop
+        if (unpaired.has(char)) {
+          unpaired.delete(char); //@pair
+          length += 2;
+        } else {
+          unpaired.add(char); //@open
+        }
       }
-      return len + (open.size ? 1 : 0); //@ret
+      // One leftover letter can sit in the middle.
+      return unpaired.size > 0 ? length + 1 : length; //@ret
     }
   `),
   run({ s }, t) {
     const open = new Set<string>();
     let len = 0;
     const view = (i?: number, key?: string) => [
-      vars({ len }),
+      vars({ length: len }),
       arr("s", [...s], { tones: tones([i, "active"]), pointers: { i } }),
       map("unpaired", open, tones([key, "compare"])),
     ];

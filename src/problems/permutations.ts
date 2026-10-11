@@ -14,18 +14,25 @@ const usedArray = defineSolution<Input>({
   idea: "Fill the permutation one slot at a time. At each slot, try every number not used yet, recurse, then undo.",
   code: code(`
     function permute(nums: number[]): number[][] {
-      const res: number[][] = [], path: number[] = [], used = nums.map(() => false);
-      function dfs() {
-        if (path.length === nums.length) { res.push([...path]); return; } //@found
+      const result: number[][] = [];
+      const path: number[] = [];
+      const used = nums.map(() => false);
+      function build() {
+        if (path.length === nums.length) { //@found
+          result.push([...path]);
+          return;
+        }
         for (let i = 0; i < nums.length; i++) { //@try
           if (used[i]) continue;
-          used[i] = true; path.push(nums[i]); //@choose
-          dfs();
-          used[i] = false; path.pop(); //@undo
+          used[i] = true; //@choose
+          path.push(nums[i]);
+          build();
+          used[i] = false; //@undo
+          path.pop();
         }
       }
-      dfs();
-      return res; //@ret
+      build();
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -68,23 +75,32 @@ const swapping = defineSolution<Input>({
   idea: "Positions [0, k) are fixed. Swap each candidate from [k, n) into position k, recurse on k + 1, then swap back.",
   code: code(`
     function permute(nums: number[]): number[][] {
-      const res: number[][] = [];
-      function dfs(k: number) {
-        if (k === nums.length) { res.push([...nums]); return; } //@found
-        for (let i = k; i < nums.length; i++) { //@try
-          [nums[k], nums[i]] = [nums[i], nums[k]]; //@swap
-          dfs(k + 1);
-          [nums[k], nums[i]] = [nums[i], nums[k]]; //@unswap
+      const result: number[][] = [];
+      function swap(a: number, b: number) {
+        const temp = nums[a];
+        nums[a] = nums[b];
+        nums[b] = temp;
+      }
+      // Positions before index are fixed; try every remaining number at index.
+      function build(index: number) {
+        if (index === nums.length) { //@found
+          result.push([...nums]);
+          return;
+        }
+        for (let i = index; i < nums.length; i++) { //@try
+          swap(index, i); //@swap
+          build(index + 1);
+          swap(index, i); // undo the swap //@unswap
         }
       }
-      dfs(0);
-      return res; //@ret
+      build(0);
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
     const res: number[][] = [];
     const view = (k: number, i?: number) => [
-      vars({ k }),
+      vars({ index: k }),
       arr("nums", nums, { tones: tones(...nums.map((_, j) => [j < k ? j : null, "success"] as [number | null, Tone]), [k < nums.length ? k : null, "active"], [i !== k ? i : null, "compare"]), pointers: { k: k < nums.length ? k : null, i } }),
       arr("results", res.map((r) => `[${r}]`), { indexLabels: false, tones: tones([res.length - 1, "success"]) }),
     ];

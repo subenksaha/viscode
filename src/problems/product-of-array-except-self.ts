@@ -16,28 +16,28 @@ const bruteForce = defineSolution<Input>({
   idea: "For each index, multiply every other element.",
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
-      const out = new Array(nums.length).fill(1); //@init
+      const answer = new Array(nums.length).fill(1); //@init
       for (let i = 0; i < nums.length; i++) { //@i
         for (let j = 0; j < nums.length; j++) { //@j
-          if (j !== i) out[i] *= nums[j]; //@mul
+          if (j !== i) answer[i] *= nums[j]; //@mul
         }
       }
-      return out; //@ret
+      return answer; //@ret
     }
   `),
   run({ nums }, t) {
     const out = new Array(nums.length).fill(1);
     const view = (i?: number, j?: number) => [
       arr("nums", nums, { tones: tones([i, "muted"], [j !== i ? j : null, "compare"]), pointers: { i, j } }),
-      arr("out", out, { tones: tones([i, "active"]) }),
+      arr("answer", out, { tones: tones([i, "active"]) }),
     ];
     t.step("init", "Fill out with 1s.", view());
     for (let i = 0; i < nums.length; i++) {
-      t.step("i", `Compute out[${i}].`, view(i));
+      t.step("i", `Compute answer[${i}].`, view(i));
       for (let j = 0; j < nums.length; j++) {
         if (j !== i) {
           out[i] *= nums[j];
-          t.step("mul", `out[${i}] *= ${nums[j]} → ${out[i]}.`, view(i, j));
+          t.step("mul", `answer[${i}] *= ${nums[j]} → ${out[i]}.`, view(i, j));
         } else t.step("j", `Skip j = i.`, view(i, j));
       }
     }
@@ -55,10 +55,13 @@ const prefixSuffix = defineSolution<Input>({
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
       const n = nums.length;
-      const pre = new Array(n).fill(1), suf = new Array(n).fill(1); //@init
-      for (let i = 1; i < n; i++) pre[i] = pre[i - 1] * nums[i - 1]; //@pre
-      for (let i = n - 2; i >= 0; i--) suf[i] = suf[i + 1] * nums[i + 1]; //@suf
-      return nums.map((_, i) => pre[i] * suf[i]); //@combine
+      const before = new Array(n).fill(1); // before[i] = product of everything left of i //@init
+      const after = new Array(n).fill(1);  // after[i] = product of everything right of i
+      for (let i = 1; i < n; i++) before[i] = before[i - 1] * nums[i - 1]; //@pre
+      for (let i = n - 2; i >= 0; i--) after[i] = after[i + 1] * nums[i + 1]; //@suf
+      const answer: number[] = [];
+      for (let i = 0; i < n; i++) answer.push(before[i] * after[i]); //@combine
+      return answer;
     }
   `),
   run({ nums }, t) {
@@ -68,22 +71,22 @@ const prefixSuffix = defineSolution<Input>({
     const out: (number | null)[] = new Array(n).fill(null);
     const view = (i?: number, src?: number) => [
       arr("nums", nums, { tones: tones([src, "compare"]) }),
-      arr("prefix", pre, { tones: tones([i, "active"]) }),
-      arr("suffix", suf, { tones: tones([i, "active"]) }),
-      arr("out", out, { tones: tones([i, "success"]) }),
+      arr("before", pre, { tones: tones([i, "active"]) }),
+      arr("after", suf, { tones: tones([i, "active"]) }),
+      arr("answer", out, { tones: tones([i, "success"]) }),
     ];
     t.step("init", "Both arrays start at 1.", view());
     for (let i = 1; i < n; i++) {
       pre[i] = pre[i - 1] * nums[i - 1];
-      t.step("pre", `pre[${i}] = pre[${i - 1}] × nums[${i - 1}] = ${pre[i]}.`, view(i, i - 1));
+      t.step("pre", `before[${i}] = before[${i - 1}] × nums[${i - 1}] = ${pre[i]}.`, view(i, i - 1));
     }
     for (let i = n - 2; i >= 0; i--) {
       suf[i] = suf[i + 1] * nums[i + 1];
-      t.step("suf", `suf[${i}] = suf[${i + 1}] × nums[${i + 1}] = ${suf[i]}.`, view(i, i + 1));
+      t.step("suf", `after[${i}] = after[${i + 1}] × nums[${i + 1}] = ${suf[i]}.`, view(i, i + 1));
     }
     for (let i = 0; i < n; i++) {
       out[i] = pre[i] * suf[i];
-      t.step("combine", `out[${i}] = ${pre[i]} × ${suf[i]} = ${out[i]}.`, view(i));
+      t.step("combine", `answer[${i}] = ${pre[i]} × ${suf[i]} = ${out[i]}.`, view(i));
     }
     return clean(out as number[]);
   },
@@ -97,14 +100,17 @@ const constantSpace = defineSolution<Input>({
   idea: "Store prefix products in the output, then sweep right to left with a running suffix product.",
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
-      const n = nums.length, out = new Array(n).fill(1); //@init
-      for (let i = 1; i < n; i++) out[i] = out[i - 1] * nums[i - 1]; //@pre
-      let suffix = 1; //@sufinit
+      const n = nums.length;
+      const answer = new Array(n).fill(1); //@init
+      // First pass: answer[i] = product of everything left of i.
+      for (let i = 1; i < n; i++) answer[i] = answer[i - 1] * nums[i - 1]; //@pre
+      // Second pass: multiply in the product of everything right of i.
+      let productAfter = 1; //@sufinit
       for (let i = n - 1; i >= 0; i--) { //@loop
-        out[i] *= suffix; //@mul
-        suffix *= nums[i]; //@grow
+        answer[i] *= productAfter; //@mul
+        productAfter *= nums[i]; //@grow
       }
-      return out; //@ret
+      return answer; //@ret
     }
   `),
   run({ nums }, t) {
@@ -112,21 +118,21 @@ const constantSpace = defineSolution<Input>({
       out = new Array(n).fill(1);
     let suffix: number | undefined;
     const view = (i?: number, src?: number) => [
-      vars({ suffix }),
+      vars({ productAfter: suffix }),
       arr("nums", nums, { tones: tones([src, "compare"]) }),
-      arr("out", out, { tones: tones([i, "active"]), pointers: { i } }),
+      arr("answer", out, { tones: tones([i, "active"]), pointers: { i } }),
     ];
     t.step("init", "out starts as all 1s.", view());
     for (let i = 1; i < n; i++) {
       out[i] = out[i - 1] * nums[i - 1];
-      t.step("pre", `out[${i}] = prefix product = ${out[i]}.`, view(i, i - 1));
+      t.step("pre", `answer[${i}] = product before it = ${out[i]}.`, view(i, i - 1));
     }
     suffix = 1;
     t.step("sufinit", "suffix = 1 (nothing to the right of the last index).", view());
     for (let i = n - 1; i >= 0; i--) {
       t.step("loop", `i = ${i}.`, view(i));
       out[i] *= suffix;
-      t.step("mul", `out[${i}] *= ${suffix} → ${out[i]}.`, view(i));
+      t.step("mul", `answer[${i}] *= ${suffix} → ${out[i]}.`, view(i));
       suffix *= nums[i];
       t.step("grow", `suffix *= ${nums[i]} → ${suffix}.`, view(i, i));
     }
@@ -143,16 +149,23 @@ const division = defineSolution<Input>({
   idea: "Multiply all non-zero values and count zeros. Two or more zeros make everything 0; exactly one zero leaves only that index non-zero. (LeetCode asks you not to use division, but it is a valid approach to know.)",
   code: code(`
     function productExceptSelf(nums: number[]): number[] {
-      let product = 1, zeros = 0; //@init
-      for (const x of nums) { //@scan
-        if (x === 0) zeros++;
-        else product *= x;
+      let product = 1; // product of all non-zero numbers //@init
+      let zeros = 0;
+      for (const num of nums) { //@scan
+        if (num === 0) zeros++;
+        else product *= num;
       }
-      return nums.map((x) => { //@map
-        if (zeros > 1) return 0; //@many
-        if (zeros === 1) return x === 0 ? product : 0; //@one
-        return product / x; //@div
-      });
+      const answer: number[] = [];
+      for (const num of nums) { //@map
+        if (zeros > 1) {
+          answer.push(0); // every product includes a zero //@many
+        } else if (zeros === 1) {
+          answer.push(num === 0 ? product : 0); // only the zero's slot is non-zero //@one
+        } else {
+          answer.push(product / num); //@div
+        }
+      }
+      return answer;
     }
   `),
   run({ nums }, t) {
@@ -162,7 +175,7 @@ const division = defineSolution<Input>({
     const view = (i?: number) => [
       vars({ product, zeros }),
       arr("nums", nums, { tones: tones([i, "active"]), pointers: { i } }),
-      arr("out", out, { tones: tones([i, "success"]) }),
+      arr("answer", out, { tones: tones([i, "success"]) }),
     ];
     t.step("init", "product = 1, zeros = 0.", view());
     nums.forEach((x, i) => {

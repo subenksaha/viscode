@@ -19,14 +19,25 @@ const kahn = defineSolution<Input>({
   idea: "Repeatedly take a course with no remaining prerequisites and remove its outgoing edges. If every course gets taken, there is no cycle.",
   code: code(`
     function canFinish(numCourses: number, prerequisites: number[][]): boolean {
-      const indeg = new Array(numCourses).fill(0), adj: number[][] = Array.from({ length: numCourses }, () => []);
-      for (const [a, b] of prerequisites) { adj[b].push(a); indeg[a]++; } //@build
-      const queue = indeg.flatMap((d, i) => (d === 0 ? [i] : [])); //@seed
+      // unlocks[c] = courses that need c first; inDegree[c] = how many courses c still waits on
+      const unlocks: number[][] = Array.from({ length: numCourses }, () => []);
+      const inDegree = new Array(numCourses).fill(0);
+      for (const [course, required] of prerequisites) { //@build
+        unlocks[required].push(course);
+        inDegree[course]++;
+      }
+      const queue: number[] = [];
+      for (let course = 0; course < numCourses; course++) { //@seed
+        if (inDegree[course] === 0) queue.push(course);
+      }
       let taken = 0;
-      while (queue.length) { //@loop
-        const c = queue.shift()!; taken++; //@take
-        for (const next of adj[c]) //@edge
-          if (--indeg[next] === 0) queue.push(next); //@ready
+      while (queue.length > 0) { //@loop
+        const course = queue.shift()!; //@take
+        taken++;
+        for (const next of unlocks[course]) { //@edge
+          inDegree[next]--;
+          if (inDegree[next] === 0) queue.push(next); //@ready
+        }
       }
       return taken === numCourses; //@ret
     }
@@ -87,18 +98,22 @@ const dfsColors = defineSolution<Input>({
   idea: "Mark nodes white (new), gray (on the current path) or black (done). Reaching a gray node means a back edge, which is a cycle.",
   code: code(`
     function canFinish(numCourses: number, prerequisites: number[][]): boolean {
-      const adj: number[][] = Array.from({ length: numCourses }, () => []);
-      for (const [a, b] of prerequisites) adj[b].push(a); //@build
-      const state = new Array(numCourses).fill(0); // 0 white, 1 gray, 2 black
-      function hasCycle(u: number): boolean {
-        if (state[u] === 1) return true; //@gray
-        if (state[u] === 2) return false; //@black
-        state[u] = 1; //@enter
-        for (const v of adj[u]) if (hasCycle(v)) return true; //@visit
-        state[u] = 2; //@exit
+      const unlocks: number[][] = Array.from({ length: numCourses }, () => []);
+      for (const [course, required] of prerequisites) unlocks[required].push(course); //@build
+      const state: ("new" | "visiting" | "done")[] = new Array(numCourses).fill("new");
+      function hasCycle(course: number): boolean {
+        if (state[course] === "visiting") return true; //@gray
+        if (state[course] === "done") return false; //@black
+        state[course] = "visiting"; //@enter
+        for (const next of unlocks[course]) { //@visit
+          if (hasCycle(next)) return true;
+        }
+        state[course] = "done"; //@exit
         return false;
       }
-      for (let i = 0; i < numCourses; i++) if (hasCycle(i)) return false; //@start
+      for (let course = 0; course < numCourses; course++) { //@start
+        if (hasCycle(course)) return false;
+      }
       return true; //@ret
     }
   `),

@@ -13,18 +13,24 @@ const lengthPrefix = defineSolution<Input>({
   idea: "Write each string as <length>#<string>. The decoder reads digits up to '#', then takes exactly that many characters, so any character (even '#') is safe inside a string.",
   code: code(`
     function encode(strs: string[]): string {
-      return strs.map((s) => s.length + "#" + s).join(""); //@encode
+      // Each string becomes "<length>#<string>", e.g. "hi" -> "2#hi".
+      let encoded = "";
+      for (const str of strs) { //@encode
+        encoded += str.length + "#" + str;
+      }
+      return encoded;
     }
     function decode(data: string): string[] {
-      const out: string[] = [];
-      let i = 0;
-      while (i < data.length) { //@loop
-        const hash = data.indexOf("#", i); //@len
-        const len = Number(data.slice(i, hash));
-        out.push(data.slice(hash + 1, hash + 1 + len)); //@take
-        i = hash + 1 + len;
+      const result: string[] = [];
+      let pos = 0;
+      while (pos < data.length) { //@loop
+        const hashIndex = data.indexOf("#", pos); //@len
+        const length = Number(data.slice(pos, hashIndex));
+        const start = hashIndex + 1;
+        result.push(data.slice(start, start + length)); //@take
+        pos = start + length;
       }
-      return out; //@ret
+      return result; //@ret
     }
   `),
   run({ strs }, t) {
@@ -37,16 +43,16 @@ const lengthPrefix = defineSolution<Input>({
     const chars = [...data];
     let i = 0;
     while (i < data.length) {
-      t.step("loop", `Read from position ${i}.`, [arr("encoded", chars, { indexLabels: false, pointers: { i } }), arr("decoded", out)]);
+      t.step("loop", `Read from position ${i}.`, [arr("encoded", chars, { indexLabels: false, pointers: { pos: i } }), arr("result", out)]);
       const hash = data.indexOf("#", i);
       const len = Number(data.slice(i, hash));
       const start = i;
-      t.step("len", `Digits before '#': length ${len}.`, [vars({ len }), arr("encoded", chars, { indexLabels: false, window: [start, hash] }), arr("decoded", out)]);
+      t.step("len", `Digits before '#': length ${len}.`, [vars({ length: len }), arr("encoded", chars, { indexLabels: false, window: [start, hash] }), arr("result", out)]);
       out.push(data.slice(hash + 1, hash + 1 + len));
-      t.step("take", `Take the next ${len} characters: "${out.at(-1)}".`, [arr("encoded", chars, { indexLabels: false, tones: tones(...Array.from({ length: len }, (_, k) => [hash + 1 + k, "success"] as [number, "success"])) }), arr("decoded", out)]);
+      t.step("take", `Take the next ${len} characters: "${out.at(-1)}".`, [arr("encoded", chars, { indexLabels: false, tones: tones(...Array.from({ length: len }, (_, k) => [hash + 1 + k, "success"] as [number, "success"])) }), arr("result", out)]);
       i = hash + 1 + len;
     }
-    t.step("ret", "Decoded every string.", [arr("decoded", out)]);
+    t.step("ret", "Decoded every string.", [arr("result", out)]);
     return out;
   },
 });
@@ -59,17 +65,31 @@ const escaping = defineSolution<Input>({
   idea: "Join with the separator ' # '. Inside strings, double every '#' so a lone '#' surrounded by spaces can only be a separator.",
   code: code(`
     function encode(strs: string[]): string {
-      return strs.map((s) => s.replaceAll("#", "##") + " # ").join(""); //@encode
+      // Double every "#" inside a string, then end each string with " # ".
+      let encoded = "";
+      for (const str of strs) { //@encode
+        encoded += str.replaceAll("#", "##") + " # ";
+      }
+      return encoded;
     }
     function decode(data: string): string[] {
-      const out: string[] = [];
-      let cur = "";
-      for (let i = 0; i < data.length; i++) { //@loop
-        if (data.startsWith(" # ", i)) { out.push(cur); cur = ""; i += 2; } //@split
-        else if (data.startsWith("##", i)) { cur += "#"; i++; } //@unescape
-        else cur += data[i];
+      const result: string[] = [];
+      let current = "";
+      let i = 0;
+      while (i < data.length) { //@loop
+        if (data.startsWith(" # ", i)) { //@split
+          result.push(current);
+          current = "";
+          i += 3;
+        } else if (data.startsWith("##", i)) { //@unescape
+          current += "#";
+          i += 2;
+        } else {
+          current += data[i];
+          i++;
+        }
       }
-      return out; //@ret
+      return result; //@ret
     }
   `),
   run({ strs }, t) {
@@ -83,19 +103,19 @@ const escaping = defineSolution<Input>({
     for (let i = 0; i < data.length; i++) {
       if (data.startsWith(" # ", i)) {
         out.push(cur);
-        t.step("split", `Separator at ${i}: finish "${cur}".`, [text("encoded", data), vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+        t.step("split", `Separator at ${i}: finish "${cur}".`, [text("encoded", data), vars({ i, current: `"${cur}"` }), arr("result", out)]);
         cur = "";
         i += 2;
       } else if (data.startsWith("##", i)) {
         cur += "#";
         i++;
-        t.step("unescape", "'##' decodes to a literal '#'.", [vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+        t.step("unescape", "'##' decodes to a literal '#'.", [vars({ i, current: `"${cur}"` }), arr("result", out)]);
       } else {
         cur += data[i];
-        t.step("loop", `Character '${data[i]}'.`, [vars({ i, cur: `"${cur}"` }), arr("decoded", out)]);
+        t.step("loop", `Character '${data[i]}'.`, [vars({ i, current: `"${cur}"` }), arr("result", out)]);
       }
     }
-    t.step("ret", "Decoded every string.", [arr("decoded", out)]);
+    t.step("ret", "Decoded every string.", [arr("result", out)]);
     return out;
   },
 });

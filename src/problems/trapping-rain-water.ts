@@ -16,9 +16,10 @@ const bruteForce = defineSolution<Input>({
     function trap(height: number[]): number {
       let water = 0;
       for (let i = 0; i < height.length; i++) { //@bar
-        const left = Math.max(...height.slice(0, i + 1)); //@left
-        const right = Math.max(...height.slice(i)); //@right
-        water += Math.min(left, right) - height[i]; //@add
+        const tallestLeft = Math.max(...height.slice(0, i + 1)); //@left
+        const tallestRight = Math.max(...height.slice(i)); //@right
+        // Water rises to the shorter of the two walls.
+        water += Math.min(tallestLeft, tallestRight) - height[i]; //@add
       }
       return water; //@ret
     }
@@ -33,13 +34,13 @@ const bruteForce = defineSolution<Input>({
     ];
     for (let i = 0; i < height.length; i++) {
       const left = Math.max(...height.slice(0, i + 1));
-      t.step("left", `Tallest bar at or left of ${i}: ${left}.`, () => view(i, { left }, range(0, i, "compare")));
+      t.step("left", `Tallest bar at or left of ${i}: ${left}.`, () => view(i, { tallestLeft: left }, range(0, i, "compare")));
       const right = Math.max(...height.slice(i));
-      t.step("right", `Tallest bar at or right of ${i}: ${right}.`, () => view(i, { left, right }, range(i, height.length - 1, "compare")));
+      t.step("right", `Tallest bar at or right of ${i}: ${right}.`, () => view(i, { tallestLeft: left, tallestRight: right }, range(i, height.length - 1, "compare")));
       const w = Math.min(left, right) - height[i];
       water += w;
       filled[i] = w;
-      t.step("add", `min(${left}, ${right}) − ${height[i]} = ${w}.`, () => view(i, { left, right }));
+      t.step("add", `min(${left}, ${right}) − ${height[i]} = ${w}.`, () => view(i, { tallestLeft: left, tallestRight: right }));
     }
     t.step("ret", `Total water: ${water}.`, view(-1));
     return water;
@@ -54,11 +55,21 @@ const prefixMax = defineSolution<Input>({
   idea: "Precompute the tallest bar to the left of every index and to the right of every index. Then each bar's water is a single lookup.",
   code: code(`
     function trap(height: number[]): number {
-      const n = height.length, L = new Array(n), R = new Array(n);
-      for (let i = 0; i < n; i++) L[i] = Math.max(height[i], i ? L[i - 1] : 0); //@L
-      for (let i = n - 1; i >= 0; i--) R[i] = Math.max(height[i], i < n - 1 ? R[i + 1] : 0); //@R
+      const n = height.length;
+      const leftMax = new Array(n); // tallest bar from 0 to i
+      const rightMax = new Array(n); // tallest bar from i to the end
+      for (let i = 0; i < n; i++) { //@L
+        const previous = i > 0 ? leftMax[i - 1] : 0;
+        leftMax[i] = Math.max(height[i], previous);
+      }
+      for (let i = n - 1; i >= 0; i--) { //@R
+        const next = i < n - 1 ? rightMax[i + 1] : 0;
+        rightMax[i] = Math.max(height[i], next);
+      }
       let water = 0;
-      for (let i = 0; i < n; i++) water += Math.min(L[i], R[i]) - height[i]; //@add
+      for (let i = 0; i < n; i++) { //@add
+        water += Math.min(leftMax[i], rightMax[i]) - height[i];
+      }
       return water; //@ret
     }
   `),
@@ -99,11 +110,22 @@ const twoPointers = defineSolution<Input>({
   idea: "Move inward from both ends, always on the side with the lower max. That side's water is bounded by its own max, since the other side is known to be at least as tall.",
   code: code(`
     function trap(height: number[]): number {
-      let l = 0, r = height.length - 1, lMax = 0, rMax = 0, water = 0; //@init
-      while (l < r) { //@loop
-        lMax = Math.max(lMax, height[l]); rMax = Math.max(rMax, height[r]); //@max
-        if (lMax < rMax) water += lMax - height[l++]; //@left
-        else water += rMax - height[r--]; //@right
+      let left = 0; //@init
+      let right = height.length - 1;
+      let leftMax = 0; // tallest bar seen from the left
+      let rightMax = 0; // tallest bar seen from the right
+      let water = 0;
+      while (left < right) { //@loop
+        leftMax = Math.max(leftMax, height[left]); //@max
+        rightMax = Math.max(rightMax, height[right]);
+        // The lower side decides the water level for its bar.
+        if (leftMax < rightMax) {
+          water += leftMax - height[left]; //@left
+          left++;
+        } else {
+          water += rightMax - height[right]; //@right
+          right--;
+        }
       }
       return water; //@ret
     }
@@ -116,15 +138,15 @@ const twoPointers = defineSolution<Input>({
       water = 0;
     const filled: number[] = height.map(() => 0);
     const view = (hi?: number) => [
-      vars({ lMax, rMax, water }),
-      arr("height", height, { tones: tones(...range(0, l - 1, "muted"), ...range(r + 1, height.length - 1, "muted"), [hi, "active"]), pointers: { l, r } }),
+      vars({ leftMax: lMax, rightMax: rMax, water }),
+      arr("height", height, { tones: tones(...range(0, l - 1, "muted"), ...range(r + 1, height.length - 1, "muted"), [hi, "active"]), pointers: { left: l, right: r } }),
       arr("water above bar", filled, { tones: tones(...filled.map((w, k) => [w ? k : null, "window"] as [number | null, Tone])) }),
     ];
     t.step("init", "Pointers at both ends.", view());
     while (l < r) {
       lMax = Math.max(lMax, height[l]);
       rMax = Math.max(rMax, height[r]);
-      t.step("max", `lMax = ${lMax}, rMax = ${rMax}.`, view());
+      t.step("max", `leftMax = ${lMax}, rightMax = ${rMax}.`, view());
       if (lMax < rMax) {
         const w = lMax - height[l];
         filled[l] = w;

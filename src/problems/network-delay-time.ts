@@ -19,13 +19,16 @@ const bellmanFord = defineSolution<Input>({
   idea: "Relax every edge n − 1 times. After round r, every shortest path with at most r edges is known, and no shortest path needs more than n − 1 edges.",
   code: code(`
     function networkDelayTime(times: number[][], n: number, k: number): number {
+      // dist[node] = fastest known time for the signal to reach node (nodes are 1..n)
       const dist = new Array(n + 1).fill(Infinity);
       dist[k] = 0; //@init
-      for (let round = 1; round < n; round++) //@round
-        for (const [u, v, w] of times)
-          if (dist[u] + w < dist[v]) dist[v] = dist[u] + w; //@relax
-      const worst = Math.max(...dist.slice(1));
-      return worst === Infinity ? -1 : worst; //@ret
+      for (let round = 1; round < n; round++) { //@round
+        for (const [from, to, time] of times) {
+          if (dist[from] + time < dist[to]) dist[to] = dist[from] + time; //@relax
+        }
+      }
+      const slowest = Math.max(...dist.slice(1));
+      return slowest === Infinity ? -1 : slowest; //@ret
     }
   `),
   run({ times, n, k }, t) {
@@ -64,17 +67,23 @@ const dijkstra = defineSolution<Input>({
   idea: "Always settle the closest unsettled node next; its distance is final because all weights are non-negative. Then relax its outgoing edges. The answer is the largest settled distance.",
   code: code(`
     function networkDelayTime(times: number[][], n: number, k: number): number {
-      const adj = new Map<number, [number, number][]>();
-      for (const [u, v, w] of times) (adj.get(u) ?? adj.set(u, []).get(u)!).push([v, w]);
-      const dist = new Map<number, number>(), heap = new MinPriorityQueue<[number, number]>((e) => e[0]);
-      heap.enqueue([0, k]); //@init
-      while (heap.size()) {
-        const [d, u] = heap.dequeue();
-        if (dist.has(u)) continue; //@stale
-        dist.set(u, d); //@settle
-        for (const [v, w] of adj.get(u) ?? []) if (!dist.has(v)) heap.enqueue([d + w, v]); //@push
+      const edgesFrom = new Map<number, [number, number][]>(); // node -> [neighbor, time]
+      for (const [from, to, time] of times) {
+        if (!edgesFrom.has(from)) edgesFrom.set(from, []);
+        edgesFrom.get(from)!.push([to, time]);
       }
-      return dist.size === n ? Math.max(...dist.values()) : -1; //@ret
+      const arrival = new Map<number, number>(); // final arrival time of each reached node
+      const heap = new MinPriorityQueue<[number, number]>((entry) => entry[0]); // [time, node]
+      heap.enqueue([0, k]); //@init
+      while (heap.size() > 0) {
+        const [time, node] = heap.dequeue();
+        if (arrival.has(node)) continue; // already reached faster //@stale
+        arrival.set(node, time); //@settle
+        for (const [neighbor, travel] of edgesFrom.get(node) ?? []) { //@push
+          if (!arrival.has(neighbor)) heap.enqueue([time + travel, neighbor]);
+        }
+      }
+      return arrival.size === n ? Math.max(...arrival.values()) : -1; //@ret
     }
   `),
   run({ times, n, k }, t) {

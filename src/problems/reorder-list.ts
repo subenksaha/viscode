@@ -15,14 +15,17 @@ const array = defineSolution<Input>({
   code: code(`
     function reorderList(head: ListNode | null): void {
       const nodes: ListNode[] = [];
-      for (let n = head; n; n = n.next) nodes.push(n); //@collect
-      let i = 0, j = nodes.length - 1;
-      while (i < j) { //@loop
-        nodes[i].next = nodes[j]; i++; //@front
-        if (i === j) break;
-        nodes[j].next = nodes[i]; j--; //@back
+      for (let node = head; node !== null; node = node.next) nodes.push(node); //@collect
+      let front = 0;
+      let back = nodes.length - 1;
+      while (front < back) { //@loop
+        nodes[front].next = nodes[back]; //@front
+        front++;
+        if (front === back) break;
+        nodes[back].next = nodes[front]; //@back
+        back--;
       }
-      nodes[i].next = null; //@end
+      nodes[front].next = null; //@end
     }
   `),
   run({ head }, t) {
@@ -31,7 +34,7 @@ const array = defineSolution<Input>({
     t.step("collect", "Store the nodes in an array.", [arr("nodes", nodes.map((n) => n.val)), list("list", nodes)]);
     let i = 0,
       j = nodes.length - 1;
-    const view = () => [arr("nodes", nodes.map((n) => n.val), { pointers: { i, j } }), list("links", nodes, { tones: [[nodes[i], "active"], [nodes[j], "compare"]] })];
+    const view = () => [arr("nodes", nodes.map((n) => n.val), { pointers: { front: i, back: j } }), list("links", nodes, { tones: [[nodes[i], "active"], [nodes[j], "compare"]] })];
     while (i < j) {
       t.step("loop", `i = ${i}, j = ${j}.`, view());
       nodes[i].next = nodes[j];
@@ -56,16 +59,34 @@ const inPlace = defineSolution<Input>({
   idea: "Find the middle with slow/fast pointers, reverse the second half, then weave the two halves together.",
   code: code(`
     function reorderList(head: ListNode | null): void {
-      if (!head) return;
-      let slow = head, fast = head;
-      while (fast.next && fast.next.next) { slow = slow.next!; fast = fast.next.next; } //@mid
-      let prev: ListNode | null = null, curr = slow.next;
+      if (head === null) return;
+      // 1. Find the middle: fast moves two steps for each step of slow.
+      let slow = head;
+      let fast = head;
+      while (fast.next !== null && fast.next.next !== null) { //@mid
+        slow = slow.next!;
+        fast = fast.next.next;
+      }
+      // 2. Cut the list in two and reverse the second half.
+      let prev: ListNode | null = null;
+      let curr = slow.next;
       slow.next = null; //@split
-      while (curr) { const nx = curr.next; curr.next = prev; prev = curr; curr = nx; } //@reverse
-      let a: ListNode | null = head, b = prev;
-      while (b) { //@merge
-        const an: ListNode | null = a!.next, bn: ListNode | null = b.next;
-        a!.next = b; b.next = an; a = an; b = bn; //@weave
+      while (curr !== null) { //@reverse
+        const next = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = next;
+      }
+      // 3. Weave: first, last, second, second-to-last, ...
+      let first: ListNode | null = head;
+      let second = prev;
+      while (second !== null) { //@merge
+        const firstNext: ListNode | null = first!.next;
+        const secondNext: ListNode | null = second.next;
+        first!.next = second; //@weave
+        second.next = firstNext;
+        first = firstNext;
+        second = secondNext;
       }
     }
   `),
@@ -95,7 +116,7 @@ const inPlace = defineSolution<Input>({
     }
     let a: ListNode | null = head,
       b = prev;
-    t.step("merge", "Weave the halves together.", [list("first half", first, { pointers: { a } }), list("second half (reversed)", listNodes(b), { pointers: { b } })]);
+    t.step("merge", "Weave the halves together.", [list("first half", first, { pointers: { first: a } }), list("second half (reversed)", listNodes(b), { pointers: { second: b } })]);
     while (b) {
       const an: ListNode | null = a!.next,
         bn: ListNode | null = b.next;

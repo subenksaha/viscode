@@ -16,15 +16,16 @@ const collectAll = defineSolution<Input>({
   idea: "In-order traversal of a BST lists values in sorted order. Collect them all and take index k − 1.",
   code: code(`
     function kthSmallest(root: TreeNode | null, k: number): number {
-      const vals: number[] = [];
-      const walk = (n: TreeNode | null) => {
-        if (!n) return;
-        walk(n.left);
-        vals.push(n.val); //@visit
-        walk(n.right);
-      };
-      walk(root);
-      return vals[k - 1]; //@ret
+      const sortedValues: number[] = [];
+      // In-order traversal of a BST visits values in increasing order.
+      function inorder(node: TreeNode | null) {
+        if (node === null) return;
+        inorder(node.left);
+        sortedValues.push(node.val); //@visit
+        inorder(node.right);
+      }
+      inorder(root);
+      return sortedValues[k - 1]; //@ret
     }
   `),
   run({ root, k }, t) {
@@ -53,12 +54,17 @@ const iterative = defineSolution<Input>({
   code: code(`
     function kthSmallest(root: TreeNode | null, k: number): number {
       const stack: TreeNode[] = [];
-      let n = root; //@init
+      let node = root; //@init
+      let visited = 0;
       while (true) {
-        while (n) { stack.push(n); n = n.left; } //@left
-        n = stack.pop()!; //@pop
-        if (--k === 0) return n.val; //@found
-        n = n.right; //@right
+        while (node !== null) { //@left
+          stack.push(node);
+          node = node.left;
+        }
+        node = stack.pop()!; //@pop
+        visited++;
+        if (visited === k) return node.val; //@found
+        node = node.right; //@right
       }
     }
   `),
@@ -68,7 +74,7 @@ const iterative = defineSolution<Input>({
       count = 0;
     const done: [TreeNode, Tone][] = [];
     const view = (cur?: TreeNode | null, hit = false) => [
-      vars({ k, popped: count }),
+      vars({ k, visited: count }),
       tree("tree", root, { tones: [...done, ...stack.map((s) => [s, "compare"] as [TreeNode, Tone]), [cur, hit ? "success" : "active"]] }),
       arr("stack", stack.map((s) => s.val), { indexLabels: false }),
     ];

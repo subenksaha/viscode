@@ -17,20 +17,33 @@ const recursive = defineSolution<Input>({
   idea: "Read tokens right to left. An operator's right operand is the expression just before it, and its left operand is the one before that, so evaluate them recursively.",
   code: code(`
     function evalRPN(tokens: string[]): number {
-      let i = tokens.length - 1;
+      let pos = tokens.length - 1; // read from the end
       function evaluate(): number {
-        const tok = tokens[i--]; //@read
-        if (!["+", "-", "*", "/"].includes(tok)) return +tok; //@num
-        const b = evaluate(), a = evaluate(); //@operands
-        return tok === "+" ? a + b : tok === "-" ? a - b : tok === "*" ? a * b : Math.trunc(a / b); //@apply
+        const token = tokens[pos]; //@read
+        pos--;
+        if (!isOperator(token)) return Number(token); //@num
+        const right = evaluate(); //@operands
+        const left = evaluate();
+        return applyOperator(left, token, right); //@apply
       }
       return evaluate(); //@ret
+    }
+
+    function isOperator(token: string): boolean {
+      return token === "+" || token === "-" || token === "*" || token === "/";
+    }
+
+    function applyOperator(left: number, operator: string, right: number): number {
+      if (operator === "+") return left + right;
+      if (operator === "-") return left - right;
+      if (operator === "*") return left * right;
+      return Math.trunc(left / right); // division rounds toward zero
     }
   `),
   run({ tokens }, t) {
     let i = tokens.length - 1;
     const stack: string[] = [];
-    const view = (k: number) => [arr("tokens", tokens, { tones: tones([k, "active"]), pointers: { i: k } }), arr("call stack", stack, { indexLabels: false })];
+    const view = (k: number) => [arr("tokens", tokens, { tones: tones([k, "active"]), pointers: { pos: k } }), arr("call stack", stack, { indexLabels: false })];
     const evaluate = (): number => {
       const k = i--;
       const tok = tokens[k];
@@ -45,7 +58,7 @@ const recursive = defineSolution<Input>({
         a = evaluate();
       stack.pop();
       const r = apply(a, b, tok);
-      t.step("apply", `${a} ${tok} ${b} = ${r}.`, [vars({ a, b, result: r }), ...view(k)]);
+      t.step("apply", `${a} ${tok} ${b} = ${r}.`, [vars({ left: a, right: b, result: r }), ...view(k)]);
       return r;
     };
     const res = evaluate();
@@ -63,19 +76,34 @@ const stack = defineSolution<Input>({
   code: code(`
     function evalRPN(tokens: string[]): number {
       const stack: number[] = []; //@init
-      for (const tok of tokens) { //@loop
-        if (!["+", "-", "*", "/"].includes(tok)) { stack.push(+tok); continue; } //@push
-        const b = stack.pop()!, a = stack.pop()!; //@pop
-        stack.push(tok === "+" ? a + b : tok === "-" ? a - b : tok === "*" ? a * b : Math.trunc(a / b)); //@apply
+      for (const token of tokens) { //@loop
+        if (!isOperator(token)) {
+          stack.push(Number(token)); //@push
+          continue;
+        }
+        const right = stack.pop()!; //@pop
+        const left = stack.pop()!;
+        stack.push(applyOperator(left, token, right)); //@apply
       }
       return stack[0]; //@ret
+    }
+
+    function isOperator(token: string): boolean {
+      return token === "+" || token === "-" || token === "*" || token === "/";
+    }
+
+    function applyOperator(left: number, operator: string, right: number): number {
+      if (operator === "+") return left + right;
+      if (operator === "-") return left - right;
+      if (operator === "*") return left * right;
+      return Math.trunc(left / right); // division rounds toward zero
     }
   `),
   run({ tokens }, t) {
     const st: number[] = [];
     const view = (k?: number, extra: Record<string, unknown> = {}) => [
       vars(extra),
-      arr("tokens", tokens, { tones: tones([k, "active"]), pointers: { i: k } }),
+      arr("tokens", tokens, { tones: tones([k, "active"]), pointers: { pos: k } }),
       arr("stack (top = right)", st, { tones: tones([st.length - 1, "compare"]), indexLabels: false }),
     ];
     t.step("init", "Empty stack.", view());
@@ -87,9 +115,9 @@ const stack = defineSolution<Input>({
       }
       const b = st.pop()!,
         a = st.pop()!;
-      t.step("pop", `"${tok}": pop b = ${b}, then a = ${a}.`, view(k, { a, b }));
+      t.step("pop", `"${tok}": pop right = ${b}, then left = ${a}.`, view(k, { left: a, right: b }));
       st.push(apply(a, b, tok));
-      t.step("apply", `${a} ${tok} ${b} = ${st.at(-1)}. Push it.`, view(k, { a, b }));
+      t.step("apply", `${a} ${tok} ${b} = ${st.at(-1)}. Push it.`, view(k, { left: a, right: b }));
     });
     t.step("ret", `Return ${st[0]}.`, view());
     return st[0];

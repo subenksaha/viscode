@@ -13,12 +13,15 @@ const hashSet = defineSolution<Input>({
   idea: "Add a number the first time it appears and remove it the second time. Only the single number is left in the set.",
   code: code(`
     function singleNumber(nums: number[]): number {
-      const seen = new Set<number>();
-      for (const x of nums) { //@loop
-        if (seen.has(x)) seen.delete(x); //@remove
-        else seen.add(x); //@add
+      const unpaired = new Set<number>();
+      for (const num of nums) { //@loop
+        if (unpaired.has(num)) {
+          unpaired.delete(num); // found its pair //@remove
+        } else {
+          unpaired.add(num); //@add
+        }
       }
-      return [...seen][0]; //@ret
+      return [...unpaired][0]; // the only number left without a pair //@ret
     }
   `),
   run({ nums }, t) {
@@ -43,20 +46,21 @@ const xor = defineSolution<Input>({
   idea: "x ^ x = 0 and x ^ 0 = x, and XOR is order-independent. XOR all numbers: every pair cancels, leaving the single number.",
   code: code(`
     function singleNumber(nums: number[]): number {
-      let acc = 0; //@init
-      for (const x of nums) acc ^= x; //@xor
-      return acc; //@ret
+      // a ^ a = 0 and a ^ 0 = a, so every pair cancels out and only the single number is left.
+      let result = 0; //@init
+      for (const num of nums) result = result ^ num; //@xor
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
     let acc = 0;
     const w = bitWidth(...nums);
-    t.step("init", "acc = 0.", [vars({ acc }), bits("acc", acc, w)]);
+    t.step("init", "result = 0.", [vars({ result: acc }), bits("result", acc, w)]);
     nums.forEach((x, i) => {
       acc ^= x;
-      t.step("xor", `acc ^= ${x} → ${acc}.`, [vars({ acc }), arr("nums", nums, { tones: tones([i, "active"]) }), bits(`${x}`, x, w), bits("acc", acc, w)]);
+      t.step("xor", `result ^= ${x} → ${acc}.`, [vars({ result: acc }), arr("nums", nums, { tones: tones([i, "active"]) }), bits(`${x}`, x, w), bits("result", acc, w)]);
     });
-    t.step("ret", `Return ${acc}.`, [vars({ acc }), bits("acc", acc, w)]);
+    t.step("ret", `Return ${acc}.`, [vars({ result: acc }), bits("result", acc, w)]);
     return acc;
   },
 });

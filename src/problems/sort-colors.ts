@@ -13,11 +13,15 @@ const counting = defineSolution<Input>({
   idea: "Count the 0s, 1s and 2s, then overwrite the array with that many of each.",
   code: code(`
     function sortColors(nums: number[]): void {
-      const count = [0, 0, 0];
-      for (const x of nums) count[x]++; //@count
-      let i = 0;
-      for (let c = 0; c < 3; c++)
-        for (let k = 0; k < count[c]; k++) nums[i++] = c; //@write
+      const count = [0, 0, 0]; // how many 0s, 1s and 2s
+      for (const color of nums) count[color]++; //@count
+      let pos = 0;
+      for (let color = 0; color < 3; color++) {
+        for (let k = 0; k < count[color]; k++) {
+          nums[pos] = color; //@write
+          pos++;
+        }
+      }
     }
   `),
   run({ nums }, t) {
@@ -41,15 +45,31 @@ const dutchFlag = defineSolution<Input>({
   name: "Dutch National Flag (One Pass)",
   time: "O(n)",
   space: "O(1)",
-  idea: "Keep three regions: [0, lo) are 0s, [lo, mid) are 1s, (hi, end] are 2s. Look at nums[mid]: send 0s left, 2s right, and step over 1s.",
+  idea: "Keep three regions: [0, low) are 0s, [low, mid) are 1s, (high, end] are 2s. Look at nums[mid]: send 0s left, 2s right, and step over 1s.",
   code: code(`
     function sortColors(nums: number[]): void {
-      let lo = 0, mid = 0, hi = nums.length - 1; //@init
-      while (mid <= hi) { //@loop
-        if (nums[mid] === 0) { [nums[lo], nums[mid]] = [nums[mid], nums[lo]]; lo++; mid++; } //@zero
-        else if (nums[mid] === 1) mid++; //@one
-        else { [nums[mid], nums[hi]] = [nums[hi], nums[mid]]; hi--; } //@two
+      // nums[0..low-1] are 0s, nums[low..mid-1] are 1s, nums[high+1..] are 2s.
+      let low = 0; //@init
+      let mid = 0;
+      let high = nums.length - 1;
+      while (mid <= high) { //@loop
+        if (nums[mid] === 0) {
+          swap(nums, low, mid); //@zero
+          low++;
+          mid++;
+        } else if (nums[mid] === 1) {
+          mid++; //@one
+        } else {
+          swap(nums, mid, high); //@two
+          high--;
+        }
       }
+    }
+
+    function swap(nums: number[], a: number, b: number) {
+      const temp = nums[a];
+      nums[a] = nums[b];
+      nums[b] = temp;
     }
   `),
   run({ nums }, t) {
@@ -60,7 +80,7 @@ const dutchFlag = defineSolution<Input>({
       vars({ "nums[mid]": nums[mid] }),
       arr("nums", nums, {
         tones: tones(...range(0, lo - 1, "success"), ...range(lo, mid - 1, "window"), ...range(hi + 1, nums.length - 1, "danger"), [mid <= hi ? mid : null, "active"]),
-        pointers: { lo, mid, hi },
+        pointers: { low: lo, mid, high: hi },
       }),
     ];
     t.step("init", "Everything is unsorted: lo = mid = 0, hi = end.", view());

@@ -14,10 +14,15 @@ const table = defineSolution<Input>({
   idea: "You can only arrive from above or from the left, so paths(r, c) = paths(r−1, c) + paths(r, c−1). The first row and column have one path each.",
   code: code(`
     function uniquePaths(m: number, n: number): number {
+      // dp[row][col] = number of paths to reach that cell. The first row and column have just one.
       const dp = Array.from({ length: m }, () => new Array(n).fill(1)); //@init
-      for (let r = 1; r < m; r++) //@r
-        for (let c = 1; c < n; c++) //@c
-          dp[r][c] = dp[r - 1][c] + dp[r][c - 1]; //@fill
+      for (let row = 1; row < m; row++) { //@r
+        for (let col = 1; col < n; col++) { //@c
+          const fromAbove = dp[row - 1][col];
+          const fromLeft = dp[row][col - 1];
+          dp[row][col] = fromAbove + fromLeft; //@fill
+        }
+      }
       return dp[m - 1][n - 1]; //@ret
     }
   `),
@@ -46,9 +51,13 @@ const row = defineSolution<Input>({
   idea: "Keep one row. Before the update, row[c] holds the value from above; row[c−1] already holds the new value to the left.",
   code: code(`
     function uniquePaths(m: number, n: number): number {
+      // Keep only one row. Before updating, row[col] still holds the value from the row above.
       const row = new Array(n).fill(1); //@init
-      for (let r = 1; r < m; r++) //@r
-        for (let c = 1; c < n; c++) row[c] += row[c - 1]; //@fill
+      for (let r = 1; r < m; r++) { //@r
+        for (let col = 1; col < n; col++) {
+          row[col] = row[col] + row[col - 1]; // from above + from left //@fill
+        }
+      }
       return row[n - 1]; //@ret
     }
   `),
@@ -75,23 +84,25 @@ const combinatorics = defineSolution<Input>({
   idea: "Every path makes (m−1) down moves and (n−1) right moves. Choose which of the m+n−2 moves go down: C(m+n−2, m−1).",
   code: code(`
     function uniquePaths(m: number, n: number): number {
-      const total = m + n - 2, k = Math.min(m, n) - 1; //@init
-      let res = 1;
+      // Every path is (m - 1) downs and (n - 1) rights in some order: choose k of the total moves.
+      const totalMoves = m + n - 2; //@init
+      const k = Math.min(m, n) - 1;
+      let result = 1;
       for (let i = 1; i <= k; i++) { //@loop
-        res = (res * (total - k + i)) / i; //@mul
+        result = (result * (totalMoves - k + i)) / i; //@mul
       }
-      return Math.round(res); //@ret
+      return Math.round(result); //@ret
     }
   `),
   run({ m, n }, t) {
     const total = m + n - 2,
       k = Math.min(m, n) - 1;
     let res = 1;
-    t.step("init", `Choose ${k} of ${total} moves: C(${total}, ${k}).`, [vars({ total, k, res })]);
+    t.step("init", `Choose ${k} of ${total} moves: C(${total}, ${k}).`, [vars({ totalMoves: total, k, result: res })]);
     for (let i = 1; i <= k; i++) {
-      t.step("loop", `i = ${i}.`, [vars({ total, k, i, res })]);
+      t.step("loop", `i = ${i}.`, [vars({ totalMoves: total, k, i, result: res })]);
       res = (res * (total - k + i)) / i;
-      t.step("mul", `res × ${total - k + i} ÷ ${i} = ${res}.`, [vars({ total, k, i, res })]);
+      t.step("mul", `result × ${total - k + i} ÷ ${i} = ${res}.`, [vars({ totalMoves: total, k, i, result: res })]);
     }
     t.step("ret", `Return ${Math.round(res)}.`, [vars({ answer: Math.round(res) })]);
     return Math.round(res);

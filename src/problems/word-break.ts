@@ -15,15 +15,20 @@ const memo = defineSolution<Input>({
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
       const memo = new Map<number, boolean>();
-      function can(i: number): boolean {
+      // Can s[i..] be split into dictionary words?
+      function canBreak(i: number): boolean {
         if (i === s.length) return true; //@base
         if (memo.has(i)) return memo.get(i)!; //@hit
-        for (const w of wordDict) //@try
-          if (s.startsWith(w, i) && can(i + w.length)) { memo.set(i, true); return true; } //@match
+        for (const word of wordDict) { //@try
+          if (s.startsWith(word, i) && canBreak(i + word.length)) { //@match
+            memo.set(i, true);
+            return true;
+          }
+        }
         memo.set(i, false); //@fail
         return false;
       }
-      return can(0); //@ret
+      return canBreak(0); //@ret
     }
   `),
   run({ s, wordDict }, t) {
@@ -72,12 +77,19 @@ const bottomUp = defineSolution<Input>({
   idea: "dp[i] = s[0..i) can be segmented. dp[i] is true if some j < i has dp[j] true and s[j..i) is a dictionary word.",
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
-      const dict = new Set(wordDict);
+      const words = new Set(wordDict);
+      // dp[i] = can the first i characters be split into words?
       const dp = new Array(s.length + 1).fill(false);
       dp[0] = true; //@init
-      for (let i = 1; i <= s.length; i++) //@i
-        for (let j = 0; j < i; j++) //@j
-          if (dp[j] && dict.has(s.slice(j, i))) { dp[i] = true; break; } //@hit
+      for (let i = 1; i <= s.length; i++) { //@i
+        for (let j = 0; j < i; j++) { //@j
+          // s[0..j) splits fine and s[j..i) is a word.
+          if (dp[j] && words.has(s.slice(j, i))) { //@hit
+            dp[i] = true;
+            break;
+          }
+        }
+      }
       return dp[s.length]; //@ret
     }
   `),
@@ -117,14 +129,19 @@ const bfs = defineSolution<Input>({
   idea: "Treat each index as a node with an edge i → i + len(w) when word w matches at i. Is index n reachable from 0?",
   code: code(`
     function wordBreak(s: string, wordDict: string[]): boolean {
-      const queue = [0], seen = new Set([0]); //@init
-      while (queue.length) { //@loop
-        const i = queue.shift()!; //@pop
-        for (const w of wordDict) {
-          if (!s.startsWith(w, i)) continue;
-          const next = i + w.length;
+      // Each queue entry is a position where a new word can start.
+      const queue = [0]; //@init
+      const visited = new Set([0]);
+      while (queue.length > 0) { //@loop
+        const start = queue.shift()!; //@pop
+        for (const word of wordDict) {
+          if (!s.startsWith(word, start)) continue;
+          const next = start + word.length;
           if (next === s.length) return true; //@done
-          if (!seen.has(next)) { seen.add(next); queue.push(next); } //@push
+          if (!visited.has(next)) { //@push
+            visited.add(next);
+            queue.push(next);
+          }
         }
       }
       return false; //@ret

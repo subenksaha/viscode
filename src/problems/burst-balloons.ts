@@ -13,18 +13,23 @@ const memo = defineSolution<Input>({
   idea: "Pad nums with 1 on both ends. For the open interval (l, r), choose which balloon k bursts last: its neighbors are then l and r, and the two sides are independent subproblems.",
   code: code(`
     function maxCoins(nums: number[]): number {
-      const a = [1, ...nums, 1], memo = new Map<string, number>();
-      const best = (l: number, r: number): number => {
-        if (l + 1 === r) return 0; //@empty
-        const key = l + "," + r;
+      const balloons = [1, ...nums, 1]; // pad with 1s so edges are easy
+      const memo = new Map<string, number>();
+      // Max coins from bursting every balloon strictly between left and right.
+      function best(left: number, right: number): number {
+        if (left + 1 === right) return 0; //@empty
+        const key = left + "," + right;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        let res = 0;
-        for (let k = l + 1; k < r; k++) //@last
-          res = Math.max(res, best(l, k) + a[l] * a[k] * a[r] + best(k, r));
-        memo.set(key, res); //@store
-        return res;
-      };
-      return best(0, a.length - 1); //@ret
+        let result = 0;
+        for (let last = left + 1; last < right; last++) { //@last
+          const coins = balloons[left] * balloons[last] * balloons[right];
+          const total = best(left, last) + coins + best(last, right);
+          result = Math.max(result, total);
+        }
+        memo.set(key, result); //@store
+        return result;
+      }
+      return best(0, balloons.length - 1); //@ret
     }
   `),
   run({ nums }, t) {
@@ -65,14 +70,20 @@ const intervalDp = defineSolution<Input>({
   idea: "Fill dp[l][r] for open intervals in order of increasing width, so both halves of every split are already known.",
   code: code(`
     function maxCoins(nums: number[]): number {
-      const a = [1, ...nums, 1], n = a.length;
+      const balloons = [1, ...nums, 1]; // pad with 1s so edges are easy
+      const n = balloons.length;
+      // dp[left][right] = max coins from bursting everything strictly between left and right
       const dp = Array.from({ length: n }, () => new Array(n).fill(0)); //@init
-      for (let width = 2; width < n; width++) //@width
-        for (let l = 0; l + width < n; l++) {
-          const r = l + width;
-          for (let k = l + 1; k < r; k++) //@cell
-            dp[l][r] = Math.max(dp[l][r], dp[l][k] + a[l] * a[k] * a[r] + dp[k][r]);
+      for (let width = 2; width < n; width++) { //@width
+        for (let left = 0; left + width < n; left++) {
+          const right = left + width;
+          for (let last = left + 1; last < right; last++) { //@cell
+            const coins = balloons[left] * balloons[last] * balloons[right];
+            const total = dp[left][last] + coins + dp[last][right];
+            dp[left][right] = Math.max(dp[left][right], total);
+          }
         }
+      }
       return dp[0][n - 1]; //@ret
     }
   `),

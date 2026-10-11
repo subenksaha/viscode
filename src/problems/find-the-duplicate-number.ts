@@ -14,21 +14,27 @@ const binary = defineSolution<Input>({
   idea: "Values are in [1, n]. If more than mid values are ≤ mid, the duplicate is in [1, mid] (pigeonhole); otherwise it is above mid.",
   code: code(`
     function findDuplicate(nums: number[]): number {
-      let lo = 1, hi = nums.length - 1; //@init
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        const cnt = nums.filter((x) => x <= mid).length; //@count
-        if (cnt > mid) hi = mid; //@low
-        else lo = mid + 1; //@high
+      // Binary search on the answer: the duplicate is somewhere in [low, high].
+      let low = 1; //@init
+      let high = nums.length - 1;
+      while (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        const countAtMostMid = nums.filter((num) => num <= mid).length; //@count
+        // More than mid numbers fit in 1..mid, so the duplicate is in that range.
+        if (countAtMostMid > mid) {
+          high = mid; //@low
+        } else {
+          low = mid + 1; //@high
+        }
       }
-      return lo; //@ret
+      return low; //@ret
     }
   `),
   run({ nums }, t) {
     let lo = 1,
       hi = nums.length - 1;
     const view = (mid?: number, cnt?: number) => [
-      vars({ lo, hi, mid, "count ≤ mid": cnt }),
+      vars({ low: lo, high: hi, mid, countAtMostMid: cnt }),
       arr("nums", nums, { tones: mid !== undefined ? tones(...nums.map((x, i) => [i, x <= mid ? "compare" : "muted"] as [number, Tone])) : {} }),
     ];
     t.step("init", `The duplicate is somewhere in [1, ${hi}].`, view());
@@ -57,11 +63,19 @@ const floyd = defineSolution<Input>({
   idea: "Treat i → nums[i] as a linked list. Two indices point to the duplicate value, so the list has a cycle whose entrance is the duplicate. Find it with tortoise and hare.",
   code: code(`
     function findDuplicate(nums: number[]): number {
-      let slow = 0, fast = 0;
-      do { slow = nums[slow]; fast = nums[nums[fast]]; } while (slow !== fast); //@meet
-      let p = 0; //@phase2
-      while (p !== slow) { p = nums[p]; slow = nums[slow]; } //@walk
-      return p; //@ret
+      // Treat index i as a node pointing to nums[i]. The duplicate value is where the cycle starts.
+      let slow = 0;
+      let fast = 0;
+      do { //@meet
+        slow = nums[slow];
+        fast = nums[nums[fast]];
+      } while (slow !== fast);
+      let finder = 0; //@phase2
+      while (finder !== slow) { //@walk
+        finder = nums[finder];
+        slow = nums[slow];
+      }
+      return finder; //@ret
     }
   `),
   run({ nums }, t) {
@@ -80,11 +94,11 @@ const floyd = defineSolution<Input>({
       t.step("meet", `slow → ${slow}, fast → ${fast}.`, view([[slow, "active"], [fast, "compare"]], { slow, fast }));
     } while (slow !== fast);
     let p = 0;
-    t.step("phase2", `They meet at ${slow}. Start p at 0; walk both one step at a time.`, view([[slow, "active"], [p, "compare"]], { slow, p }));
+    t.step("phase2", `They meet at ${slow}. Start finder at 0; walk both one step at a time.`, view([[slow, "active"], [p, "compare"]], { slow, finder: p }));
     while (p !== slow) {
       p = nums[p];
       slow = nums[slow];
-      t.step("walk", `p → ${p}, slow → ${slow}.`, view([[slow, "active"], [p, "compare"]], { slow, p }));
+      t.step("walk", `finder → ${p}, slow → ${slow}.`, view([[slow, "active"], [p, "compare"]], { slow, finder: p }));
     }
     t.step("ret", `They meet at the cycle entrance: ${p}.`, view([[p, "success"]], { p }));
     return p;

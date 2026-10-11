@@ -15,10 +15,13 @@ const expand = defineSolution<Input>({
     function largestRectangleArea(heights: number[]): number {
       let best = 0;
       for (let i = 0; i < heights.length; i++) { //@bar
-        let l = i, r = i;
-        while (l > 0 && heights[l - 1] >= heights[i]) l--; //@left
-        while (r < heights.length - 1 && heights[r + 1] >= heights[i]) r++; //@right
-        best = Math.max(best, heights[i] * (r - l + 1)); //@area
+        // Stretch left and right while the bars are at least as tall as bar i.
+        let left = i;
+        let right = i;
+        while (left > 0 && heights[left - 1] >= heights[i]) left--; //@left
+        while (right < heights.length - 1 && heights[right + 1] >= heights[i]) right++; //@right
+        const width = right - left + 1;
+        best = Math.max(best, heights[i] * width); //@area
       }
       return best; //@ret
     }
@@ -50,13 +53,17 @@ const monoStack = defineSolution<Input>({
   idea: "Keep indices of increasing heights on a stack. When a shorter bar arrives, every taller bar on the stack has found its right edge; its left edge is the index below it on the stack. Pop and measure.",
   code: code(`
     function largestRectangleArea(heights: number[]): number {
-      const stack: number[] = []; let best = 0; //@init
+      const stack: number[] = []; // indices of bars with increasing heights //@init
+      let best = 0;
       for (let i = 0; i <= heights.length; i++) { //@bar
-        const h = i === heights.length ? 0 : heights[i];
-        while (stack.length && heights[stack.at(-1)!] > h) { //@pop
-          const top = stack.pop()!;
-          const left = stack.length ? stack.at(-1)! + 1 : 0;
-          best = Math.max(best, heights[top] * (i - left)); //@area
+        // A height-0 bar at the end flushes everything left on the stack.
+        const height = i === heights.length ? 0 : heights[i];
+        while (stack.length > 0 && heights[stack[stack.length - 1]] > height) { //@pop
+          const tallest = stack.pop()!;
+          // That bar stretches from just after the new stack top up to i - 1.
+          const left = stack.length > 0 ? stack[stack.length - 1] + 1 : 0;
+          const width = i - left;
+          best = Math.max(best, heights[tallest] * width); //@area
         }
         stack.push(i); //@push
       }

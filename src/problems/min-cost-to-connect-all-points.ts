@@ -17,15 +17,25 @@ const prim = defineSolution<Input>({
   idea: "Grow one tree from point 0. Keep for every outside point its cheapest edge into the tree; repeatedly add the cheapest outside point and update the others with distances to it.",
   code: code(`
     function minCostConnectPoints(points: number[][]): number {
-      const n = points.length, best = new Array(n).fill(Infinity), inTree = new Array(n).fill(false);
-      best[0] = 0;
+      const n = points.length;
+      const distance = (a: number, b: number) =>
+        Math.abs(points[a][0] - points[b][0]) + Math.abs(points[a][1] - points[b][1]);
+      // cheapest[i] = cheapest edge that connects point i to the tree built so far
+      const cheapest = new Array(n).fill(Infinity);
+      const inTree = new Array(n).fill(false);
+      cheapest[0] = 0;
       let total = 0; //@init
-      for (let k = 0; k < n; k++) {
-        let u = -1;
-        for (let i = 0; i < n; i++) if (!inTree[i] && (u < 0 || best[i] < best[u])) u = i; //@pick
-        inTree[u] = true; total += best[u]; //@add
-        for (let v = 0; v < n; v++)
-          if (!inTree[v]) best[v] = Math.min(best[v], Math.abs(points[u][0] - points[v][0]) + Math.abs(points[u][1] - points[v][1])); //@relax
+      for (let added = 0; added < n; added++) {
+        // Pick the outside point that is cheapest to connect.
+        let next = -1;
+        for (let i = 0; i < n; i++) { //@pick
+          if (!inTree[i] && (next === -1 || cheapest[i] < cheapest[next])) next = i;
+        }
+        inTree[next] = true; //@add
+        total += cheapest[next];
+        for (let other = 0; other < n; other++) { //@relax
+          if (!inTree[other]) cheapest[other] = Math.min(cheapest[other], distance(next, other));
+        }
       }
       return total; //@ret
     }
@@ -76,18 +86,30 @@ const kruskal = defineSolution<Input>({
   idea: "List all n² edges, sort by length, and add each edge whose endpoints are in different components (union-find), until n − 1 edges are in.",
   code: code(`
     function minCostConnectPoints(points: number[][]): number {
-      const n = points.length, edges: [number, number, number][] = [];
-      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++)
-        edges.push([Math.abs(points[i][0] - points[j][0]) + Math.abs(points[i][1] - points[j][1]), i, j]);
+      const n = points.length;
+      const edges: [number, number, number][] = []; // [length, pointA, pointB]
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const length = Math.abs(points[i][0] - points[j][0]) + Math.abs(points[i][1] - points[j][1]);
+          edges.push([length, i, j]);
+        }
+      }
       edges.sort((a, b) => a[0] - b[0]); //@sort
       const parent = Array.from({ length: n }, (_, i) => i);
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      let total = 0, used = 0;
-      for (const [d, i, j] of edges) {
-        if (used === n - 1) break;
-        const a = find(i), b = find(j);
-        if (a === b) continue; //@skip
-        parent[a] = b; total += d; used++; //@take
+      function findRoot(point: number): number {
+        while (parent[point] !== point) point = parent[point];
+        return point;
+      }
+      let total = 0;
+      let edgesUsed = 0;
+      for (const [length, pointA, pointB] of edges) {
+        if (edgesUsed === n - 1) break;
+        const rootA = findRoot(pointA);
+        const rootB = findRoot(pointB);
+        if (rootA === rootB) continue; // already connected //@skip
+        parent[rootA] = rootB; //@take
+        total += length;
+        edgesUsed++;
       }
       return total; //@ret
     }
@@ -104,7 +126,7 @@ const kruskal = defineSolution<Input>({
       used = 0;
     const tree: [string, string][] = [];
     const view = (k?: number, tone: Tone = "active") => [
-      vars({ total, edges: used }),
+      vars({ total, edgesUsed: used }),
       graph("MST so far", nm, k !== undefined ? [...tree, [nm[edges[k][1]], nm[edges[k][2]]]] : tree, {
         edgeTones: k !== undefined ? tones([edgeKey(nm[edges[k][1]], nm[edges[k][2]]), tone]) : {},
       }),

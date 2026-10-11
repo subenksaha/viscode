@@ -16,12 +16,15 @@ const cascade = defineSolution<Input>({
   idea: "Start with just the empty set. For each number, copy every subset so far and add the number to each copy.",
   code: code(`
     function subsets(nums: number[]): number[][] {
-      const res: number[][] = [[]]; //@init
-      for (const x of nums) { //@num
-        const size = res.length;
-        for (let k = 0; k < size; k++) res.push([...res[k], x]); //@extend
+      const result: number[][] = [[]]; //@init
+      for (const num of nums) { //@num
+        // Every existing subset gets a copy that also includes num.
+        const existingCount = result.length;
+        for (let k = 0; k < existingCount; k++) { //@extend
+          result.push([...result[k], num]);
+        }
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -51,10 +54,18 @@ const bitmask = defineSolution<Input>({
   idea: "Each subset corresponds to an n-bit number: bit i says whether nums[i] is in it. Count from 0 to 2ⁿ − 1.",
   code: code(`
     function subsets(nums: number[]): number[][] {
-      const res: number[][] = [];
-      for (let mask = 0; mask < 1 << nums.length; mask++) //@mask
-        res.push(nums.filter((_, i) => mask & (1 << i))); //@pick
-      return res; //@ret
+      const result: number[][] = [];
+      // Each number from 0 to 2^n - 1 picks a subset: bit i says whether nums[i] is in it.
+      const totalSubsets = 2 ** nums.length;
+      for (let mask = 0; mask < totalSubsets; mask++) { //@mask
+        const subset: number[] = [];
+        for (let i = 0; i < nums.length; i++) {
+          const bitIsSet = (mask & (1 << i)) !== 0;
+          if (bitIsSet) subset.push(nums[i]);
+        }
+        result.push(subset); //@pick
+      }
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -84,17 +95,18 @@ const backtrack = defineSolution<Input>({
   idea: "Every path in the recursion is a subset. Record the current path, then try extending it with each later number.",
   code: code(`
     function subsets(nums: number[]): number[][] {
-      const res: number[][] = [], path: number[] = [];
-      function dfs(start: number) {
-        res.push([...path]); //@record
+      const result: number[][] = [];
+      const path: number[] = [];
+      function build(start: number) {
+        result.push([...path]); //@record
         for (let i = start; i < nums.length; i++) { //@try
           path.push(nums[i]); //@choose
-          dfs(i + 1);
+          build(i + 1);
           path.pop(); //@undo
         }
       }
-      dfs(0);
-      return res; //@ret
+      build(0);
+      return result; //@ret
     }
   `),
   run({ nums }, t) {

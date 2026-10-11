@@ -15,10 +15,10 @@ const bruteForce = defineSolution<Input>({
     function maxProduct(nums: number[]): number {
       let best = -Infinity; //@init
       for (let i = 0; i < nums.length; i++) { //@i
-        let prod = 1;
+        let product = 1;
         for (let j = i; j < nums.length; j++) { //@j
-          prod *= nums[j]; //@prod
-          best = Math.max(best, prod); //@best
+          product *= nums[j]; //@prod
+          best = Math.max(best, product); //@best
         }
       }
       return best; //@ret
@@ -27,7 +27,7 @@ const bruteForce = defineSolution<Input>({
   run({ nums }, t) {
     let best = -Infinity;
     const view = (i?: number, j?: number, prod?: number) => [
-      vars({ prod, best: best === -Infinity ? "-∞" : best }),
+      vars({ product: prod, best: best === -Infinity ? "-∞" : best }),
       arr("nums", nums, { window: i !== undefined && j !== undefined ? [i, j] : null, tones: tones([j, "active"]), pointers: { i, j } }),
     ];
     t.step("init", "best = -∞.", view());
@@ -54,13 +54,17 @@ const minMax = defineSolution<Input>({
   idea: "A negative number turns the smallest product into the largest. Keep both the max and min product ending at each index.",
   code: code(`
     function maxProduct(nums: number[]): number {
-      let hi = nums[0], lo = nums[0], best = nums[0]; //@init
+      // Track both the biggest and smallest product ending here:
+      // a negative number turns the smallest into the biggest.
+      let maxEndingHere = nums[0]; //@init
+      let minEndingHere = nums[0];
+      let best = nums[0];
       for (let i = 1; i < nums.length; i++) { //@loop
-        const x = nums[i];
-        const candidates = [x, hi * x, lo * x]; //@cand
-        hi = Math.max(...candidates); //@hi
-        lo = Math.min(...candidates); //@lo
-        best = Math.max(best, hi); //@best
+        const num = nums[i];
+        const candidates = [num, maxEndingHere * num, minEndingHere * num]; //@cand
+        maxEndingHere = Math.max(...candidates); //@hi
+        minEndingHere = Math.min(...candidates); //@lo
+        best = Math.max(best, maxEndingHere); //@best
       }
       return best; //@ret
     }
@@ -70,19 +74,19 @@ const minMax = defineSolution<Input>({
       lo = nums[0],
       best = nums[0];
     const view = (i: number, extra: Record<string, unknown> = {}) => [
-      vars({ hi, lo, best, ...extra }),
+      vars({ maxEndingHere: hi, minEndingHere: lo, best, ...extra }),
       arr("nums", nums, { tones: tones([i, "active"]), pointers: { i } }),
     ];
-    t.step("init", `hi = lo = best = ${nums[0]}.`, view(0));
+    t.step("init", `maxEndingHere = minEndingHere = best = ${nums[0]}.`, view(0));
     for (let i = 1; i < nums.length; i++) {
       const x = nums[i];
-      t.step("loop", `x = ${x}.`, view(i));
+      t.step("loop", `num = ${x}.`, view(i));
       const c = [x, hi * x, lo * x];
-      t.step("cand", `Candidates: x = ${c[0]}, hi·x = ${c[1]}, lo·x = ${c[2]}.`, view(i, { candidates: c }));
+      t.step("cand", `Candidates: num = ${c[0]}, max·num = ${c[1]}, min·num = ${c[2]}.`, view(i, { candidates: c }));
       hi = Math.max(...c);
-      t.step("hi", `hi = ${hi}.`, view(i));
+      t.step("hi", `maxEndingHere = ${hi}.`, view(i));
       lo = Math.min(...c);
-      t.step("lo", `lo = ${lo}.`, view(i));
+      t.step("lo", `minEndingHere = ${lo}.`, view(i));
       best = Math.max(best, hi);
       t.step("best", `best = ${best}.`, view(i));
     }
@@ -100,11 +104,15 @@ const prefixSuffix = defineSolution<Input>({
   code: code(`
     function maxProduct(nums: number[]): number {
       const n = nums.length;
-      let pre = 1, suf = 1, best = -Infinity; //@init
+      let prefix = 1; // product from the left, restarting after a 0 //@init
+      let suffix = 1; // product from the right, restarting after a 0
+      let best = -Infinity;
       for (let i = 0; i < n; i++) { //@loop
-        pre = (pre === 0 ? 1 : pre) * nums[i]; //@pre
-        suf = (suf === 0 ? 1 : suf) * nums[n - 1 - i]; //@suf
-        best = Math.max(best, pre, suf); //@best
+        if (prefix === 0) prefix = 1;
+        prefix *= nums[i]; //@pre
+        if (suffix === 0) suffix = 1;
+        suffix *= nums[n - 1 - i]; //@suf
+        best = Math.max(best, prefix, suffix); //@best
       }
       return best; //@ret
     }
@@ -115,7 +123,7 @@ const prefixSuffix = defineSolution<Input>({
       suf = 1,
       best = -Infinity;
     const view = (i?: number) => [
-      vars({ pre, suf, best: best === -Infinity ? "-∞" : best }),
+      vars({ prefix: pre, suffix: suf, best: best === -Infinity ? "-∞" : best }),
       arr("nums", nums, {
         tones: tones([i, "active"], [i !== undefined ? n - 1 - i : null, "compare"]),
         pointers: { i, j: i !== undefined ? n - 1 - i : null },

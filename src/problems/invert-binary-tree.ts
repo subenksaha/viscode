@@ -15,8 +15,10 @@ const recursive = defineSolution<Input>({
   idea: "Swap the left and right child of the root, then invert both subtrees.",
   code: code(`
     function invertTree(root: TreeNode | null): TreeNode | null {
-      if (!root) return null; //@base
-      [root.left, root.right] = [root.right, root.left]; //@swap
+      if (root === null) return null; //@base
+      const oldLeft = root.left; //@swap
+      root.left = root.right;
+      root.right = oldLeft;
       invertTree(root.left); //@left
       invertTree(root.right); //@right
       return root; //@ret
@@ -50,12 +52,15 @@ const bfs = defineSolution<Input>({
   idea: "Visit nodes level by level and swap each node's children.",
   code: code(`
     function invertTree(root: TreeNode | null): TreeNode | null {
-      const queue = root ? [root] : []; //@init
-      while (queue.length) { //@loop
-        const n = queue.shift()!; //@pop
-        [n.left, n.right] = [n.right, n.left]; //@swap
-        if (n.left) queue.push(n.left);
-        if (n.right) queue.push(n.right); //@push
+      const queue: TreeNode[] = []; //@init
+      if (root !== null) queue.push(root);
+      while (queue.length > 0) { //@loop
+        const node = queue.shift()!; //@pop
+        const oldLeft = node.left; //@swap
+        node.left = node.right;
+        node.right = oldLeft;
+        if (node.left !== null) queue.push(node.left);
+        if (node.right !== null) queue.push(node.right); //@push
       }
       return root; //@ret
     }

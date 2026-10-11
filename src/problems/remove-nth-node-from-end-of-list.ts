@@ -15,13 +15,14 @@ const twoPass = defineSolution<Input>({
   idea: "Count the length L, then walk L − n steps from a dummy head to the node just before the target and unlink it.",
   code: code(`
     function removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {
-      let len = 0;
-      for (let p = head; p; p = p.next) len++; //@count
-      const dummy = new ListNode(0, head);
-      let prev = dummy; //@init
-      for (let i = 0; i < len - n; i++) prev = prev.next!; //@walk
+      let length = 0;
+      for (let node = head; node !== null; node = node.next) length++; //@count
+      const dummyHead = new ListNode(0, head); // makes removing the first node easy
+      let prev = dummyHead; //@init
+      // Stop just before the node to remove.
+      for (let step = 0; step < length - n; step++) prev = prev.next!; //@walk
       prev.next = prev.next!.next; //@unlink
-      return dummy.next; //@ret
+      return dummyHead.next; //@ret
     }
   `),
   run({ head, n }, t) {
@@ -31,10 +32,10 @@ const twoPass = defineSolution<Input>({
     let len = 0;
     for (let p = head; p; p = p.next) {
       len++;
-      t.step("count", `len = ${len}.`, [vars({ len }), list("list", nodes, { names, tones: [[p, "active"]] })]);
+      t.step("count", `length = ${len}.`, [vars({ length: len }), list("list", nodes, { names, tones: [[p, "active"]] })]);
     }
     let prev = dummy;
-    const view = (target?: ListNode | null) => [vars({ len, n, steps: len - n }), list("list", nodes, { names, tones: [[prev, "active"], [target, "danger"]], pointers: { prev } })];
+    const view = (target?: ListNode | null) => [vars({ length: len, n, steps: len - n }), list("list", nodes, { names, tones: [[prev, "active"], [target, "danger"]], pointers: { prev } })];
     t.step("init", "Start prev at the dummy node.", view());
     for (let i = 0; i < len - n; i++) {
       prev = prev.next!;
@@ -56,12 +57,18 @@ const onePass = defineSolution<Input>({
   idea: "Move fast n + 1 steps ahead of slow (both starting at a dummy). Then move both until fast falls off the end; slow is right before the target.",
   code: code(`
     function removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {
-      const dummy = new ListNode(0, head);
-      let slow: ListNode = dummy, fast: ListNode | null = dummy; //@init
-      for (let i = 0; i <= n; i++) fast = fast!.next; //@gap
-      while (fast) { slow = slow.next!; fast = fast.next; } //@move
+      const dummyHead = new ListNode(0, head); // makes removing the first node easy
+      let slow: ListNode = dummyHead; //@init
+      let fast: ListNode | null = dummyHead;
+      // Put fast n + 1 steps ahead of slow.
+      for (let step = 0; step <= n; step++) fast = fast!.next; //@gap
+      // When fast falls off the end, slow is just before the node to remove.
+      while (fast !== null) { //@move
+        slow = slow.next!;
+        fast = fast.next;
+      }
       slow.next = slow.next!.next; //@unlink
-      return dummy.next; //@ret
+      return dummyHead.next; //@ret
     }
   `),
   run({ head, n }, t) {

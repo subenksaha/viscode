@@ -17,13 +17,17 @@ const sortMerge = defineSolution<Input>({
   code: code(`
     function merge(intervals: number[][]): number[][] {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
-      const res = [intervals[0]]; //@init
-      for (const [s, e] of intervals.slice(1)) { //@loop
-        const last = res[res.length - 1];
-        if (s <= last[1]) last[1] = Math.max(last[1], e); //@merge
-        else res.push([s, e]); //@push
+      const merged = [intervals[0]]; //@init
+      for (let i = 1; i < intervals.length; i++) { //@loop
+        const [start, end] = intervals[i];
+        const last = merged[merged.length - 1];
+        if (start <= last[1]) {
+          last[1] = Math.max(last[1], end); // overlaps: extend the last interval //@merge
+        } else {
+          merged.push([start, end]); //@push
+        }
       }
-      return res; //@ret
+      return merged; //@ret
     }
   `),
   run({ intervals: list }, t) {
@@ -58,20 +62,25 @@ const repeated = defineSolution<Input>({
   idea: "Without sorting: keep looking for any two overlapping intervals, merge them, and repeat until no pair overlaps.",
   code: code(`
     function merge(intervals: number[][]): number[][] {
-      const res = intervals.map((x) => [...x]);
-      let changed = true;
-      while (changed) { //@pass
-        changed = false;
-        outer: for (let i = 0; i < res.length; i++)
-          for (let j = i + 1; j < res.length; j++) { //@pair
-            if (res[i][0] <= res[j][1] && res[j][0] <= res[i][1]) { //@overlap
-              res[i] = [Math.min(res[i][0], res[j][0]), Math.max(res[i][1], res[j][1])];
-              res.splice(j, 1); changed = true; //@merge
-              break outer;
+      const result = intervals.map((interval) => [...interval]);
+      // Keep merging any overlapping pair until a full pass finds none.
+      let mergedSomething = true;
+      while (mergedSomething) { //@pass
+        mergedSomething = false;
+        for (let i = 0; i < result.length && !mergedSomething; i++) {
+          for (let j = i + 1; j < result.length; j++) { //@pair
+            const a = result[i];
+            const b = result[j];
+            if (a[0] <= b[1] && b[0] <= a[1]) { //@overlap
+              result[i] = [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
+              result.splice(j, 1); //@merge
+              mergedSomething = true;
+              break;
             }
           }
+        }
       }
-      return res.sort((a, b) => a[0] - b[0]); //@ret
+      return result.sort((a, b) => a[0] - b[0]); //@ret
     }
   `),
   run({ intervals: list }, t) {

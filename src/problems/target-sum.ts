@@ -15,14 +15,17 @@ const memo = defineSolution<Input>({
   code: code(`
     function findTargetSumWays(nums: number[], target: number): number {
       const memo = new Map<string, number>();
-      const ways = (i: number, sum: number): number => {
+      // Ways to reach target using nums[i..], given the running sum so far.
+      function ways(i: number, sum: number): number {
         if (i === nums.length) return sum === target ? 1 : 0; //@end
         const key = i + "," + sum;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const res = ways(i + 1, sum + nums[i]) + ways(i + 1, sum - nums[i]); //@branch
-        memo.set(key, res);
-        return res;
-      };
+        const withPlus = ways(i + 1, sum + nums[i]); //@branch
+        const withMinus = ways(i + 1, sum - nums[i]);
+        const result = withPlus + withMinus;
+        memo.set(key, result);
+        return result;
+      }
       return ways(0, 0); //@ret
     }
   `),
@@ -62,12 +65,18 @@ const subsetSum = defineSolution<Input>({
   idea: "Call P the numbers given '+'. Then P − (total − P) = target, so P = (total + target) / 2. Count subsets with that sum using a 1D knapsack, iterating sums downward.",
   code: code(`
     function findTargetSumWays(nums: number[], target: number): number {
-      const total = nums.reduce((a, b) => a + b, 0);
-      if ((total + target) % 2 || Math.abs(target) > total) return 0; //@check
-      const goal = (total + target) / 2, dp = new Array(goal + 1).fill(0);
+      let total = 0;
+      for (const num of nums) total += num;
+      // If P is the sum of the "+" numbers, then P - (total - P) = target, so P = (total + target) / 2.
+      if ((total + target) % 2 !== 0 || Math.abs(target) > total) return 0; //@check
+      const goal = (total + target) / 2;
+      // dp[sum] = number of subsets that add up to sum
+      const dp = new Array(goal + 1).fill(0);
       dp[0] = 1; //@init
-      for (const x of nums) //@num
-        for (let s = goal; s >= x; s--) dp[s] += dp[s - x]; //@add
+      for (const num of nums) { //@num
+        // Go downward so each number is used at most once.
+        for (let sum = goal; sum >= num; sum--) dp[sum] += dp[sum - num]; //@add
+      }
       return dp[goal]; //@ret
     }
   `),
@@ -87,7 +96,7 @@ const subsetSum = defineSolution<Input>({
       for (let s = goal; s >= x; s--) {
         if (!dp[s - x]) continue;
         dp[s] += dp[s - x];
-        t.step("add", `dp[${s}] += dp[${s - x}] → ${dp[s]}.`, () => [vars({ x, goal }), arr("dp (subsets with sum s)", dp, { tones: tones([s - x, "compare"], [s, "active"]) })]);
+        t.step("add", `dp[${s}] += dp[${s - x}] → ${dp[s]}.`, () => [vars({ num: x, goal }), arr("dp (subsets with sum s)", dp, { tones: tones([s - x, "compare"], [s, "active"]) })]);
       }
     });
     t.step("ret", `Return dp[${goal}] = ${dp[goal]}.`, [arr("dp (subsets with sum s)", dp, { tones: tones([goal, "success"]) })]);

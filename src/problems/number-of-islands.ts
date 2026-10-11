@@ -30,16 +30,27 @@ const dfs = defineSolution<Input>({
   idea: "Scan the grid. Each unvisited '1' starts a new island; flood-fill it with DFS, sinking every connected land cell so it is not counted again.",
   code: code(`
     function numIslands(grid: string[][]): number {
-      const m = grid.length, n = grid[0].length;
+      const rows = grid.length;
+      const cols = grid[0].length;
       let count = 0;
-      function sink(r: number, c: number) {
-        if (r < 0 || c < 0 || r >= m || c >= n || grid[r][c] !== "1") return;
-        grid[r][c] = "0"; //@sink
-        sink(r + 1, c); sink(r - 1, c); sink(r, c + 1); sink(r, c - 1);
+      // Turn the whole island containing (row, col) into water so we don't count it again.
+      function sink(row: number, col: number) {
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || grid[row][col] !== "1") return;
+        grid[row][col] = "0"; //@sink
+        sink(row + 1, col);
+        sink(row - 1, col);
+        sink(row, col + 1);
+        sink(row, col - 1);
       }
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) //@scan
-          if (grid[r][c] === "1") { count++; sink(r, c); } //@found
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@scan
+          if (grid[row][col] === "1") { //@found
+            count++;
+            sink(row, col);
+          }
+        }
+      }
       return count; //@ret
     }
   `),
@@ -77,21 +88,30 @@ const bfs = defineSolution<Input>({
   idea: "Same scan, but explore each island with a queue instead of recursion.",
   code: code(`
     function numIslands(grid: string[][]): number {
-      const m = grid.length, n = grid[0].length;
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
       let count = 0;
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) { //@scan
-          if (grid[r][c] !== "1") continue;
-          count++; grid[r][c] = "0"; //@found
-          const queue = [[r, c]];
-          while (queue.length) {
-            const [i, j] = queue.shift()!; //@pop
-            for (const [x, y] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]])
-              if (x >= 0 && y >= 0 && x < m && y < n && grid[x][y] === "1") {
-                grid[x][y] = "0"; queue.push([x, y]); //@push
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@scan
+          if (grid[row][col] !== "1") continue;
+          count++; //@found
+          grid[row][col] = "0";
+          const queue = [[row, col]];
+          while (queue.length > 0) {
+            const [r, c] = queue.shift()!; //@pop
+            for (const [rowStep, colStep] of directions) {
+              const nextRow = r + rowStep;
+              const nextCol = c + colStep;
+              const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+              if (inside && grid[nextRow][nextCol] === "1") {
+                grid[nextRow][nextCol] = "0"; //@push
+                queue.push([nextRow, nextCol]);
               }
+            }
           }
         }
+      }
       return count; //@ret
     }
   `),
@@ -139,17 +159,37 @@ const unionFind = defineSolution<Input>({
   idea: "Start with one set per land cell. Union each land cell with its land neighbors to the right and below. Every successful union merges two islands, so subtract one.",
   code: code(`
     function numIslands(grid: string[][]): number {
-      const m = grid.length, n = grid[0].length, parent: number[] = [];
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const id = (row: number, col: number) => row * cols + col; // one number per cell
+      const parent: number[] = [];
+      function findRoot(cell: number): number {
+        while (parent[cell] !== cell) cell = parent[cell];
+        return cell;
+      }
       let count = 0;
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++)
-        if (grid[r][c] === "1") { parent[r * n + c] = r * n + c; count++; } //@init
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) { //@cell
-        if (grid[r][c] !== "1") continue;
-        for (const [x, y] of [[r + 1, c], [r, c + 1]]) {
-          if (x >= m || y >= n || grid[x][y] !== "1") continue;
-          const a = find(r * n + c), b = find(x * n + y); //@find
-          if (a !== b) { parent[a] = b; count--; } //@union
+      // Every land cell starts as its own island.
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (grid[row][col] === "1") { //@init
+            parent[id(row, col)] = id(row, col);
+            count++;
+          }
+        }
+      }
+      // Join each land cell with land below it and to its right.
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@cell
+          if (grid[row][col] !== "1") continue;
+          for (const [nextRow, nextCol] of [[row + 1, col], [row, col + 1]]) {
+            if (nextRow >= rows || nextCol >= cols || grid[nextRow][nextCol] !== "1") continue;
+            const rootA = findRoot(id(row, col)); //@find
+            const rootB = findRoot(id(nextRow, nextCol));
+            if (rootA !== rootB) { //@union
+              parent[rootA] = rootB; // two islands become one
+              count--;
+            }
+          }
         }
       }
       return count; //@ret

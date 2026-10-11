@@ -28,10 +28,13 @@ const recursive = defineSolution<Input>({
   idea: "Walk root's tree. At every node, run Same Tree against subRoot.",
   code: code(`
     function isSubtree(root: TreeNode | null, subRoot: TreeNode | null): boolean {
-      const same = (a: TreeNode | null, b: TreeNode | null): boolean =>
-        !a && !b ? true : !a || !b || a.val !== b.val ? false : same(a.left, b.left) && same(a.right, b.right);
-      if (!root) return false; //@empty
-      if (same(root, subRoot)) return true; //@check
+      function isSameTree(a: TreeNode | null, b: TreeNode | null): boolean {
+        if (a === null && b === null) return true;
+        if (a === null || b === null || a.val !== b.val) return false;
+        return isSameTree(a.left, b.left) && isSameTree(a.right, b.right);
+      }
+      if (root === null) return false; //@empty
+      if (isSameTree(root, subRoot)) return true; //@check
       return isSubtree(root.left, subRoot) || isSubtree(root.right, subRoot); //@recurse
     }
   `),
@@ -62,10 +65,14 @@ const serialize = defineSolution<Input>({
   idea: "Serialize both trees in pre-order with null markers and a separator before every value. subRoot is a subtree exactly when its string occurs inside root's string. (Use KMP for guaranteed linear time.)",
   code: code(`
     function isSubtree(root: TreeNode | null, subRoot: TreeNode | null): boolean {
-      const ser = (n: TreeNode | null): string =>
-        n ? "^" + n.val + ser(n.left) + ser(n.right) : "#"; //@ser
-      const a = ser(root), b = ser(subRoot); //@both
-      return a.includes(b); //@search
+      // Preorder string with "#" for empty spots. "^" before each value stops "2" matching inside "12".
+      function serialize(node: TreeNode | null): string {
+        if (node === null) return "#"; //@ser
+        return "^" + node.val + serialize(node.left) + serialize(node.right);
+      }
+      const treeText = serialize(root); //@both
+      const subText = serialize(subRoot);
+      return treeText.includes(subText); //@search
     }
   `),
   run({ root, subRoot }, t) {

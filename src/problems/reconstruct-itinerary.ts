@@ -16,21 +16,30 @@ const backtrack = defineSolution<Input>({
   idea: "Sort each airport's destinations. From JFK, try the smallest unused ticket first and recurse; if the path gets stuck before using every ticket, undo and try the next one. The first complete path is the lexically smallest.",
   code: code(`
     function findItinerary(tickets: string[][]): string[] {
-      const adj = new Map<string, string[]>();
-      for (const [a, b] of [...tickets].sort()) (adj.get(a) ?? adj.set(a, []).get(a)!).push(b); //@build
+      // destinations.get(airport) = airports we can fly to, in alphabetical order
+      const destinations = new Map<string, string[]>();
+      const sortedTickets = [...tickets].sort();
+      for (const [from, to] of sortedTickets) { //@build
+        if (!destinations.has(from)) destinations.set(from, []);
+        destinations.get(from)!.push(to);
+      }
       const path = ["JFK"];
-      const dfs = (): boolean => {
+      // Try to use every ticket, trying destinations in alphabetical order.
+      function fly(): boolean {
         if (path.length === tickets.length + 1) return true; //@done
-        const from = path.at(-1)!, dests = adj.get(from) ?? [];
-        for (let i = 0; i < dests.length; i++) {
-          const to = dests[i];
-          dests.splice(i, 1); path.push(to); //@fly
-          if (dfs()) return true;
-          path.pop(); dests.splice(i, 0, to); //@undo
+        const from = path[path.length - 1];
+        const options = destinations.get(from) ?? [];
+        for (let i = 0; i < options.length; i++) {
+          const to = options[i];
+          options.splice(i, 1); // use this ticket //@fly
+          path.push(to);
+          if (fly()) return true;
+          path.pop(); // give the ticket back //@undo
+          options.splice(i, 0, to);
         }
         return false; //@stuck
-      };
-      dfs();
+      }
+      fly();
       return path; //@ret
     }
   `),
@@ -86,14 +95,20 @@ const hierholzer = defineSolution<Input>({
   idea: "The itinerary is an Eulerian path. Greedily follow the smallest unused ticket; when an airport has no tickets left, add it to the route. The route comes out reversed, and dead-end detours are naturally placed at the end.",
   code: code(`
     function findItinerary(tickets: string[][]): string[] {
-      const adj = new Map<string, string[]>();
-      for (const [a, b] of [...tickets].sort().reverse()) (adj.get(a) ?? adj.set(a, []).get(a)!).push(b); //@build
+      // Store destinations in reverse order so pop() gives the alphabetically smallest.
+      const destinations = new Map<string, string[]>();
+      const sortedTickets = [...tickets].sort().reverse();
+      for (const [from, to] of sortedTickets) { //@build
+        if (!destinations.has(from)) destinations.set(from, []);
+        destinations.get(from)!.push(to);
+      }
       const route: string[] = [];
-      const visit = (a: string) => {
-        const dests = adj.get(a) ?? [];
-        while (dests.length) visit(dests.pop()!); //@fly
-        route.push(a); //@finish
-      };
+      // Hierholzer's algorithm: add an airport only after all its tickets are used.
+      function visit(airport: string) {
+        const options = destinations.get(airport) ?? [];
+        while (options.length > 0) visit(options.pop()!); //@fly
+        route.push(airport); //@finish
+      }
       visit("JFK");
       return route.reverse(); //@ret
     }

@@ -15,12 +15,17 @@ const staircase = defineSolution<Input>({
   idea: "Start at the top-right corner. If the value is too big, everything below it in that column is bigger too, so move left; if too small, move down.",
   code: code(`
     function searchMatrix(matrix: number[][], target: number): boolean {
-      let r = 0, c = matrix[0].length - 1; //@init
-      while (r < matrix.length && c >= 0) {
-        const v = matrix[r][c]; //@look
-        if (v === target) return true; //@found
-        if (v > target) c--; //@left
-        else r++; //@down
+      // Start at the top-right corner: left is smaller, down is bigger.
+      let row = 0; //@init
+      let col = matrix[0].length - 1;
+      while (row < matrix.length && col >= 0) {
+        const value = matrix[row][col]; //@look
+        if (value === target) return true; //@found
+        if (value > target) {
+          col--; //@left
+        } else {
+          row++; //@down
+        }
       }
       return false; //@none
     }
@@ -33,7 +38,7 @@ const staircase = defineSolution<Input>({
       const tn: Record<string, Tone> = {};
       path.forEach((k) => (tn[k] = "muted"));
       if (r < matrix.length && c >= 0) tn[rc(r, c)] = tone;
-      return [vars({ target, r, c }), grid("matrix", matrix, { tones: tn })];
+      return [vars({ target, row: r, col: c }), grid("matrix", matrix, { tones: tn })];
     };
     t.step("init", "Start at the top-right corner.", view());
     while (r < matrix.length && c >= 0) {
@@ -65,14 +70,22 @@ const flatBinary = defineSolution<Input>({
   idea: "Rows are sorted and each row starts after the previous ends, so the matrix is one sorted array of m·n values. Index k maps to (⌊k/n⌋, k mod n).",
   code: code(`
     function searchMatrix(matrix: number[][], target: number): boolean {
-      const m = matrix.length, n = matrix[0].length;
-      let lo = 0, hi = m * n - 1; //@init
-      while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        const v = matrix[Math.floor(mid / n)][mid % n]; //@mid
-        if (v === target) return true; //@found
-        if (v < target) lo = mid + 1; //@right
-        else hi = mid - 1; //@left
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      // Treat the matrix as one sorted list of rows * cols numbers.
+      let left = 0; //@init
+      let right = rows * cols - 1;
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const row = Math.floor(mid / cols);
+        const col = mid % cols;
+        const value = matrix[row][col]; //@mid
+        if (value === target) return true; //@found
+        if (value < target) {
+          left = mid + 1; //@right
+        } else {
+          right = mid - 1; //@left
+        }
       }
       return false; //@none
     }
@@ -89,7 +102,7 @@ const flatBinary = defineSolution<Input>({
         tn[key] = k >= lo && k <= hi ? "window" : "muted";
       }
       if (mid !== undefined) tn[rc(Math.floor(mid / n), mid % n)] = tone;
-      return [vars({ target, lo, hi, mid }), grid("matrix", matrix, { tones: tn })];
+      return [vars({ target, left: lo, right: hi, mid }), grid("matrix", matrix, { tones: tn })];
     };
     t.step("init", `Search flat indices 0..${m * n - 1}.`, view());
     while (lo <= hi) {

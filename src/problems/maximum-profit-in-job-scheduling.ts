@@ -21,13 +21,18 @@ const quadratic = defineSolution<Input>({
   idea: "Sort jobs by end time. dp[i] is the best profit using the first i jobs: either skip job i, or take it plus the best dp over jobs that end by its start (found by scanning back).",
   code: code(`
     function jobScheduling(startTime: number[], endTime: number[], profit: number[]): number {
-      const jobs = startTime.map((s, i) => [s, endTime[i], profit[i]]).sort((a, b) => a[1] - b[1]); //@sort
+      const jobs = startTime.map((start, i) => ({ start, end: endTime[i], profit: profit[i] }));
+      jobs.sort((a, b) => a.end - b.end); //@sort
+      // dp[i] = best profit using only the first i jobs (by end time)
       const dp = new Array(jobs.length + 1).fill(0);
       for (let i = 1; i <= jobs.length; i++) { //@job
-        const [s, , p] = jobs[i - 1];
-        let j = i - 1;
-        while (j > 0 && jobs[j - 1][1] > s) j--; //@scan
-        dp[i] = Math.max(dp[i - 1], dp[j] + p); //@choose
+        const job = jobs[i - 1];
+        // Find how many earlier jobs end before this one starts.
+        let compatible = i - 1;
+        while (compatible > 0 && jobs[compatible - 1].end > job.start) compatible--; //@scan
+        const skip = dp[i - 1];
+        const take = dp[compatible] + job.profit;
+        dp[i] = Math.max(skip, take); //@choose
       }
       return dp[jobs.length]; //@ret
     }
@@ -65,13 +70,24 @@ const binarySearch = defineSolution<Input>({
   idea: "Same recurrence, but since jobs are sorted by end time, binary search for the last job ending at or before the current start.",
   code: code(`
     function jobScheduling(startTime: number[], endTime: number[], profit: number[]): number {
-      const jobs = startTime.map((s, i) => [s, endTime[i], profit[i]]).sort((a, b) => a[1] - b[1]); //@sort
+      const jobs = startTime.map((start, i) => ({ start, end: endTime[i], profit: profit[i] }));
+      jobs.sort((a, b) => a.end - b.end); //@sort
+      // dp[i] = best profit using only the first i jobs (by end time)
       const dp = new Array(jobs.length + 1).fill(0);
       for (let i = 1; i <= jobs.length; i++) { //@job
-        const [s, , p] = jobs[i - 1];
-        let lo = 0, hi = i - 1; // count of jobs ending by s
-        while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (jobs[mid - 1][1] <= s) lo = mid; else hi = mid - 1; } //@search
-        dp[i] = Math.max(dp[i - 1], dp[lo] + p); //@choose
+        const job = jobs[i - 1];
+        // Binary search: how many earlier jobs end by job.start?
+        let low = 0;
+        let high = i - 1;
+        while (low < high) { //@search
+          const mid = Math.ceil((low + high) / 2);
+          if (jobs[mid - 1].end <= job.start) low = mid;
+          else high = mid - 1;
+        }
+        const compatible = low;
+        const skip = dp[i - 1];
+        const take = dp[compatible] + job.profit;
+        dp[i] = Math.max(skip, take); //@choose
       }
       return dp[jobs.length]; //@ret
     }

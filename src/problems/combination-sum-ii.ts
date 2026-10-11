@@ -18,19 +18,26 @@ const includeExclude = defineSolution<Input>({
   code: code(`
     function combinationSum2(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b);
-      const seen = new Set<string>(), res: number[][] = [], path: number[] = [];
-      function dfs(i: number, remain: number) {
+      const seen = new Set<string>();
+      const result: number[][] = [];
+      const path: number[] = [];
+      function search(i: number, remain: number) {
         if (remain === 0) { //@hit
           const key = path.join(",");
-          if (!seen.has(key)) { seen.add(key); res.push([...path]); }
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push([...path]);
+          }
           return;
         }
         if (i === candidates.length || candidates[i] > remain) return; //@stop
-        path.push(candidates[i]); dfs(i + 1, remain - candidates[i]); path.pop(); //@take
-        dfs(i + 1, remain); //@skip
+        path.push(candidates[i]); //@take
+        search(i + 1, remain - candidates[i]);
+        path.pop();
+        search(i + 1, remain); //@skip
       }
-      dfs(0, target);
-      return res; //@ret
+      search(0, target);
+      return result; //@ret
     }
   `),
   run({ candidates, target }, t) {
@@ -76,19 +83,24 @@ const skipDuplicates = defineSolution<Input>({
   code: code(`
     function combinationSum2(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b);
-      const res: number[][] = [], path: number[] = [];
-      function dfs(start: number, remain: number) {
-        if (remain === 0) { res.push([...path]); return; } //@hit
+      const result: number[][] = [];
+      const path: number[] = [];
+      function search(start: number, remain: number) {
+        if (remain === 0) { //@hit
+          result.push([...path]);
+          return;
+        }
         for (let i = start; i < candidates.length; i++) {
-          if (i > start && candidates[i] === candidates[i - 1]) continue; //@dup
+          const sameAsPrevious = i > start && candidates[i] === candidates[i - 1];
+          if (sameAsPrevious) continue; //@dup
           if (candidates[i] > remain) break; //@stop
           path.push(candidates[i]); //@choose
-          dfs(i + 1, remain - candidates[i]);
+          search(i + 1, remain - candidates[i]);
           path.pop(); //@undo
         }
       }
-      dfs(0, target);
-      return res; //@ret
+      search(0, target);
+      return result; //@ret
     }
   `),
   run({ candidates, target }, t) {

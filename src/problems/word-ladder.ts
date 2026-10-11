@@ -38,19 +38,28 @@ const bfs = defineSolution<Input>({
   idea: "Words are nodes and one-letter changes are edges. BFS from beginWord finds the shortest chain. Generate neighbors by trying all 26 letters at each position, and delete words from the dictionary once queued.",
   code: code(`
     function ladderLength(beginWord: string, endWord: string, wordList: string[]): number {
-      const dict = new Set(wordList);
-      if (!dict.has(endWord)) return 0; //@missing
-      let level = [beginWord], steps = 1; //@init
-      while (level.length) { //@level
-        const next: string[] = [];
-        for (const w of level) //@word
-          for (let i = 0; i < w.length; i++)
-            for (const c of "abcdefghijklmnopqrstuvwxyz") {
-              const v = w.slice(0, i) + c + w.slice(i + 1);
-              if (v === endWord) return steps + 1; //@found
-              if (dict.delete(v)) next.push(v); //@enqueue
+      const unused = new Set(wordList); // words we haven't reached yet
+      if (!unused.has(endWord)) return 0; //@missing
+      const letters = "abcdefghijklmnopqrstuvwxyz";
+      let level = [beginWord]; //@init
+      let steps = 1;
+      while (level.length > 0) { //@level
+        const nextLevel: string[] = [];
+        for (const word of level) { //@word
+          // Try changing each position to every other letter.
+          for (let i = 0; i < word.length; i++) {
+            for (const letter of letters) {
+              const candidate = word.slice(0, i) + letter + word.slice(i + 1);
+              if (candidate === endWord) return steps + 1; //@found
+              if (unused.has(candidate)) { //@enqueue
+                unused.delete(candidate);
+                nextLevel.push(candidate);
+              }
             }
-        level = next; steps++;
+          }
+        }
+        level = nextLevel;
+        steps++;
       }
       return 0; //@ret
     }
@@ -114,21 +123,36 @@ const bidirectional = defineSolution<Input>({
   idea: "Grow one frontier from each end and always expand the smaller one. The search ends when a generated word lies in the other frontier. This explores far fewer words when branching is large.",
   code: code(`
     function ladderLength(beginWord: string, endWord: string, wordList: string[]): number {
-      const dict = new Set(wordList);
-      if (!dict.has(endWord)) return 0; //@missing
-      let front = new Set([beginWord]), back = new Set([endWord]), steps = 1; //@init
-      dict.delete(endWord);
-      while (front.size && back.size) { //@level
-        if (front.size > back.size) [front, back] = [back, front]; //@swap
-        const next = new Set<string>();
-        for (const w of front)
-          for (let i = 0; i < w.length; i++)
-            for (const c of "abcdefghijklmnopqrstuvwxyz") {
-              const v = w.slice(0, i) + c + w.slice(i + 1);
-              if (back.has(v)) return steps + 1; //@meet
-              if (dict.delete(v)) next.add(v); //@expand
+      const unused = new Set(wordList); // words neither side has reached yet
+      if (!unused.has(endWord)) return 0; //@missing
+      const letters = "abcdefghijklmnopqrstuvwxyz";
+      // Search from both ends at once and stop when the two searches meet.
+      let front = new Set([beginWord]); //@init
+      let back = new Set([endWord]);
+      let steps = 1;
+      unused.delete(endWord);
+      while (front.size > 0 && back.size > 0) { //@level
+        // Always grow the smaller side.
+        if (front.size > back.size) { //@swap
+          const temp = front;
+          front = back;
+          back = temp;
+        }
+        const nextFront = new Set<string>();
+        for (const word of front) {
+          for (let i = 0; i < word.length; i++) {
+            for (const letter of letters) {
+              const candidate = word.slice(0, i) + letter + word.slice(i + 1);
+              if (back.has(candidate)) return steps + 1; //@meet
+              if (unused.has(candidate)) { //@expand
+                unused.delete(candidate);
+                nextFront.add(candidate);
+              }
             }
-        front = next; steps++;
+          }
+        }
+        front = nextFront;
+        steps++;
       }
       return 0; //@ret
     }

@@ -16,7 +16,8 @@ const bruteForce = defineSolution<Input>({
       let best = 0; //@init
       for (let i = 0; i < prices.length; i++) { //@i
         for (let j = i + 1; j < prices.length; j++) { //@j
-          best = Math.max(best, prices[j] - prices[i]); //@update
+          const profit = prices[j] - prices[i];
+          best = Math.max(best, profit); //@update
         }
       }
       return best; //@ret
@@ -50,10 +51,15 @@ const onePass = defineSolution<Input>({
   idea: "The best sell today pairs with the cheapest price seen so far. Track that minimum as you scan.",
   code: code(`
     function maxProfit(prices: number[]): number {
-      let minPrice = Infinity, best = 0; //@init
+      let minPrice = Infinity; //@init
+      let best = 0;
       for (const price of prices) { //@loop
-        if (price < minPrice) minPrice = price; //@min
-        else best = Math.max(best, price - minPrice); //@profit
+        if (price < minPrice) {
+          minPrice = price; //@min
+        } else {
+          const profit = price - minPrice;
+          best = Math.max(best, profit); //@profit
+        }
       }
       return best; //@ret
     }

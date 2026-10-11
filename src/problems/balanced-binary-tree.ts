@@ -16,13 +16,15 @@ const topDown = defineSolution<Input>({
   space: "O(h)",
   idea: "At every node, compute the height of both subtrees from scratch and compare them, then recurse into both children.",
   code: code(`
-    function height(n: TreeNode | null): number {
-      return n ? 1 + Math.max(height(n.left), height(n.right)) : 0;
+    function height(node: TreeNode | null): number {
+      if (node === null) return 0;
+      return 1 + Math.max(height(node.left), height(node.right));
     }
     function isBalanced(root: TreeNode | null): boolean {
-      if (!root) return true; //@base
-      const l = height(root.left), r = height(root.right); //@heights
-      if (Math.abs(l - r) > 1) return false; //@bad
+      if (root === null) return true; //@base
+      const leftHeight = height(root.left); //@heights
+      const rightHeight = height(root.right);
+      if (Math.abs(leftHeight - rightHeight) > 1) return false; //@bad
       return isBalanced(root.left) && isBalanced(root.right); //@recurse
     }
   `),
@@ -63,14 +65,16 @@ const bottomUp = defineSolution<Input>({
   idea: "Return each subtree's height from a post-order DFS, or −1 as soon as any subtree is unbalanced. Each node is visited once.",
   code: code(`
     function isBalanced(root: TreeNode | null): boolean {
-      function check(n: TreeNode | null): number {
-        if (!n) return 0; //@base
-        const l = check(n.left); //@left
-        const r = check(n.right); //@right
-        if (l === -1 || r === -1 || Math.abs(l - r) > 1) return -1; //@bad
-        return 1 + Math.max(l, r); //@ret
+      // Returns the height of the subtree, or -1 if it is not balanced.
+      function checkHeight(node: TreeNode | null): number {
+        if (node === null) return 0; //@base
+        const leftHeight = checkHeight(node.left); //@left
+        const rightHeight = checkHeight(node.right); //@right
+        const childIsUnbalanced = leftHeight === -1 || rightHeight === -1;
+        if (childIsUnbalanced || Math.abs(leftHeight - rightHeight) > 1) return -1; //@bad
+        return 1 + Math.max(leftHeight, rightHeight); //@ret
       }
-      return check(root) !== -1; //@answer
+      return checkHeight(root) !== -1; //@answer
     }
   `),
   run({ root }, t) {

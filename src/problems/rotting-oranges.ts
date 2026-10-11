@@ -28,13 +28,26 @@ const simulate = defineSolution<Input>({
   idea: "Each minute, scan the whole grid for fresh oranges next to a rotten one and rot them together. Stop when a minute changes nothing.",
   code: code(`
     function orangesRotting(grid: number[][]): number {
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const isRotten = (row: number, col: number) =>
+        row >= 0 && col >= 0 && row < rows && col < cols && grid[row][col] === 2;
       for (let minutes = 0; ; minutes++) { //@minute
+        // Find every fresh orange that touches a rotten one.
         const toRot: number[][] = [];
-        grid.forEach((row, r) => row.forEach((v, c) => { //@scan
-          if (v === 1 && [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]].some(([x, y]) => grid[x]?.[y] === 2)) toRot.push([r, c]);
-        }));
-        if (!toRot.length) return grid.flat().includes(1) ? -1 : minutes; //@stop
-        for (const [r, c] of toRot) grid[r][c] = 2; //@rot
+        for (let row = 0; row < rows; row++) { //@scan
+          for (let col = 0; col < cols; col++) {
+            if (grid[row][col] !== 1) continue;
+            const touchesRotten =
+              isRotten(row + 1, col) || isRotten(row - 1, col) || isRotten(row, col + 1) || isRotten(row, col - 1);
+            if (touchesRotten) toRot.push([row, col]);
+          }
+        }
+        if (toRot.length === 0) { //@stop
+          const freshLeft = grid.some((line) => line.includes(1));
+          return freshLeft ? -1 : minutes;
+        }
+        for (const [row, col] of toRot) grid[row][col] = 2; //@rot
       }
     }
   `),
@@ -67,16 +80,36 @@ const bfs = defineSolution<Input>({
   idea: "Queue every rotten orange at minute 0 and BFS level by level. Each level is one minute. Count fresh oranges so you know if any are left unreachable.",
   code: code(`
     function orangesRotting(grid: number[][]): number {
-      let queue: number[][] = [], fresh = 0, minutes = 0;
-      grid.forEach((row, r) => row.forEach((v, c) => (v === 2 ? queue.push([r, c]) : v === 1 && fresh++))); //@seed
-      while (queue.length && fresh) { //@level
-        const next: number[][] = [];
-        for (const [r, c] of queue)
-          for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-            if (grid[x]?.[y] === 1) { grid[x][y] = 2; fresh--; next.push([x, y]); } //@rot
-        queue = next; minutes++; //@tick
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      let rotten: number[][] = [];
+      let fresh = 0;
+      for (let row = 0; row < rows; row++) { //@seed
+        for (let col = 0; col < cols; col++) {
+          if (grid[row][col] === 2) rotten.push([row, col]);
+          else if (grid[row][col] === 1) fresh++;
+        }
       }
-      return fresh ? -1 : minutes; //@ret
+      let minutes = 0;
+      while (rotten.length > 0 && fresh > 0) { //@level
+        const newlyRotten: number[][] = [];
+        for (const [row, col] of rotten) {
+          for (const [rowStep, colStep] of directions) {
+            const nextRow = row + rowStep;
+            const nextCol = col + colStep;
+            const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+            if (inside && grid[nextRow][nextCol] === 1) { //@rot
+              grid[nextRow][nextCol] = 2;
+              fresh--;
+              newlyRotten.push([nextRow, nextCol]);
+            }
+          }
+        }
+        rotten = newlyRotten; //@tick
+        minutes++;
+      }
+      return fresh > 0 ? -1 : minutes; //@ret
     }
   `),
   run({ grid: g }, t) {

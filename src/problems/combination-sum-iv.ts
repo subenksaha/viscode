@@ -15,12 +15,14 @@ const memo = defineSolution<Input>({
   code: code(`
     function combinationSum4(nums: number[], target: number): number {
       const memo = new Map<number, number>();
-      function ways(r: number): number {
-        if (r === 0) return 1; //@base
-        if (memo.has(r)) return memo.get(r)!; //@hit
+      function ways(remaining: number): number {
+        if (remaining === 0) return 1; //@base
+        if (memo.has(remaining)) return memo.get(remaining)!; //@hit
         let total = 0;
-        for (const x of nums) if (x <= r) total += ways(r - x); //@try
-        memo.set(r, total); //@store
+        for (const num of nums) { //@try
+          if (num <= remaining) total += ways(remaining - num);
+        }
+        memo.set(remaining, total); //@store
         return total;
       }
       return ways(target); //@ret
@@ -68,11 +70,14 @@ const bottomUp = defineSolution<Input>({
   idea: "dp[s] = number of ordered sequences summing to s. dp[s] += dp[s − x] for every x. The sum is the outer loop, so order matters.",
   code: code(`
     function combinationSum4(nums: number[], target: number): number {
+      // dp[sum] = number of ordered ways to reach sum
       const dp = new Array(target + 1).fill(0);
       dp[0] = 1; //@init
-      for (let s = 1; s <= target; s++) //@s
-        for (const x of nums) //@x
-          if (x <= s) dp[s] += dp[s - x]; //@add
+      for (let sum = 1; sum <= target; sum++) { //@s
+        for (const num of nums) { //@x
+          if (num <= sum) dp[sum] += dp[sum - num]; //@add
+        }
+      }
       return dp[target]; //@ret
     }
   `),

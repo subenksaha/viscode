@@ -13,12 +13,20 @@ const dp = defineSolution<Input>({
   idea: "Work backwards: index i is good if some jump from i lands on a good index. The last index is good.",
   code: code(`
     function canJump(nums: number[]): boolean {
-      const n = nums.length, good = new Array(n).fill(false);
-      good[n - 1] = true; //@init
-      for (let i = n - 2; i >= 0; i--) //@i
-        for (let j = i + 1; j <= Math.min(i + nums[i], n - 1); j++) //@j
-          if (good[j]) { good[i] = true; break; } //@hit
-      return good[0]; //@ret
+      const n = nums.length;
+      // canReachEnd[i] = can we reach the last index starting from i?
+      const canReachEnd = new Array(n).fill(false);
+      canReachEnd[n - 1] = true; //@init
+      for (let i = n - 2; i >= 0; i--) { //@i
+        const farthest = Math.min(i + nums[i], n - 1);
+        for (let j = i + 1; j <= farthest; j++) { //@j
+          if (canReachEnd[j]) { //@hit
+            canReachEnd[i] = true;
+            break;
+          }
+        }
+      }
+      return canReachEnd[0]; //@ret
     }
   `),
   run({ nums }, t) {
@@ -54,7 +62,7 @@ const greedyForward = defineSolution<Input>({
   idea: "Track the farthest index reachable so far. If you ever stand past it, you are stuck.",
   code: code(`
     function canJump(nums: number[]): boolean {
-      let reach = 0; //@init
+      let reach = 0; // farthest index we can reach so far //@init
       for (let i = 0; i < nums.length; i++) { //@loop
         if (i > reach) return false; //@stuck
         reach = Math.max(reach, i + nums[i]); //@extend
@@ -88,9 +96,9 @@ const greedyBackward = defineSolution<Input>({
   idea: "Walk from the end. Whenever index i can reach the current goal, i becomes the new goal. Success if the goal reaches 0.",
   code: code(`
     function canJump(nums: number[]): boolean {
-      let goal = nums.length - 1; //@init
+      let goal = nums.length - 1; // leftmost index known to reach the end //@init
       for (let i = nums.length - 2; i >= 0; i--) { //@loop
-        if (i + nums[i] >= goal) goal = i; //@move
+        if (i + nums[i] >= goal) goal = i; // i can jump to goal, so i becomes the goal //@move
       }
       return goal === 0; //@ret
     }

@@ -46,17 +46,20 @@ const hashMap = defineSolution<Input>({
   idea: "The next pre-order value is always the root of the current subtree. Its position in the inorder array splits the remaining values into left and right subtrees. A value → index map makes that lookup O(1).",
   code: code(`
     function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
-      const idx = new Map(inorder.map((v, i) => [v, i]));
-      let p = 0;
-      function go(lo: number, hi: number): TreeNode | null {
-        if (lo > hi) return null; //@empty
-        const node = new TreeNode(preorder[p++]); //@root
-        const mid = idx.get(node.val)!; //@split
-        node.left = go(lo, mid - 1);
-        node.right = go(mid + 1, hi);
+      const inorderIndex = new Map<number, number>();
+      inorder.forEach((value, index) => inorderIndex.set(value, index));
+      let nextPreorder = 0; // preorder[nextPreorder] is the next subtree root
+      // Builds the subtree whose values are inorder[start..end].
+      function build(start: number, end: number): TreeNode | null {
+        if (start > end) return null; //@empty
+        const node = new TreeNode(preorder[nextPreorder]); //@root
+        nextPreorder++;
+        const rootIndex = inorderIndex.get(node.val)!; //@split
+        node.left = build(start, rootIndex - 1);
+        node.right = build(rootIndex + 1, end);
         return node;
       }
-      return go(0, inorder.length - 1); //@ret
+      return build(0, inorder.length - 1); //@ret
     }
   `),
   run({ preorder, inorder }, t) {
@@ -73,17 +76,19 @@ const linearSearch = defineSolution<Input>({
   idea: "The same recursion, but find the root in the inorder slice by scanning. Simpler, and quadratic on skewed trees.",
   code: code(`
     function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
-      let p = 0;
-      function go(lo: number, hi: number): TreeNode | null {
-        if (lo > hi) return null; //@empty
-        const node = new TreeNode(preorder[p++]); //@root
-        let mid = lo;
-        while (inorder[mid] !== node.val) mid++; //@split
-        node.left = go(lo, mid - 1);
-        node.right = go(mid + 1, hi);
+      let nextPreorder = 0; // preorder[nextPreorder] is the next subtree root
+      // Builds the subtree whose values are inorder[start..end].
+      function build(start: number, end: number): TreeNode | null {
+        if (start > end) return null; //@empty
+        const node = new TreeNode(preorder[nextPreorder]); //@root
+        nextPreorder++;
+        let rootIndex = start;
+        while (inorder[rootIndex] !== node.val) rootIndex++; //@split
+        node.left = build(start, rootIndex - 1);
+        node.right = build(rootIndex + 1, end);
         return node;
       }
-      return go(0, inorder.length - 1); //@ret
+      return build(0, inorder.length - 1); //@ret
     }
   `),
   run({ preorder, inorder }, t) {

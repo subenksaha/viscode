@@ -31,19 +31,33 @@ const scanCheck = defineSolution<Input>({
   idea: "Place one queen per row. Before placing at (r, c), scan the queens already placed for a shared column or diagonal.",
   code: code(`
     function solveNQueens(n: number): string[][] {
-      const res: string[][] = [], queens: number[] = []; // queens[r] = column
-      const safe = (r: number, c: number) => queens.every((qc, qr) => qc !== c && Math.abs(qc - c) !== r - qr);
-      function place(r: number) {
-        if (r === n) { res.push(queens.map((c) => ".".repeat(c) + "Q" + ".".repeat(n - c - 1))); return; } //@solved
-        for (let c = 0; c < n; c++) {
-          if (!safe(r, c)) continue; //@attacked
-          queens.push(c); //@place
-          place(r + 1);
-          queens.pop(); //@remove
+      const solutions: string[][] = [];
+      const queenCols: number[] = []; // queenCols[row] = column of the queen in that row
+      function isSafe(row: number, col: number): boolean {
+        for (let otherRow = 0; otherRow < queenCols.length; otherRow++) {
+          const otherCol = queenCols[otherRow];
+          if (otherCol === col) return false; // same column
+          if (Math.abs(otherCol - col) === row - otherRow) return false; // same diagonal
+        }
+        return true;
+      }
+      function drawBoard(): string[] {
+        return queenCols.map((col) => ".".repeat(col) + "Q" + ".".repeat(n - col - 1));
+      }
+      function placeRow(row: number) {
+        if (row === n) { //@solved
+          solutions.push(drawBoard());
+          return;
+        }
+        for (let col = 0; col < n; col++) {
+          if (!isSafe(row, col)) continue; //@attacked
+          queenCols.push(col); //@place
+          placeRow(row + 1);
+          queenCols.pop(); //@remove
         }
       }
-      place(0);
-      return res; //@ret
+      placeRow(0);
+      return solutions; //@ret
     }
   `),
   run({ n }, t) {
@@ -82,19 +96,36 @@ const sets = defineSolution<Input>({
   idea: "Every cell on a '\\' diagonal shares r − c, and every cell on a '/' diagonal shares r + c. Keep three sets so the attack check is O(1).",
   code: code(`
     function solveNQueens(n: number): string[][] {
-      const res: string[][] = [], queens: number[] = [];
-      const cols = new Set<number>(), diag = new Set<number>(), anti = new Set<number>();
-      function place(r: number) {
-        if (r === n) { res.push(queens.map((c) => ".".repeat(c) + "Q" + ".".repeat(n - c - 1))); return; } //@solved
-        for (let c = 0; c < n; c++) {
-          if (cols.has(c) || diag.has(r - c) || anti.has(r + c)) continue; //@attacked
-          queens.push(c); cols.add(c); diag.add(r - c); anti.add(r + c); //@place
-          place(r + 1);
-          queens.pop(); cols.delete(c); diag.delete(r - c); anti.delete(r + c); //@remove
+      const solutions: string[][] = [];
+      const queenCols: number[] = []; // queenCols[row] = column of the queen in that row
+      // Cells on one down-right diagonal share row - col; on one down-left diagonal they share row + col.
+      const usedCols = new Set<number>();
+      const usedDiagonals = new Set<number>();
+      const usedAntiDiagonals = new Set<number>();
+      function drawBoard(): string[] {
+        return queenCols.map((col) => ".".repeat(col) + "Q" + ".".repeat(n - col - 1));
+      }
+      function placeRow(row: number) {
+        if (row === n) { //@solved
+          solutions.push(drawBoard());
+          return;
+        }
+        for (let col = 0; col < n; col++) {
+          const attacked = usedCols.has(col) || usedDiagonals.has(row - col) || usedAntiDiagonals.has(row + col);
+          if (attacked) continue; //@attacked
+          queenCols.push(col); //@place
+          usedCols.add(col);
+          usedDiagonals.add(row - col);
+          usedAntiDiagonals.add(row + col);
+          placeRow(row + 1);
+          queenCols.pop(); //@remove
+          usedCols.delete(col);
+          usedDiagonals.delete(row - col);
+          usedAntiDiagonals.delete(row + col);
         }
       }
-      place(0);
-      return res; //@ret
+      placeRow(0);
+      return solutions; //@ret
     }
   `),
   run({ n }, t) {
@@ -105,7 +136,7 @@ const sets = defineSolution<Input>({
       anti = new Set<number>();
     const view = (rcPos?: [number, number], tone: Tone = "active") => [
       ...boardView(queens, n, rcPos, tone, res.length),
-      vars({ cols: `{${[...cols]}}`, "r−c": `{${[...diag]}}`, "r+c": `{${[...anti]}}` }, "used"),
+      vars({ usedCols: `{${[...cols]}}`, "usedDiagonals (row − col)": `{${[...diag]}}`, "usedAntiDiagonals (row + col)": `{${[...anti]}}` }, "used"),
     ];
     const place = (r: number) => {
       if (r === n) {

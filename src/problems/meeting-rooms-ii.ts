@@ -14,12 +14,13 @@ const minHeap = defineSolution<Input>({
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
-      const ends = new MinPriorityQueue<number>(); // end time of each busy room
-      for (const [s, e] of intervals) { //@loop
-        if (ends.size() && ends.front() <= s) ends.dequeue(); //@reuse
-        ends.enqueue(e); //@push
+      const roomEndTimes = new MinPriorityQueue<number>(); // one entry per room, earliest end on top
+      for (const [start, end] of intervals) { //@loop
+        // If the room that frees up first is free by now, reuse it.
+        if (roomEndTimes.size() > 0 && roomEndTimes.front() <= start) roomEndTimes.dequeue(); //@reuse
+        roomEndTimes.enqueue(end); //@push
       }
-      return ends.size(); //@ret
+      return roomEndTimes.size(); //@ret
     }
   `),
   run({ intervals: list }, t) {
@@ -55,12 +56,17 @@ const twoPointers = defineSolution<Input>({
   idea: "Sort start and end times separately. Sweep the starts: if a meeting ends before the next one starts, that room frees up; otherwise you need another room.",
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
-      const starts = intervals.map((x) => x[0]).sort((a, b) => a - b);
-      const ends = intervals.map((x) => x[1]).sort((a, b) => a - b); //@sort
-      let rooms = 0, best = 0, e = 0;
-      for (let s = 0; s < starts.length; s++) { //@loop
-        if (starts[s] < ends[e]) rooms++; //@open
-        else e++; //@reuse
+      const starts = intervals.map((meeting) => meeting[0]).sort((a, b) => a - b);
+      const ends = intervals.map((meeting) => meeting[1]).sort((a, b) => a - b); //@sort
+      let rooms = 0;
+      let best = 0;
+      let endIndex = 0; // earliest meeting end we haven't used yet
+      for (let startIndex = 0; startIndex < starts.length; startIndex++) { //@loop
+        if (starts[startIndex] < ends[endIndex]) {
+          rooms++; // nothing has ended yet: need a new room //@open
+        } else {
+          endIndex++; // a meeting ended: reuse its room //@reuse
+        }
         best = Math.max(best, rooms); //@best
       }
       return best; //@ret
@@ -74,8 +80,8 @@ const twoPointers = defineSolution<Input>({
       e = 0;
     const view = (s?: number) => [
       vars({ rooms, best }),
-      arr("starts", starts, { tones: tones([s, "active"]), pointers: { s } }),
-      arr("ends", ends, { tones: tones([e, "compare"]), pointers: { e } }),
+      arr("starts", starts, { tones: tones([s, "active"]), pointers: { startIndex: s } }),
+      arr("ends", ends, { tones: tones([e, "compare"]), pointers: { endIndex: e } }),
     ];
     t.step("sort", "Sort starts and ends independently.", view());
     for (let s = 0; s < starts.length; s++) {
@@ -103,12 +109,19 @@ const sweep = defineSolution<Input>({
   idea: "Turn each meeting into a +1 at its start and a −1 at its end. Sort the events (ends before starts at the same time) and track the running total.",
   code: code(`
     function minMeetingRooms(intervals: number[][]): number {
-      const events = intervals.flatMap(([s, e]) => [[s, 1], [e, -1]]);
-      events.sort((a, b) => a[0] - b[0] || a[1] - b[1]); //@sort
-      let cur = 0, best = 0;
-      for (const [, delta] of events) { //@loop
-        cur += delta; //@apply
-        best = Math.max(best, cur); //@best
+      // Each meeting adds +1 at its start and -1 at its end.
+      const events: number[][] = [];
+      for (const [start, end] of intervals) {
+        events.push([start, 1]);
+        events.push([end, -1]);
+      }
+      // Sort by time; at the same time, process ends (-1) before starts (+1).
+      events.sort((a, b) => (a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1])); //@sort
+      let roomsInUse = 0;
+      let best = 0;
+      for (const [time, change] of events) { //@loop
+        roomsInUse += change; //@apply
+        best = Math.max(best, roomsInUse); //@best
       }
       return best; //@ret
     }
@@ -119,7 +132,7 @@ const sweep = defineSolution<Input>({
     let cur = 0,
       best = 0;
     const labels = events.map(([time, d]) => `${time}${d > 0 ? "+" : "−"}`);
-    const view = (k?: number) => [vars({ "rooms in use": cur, best }), arr("events (time, +start / −end)", labels, { tones: tones([k, k !== undefined && events[k][1] > 0 ? "active" : "compare"]) })];
+    const view = (k?: number) => [vars({ roomsInUse: cur, best }), arr("events (time, +start / −end)", labels, { tones: tones([k, k !== undefined && events[k][1] > 0 ? "active" : "compare"]) })];
     t.step("sort", "Build and sort the events.", view());
     events.forEach(([time, delta], k) => {
       t.step("loop", `t = ${time}: a meeting ${delta > 0 ? "starts" : "ends"}.`, view(k));

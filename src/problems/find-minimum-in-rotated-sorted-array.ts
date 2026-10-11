@@ -43,27 +43,31 @@ const binarySearch = defineSolution<Input>({
   name: "Binary Search",
   time: "O(log n)",
   space: "O(1)",
-  idea: "Compare the middle with the right end. If nums[mid] > nums[hi], the drop (and the minimum) is right of mid; otherwise it is at mid or to its left.",
+  idea: "Compare the middle with the right end. If nums[mid] > nums[right], the drop (and the minimum) is right of mid; otherwise it is at mid or to its left.",
   code: code(`
     function findMin(nums: number[]): number {
-      let lo = 0, hi = nums.length - 1; //@init
-      while (lo < hi) { //@loop
-        const mid = (lo + hi) >> 1; //@mid
-        if (nums[mid] > nums[hi]) lo = mid + 1; //@right
-        else hi = mid; //@left
+      let left = 0; //@init
+      let right = nums.length - 1;
+      while (left < right) { //@loop
+        const mid = Math.floor((left + right) / 2); //@mid
+        if (nums[mid] > nums[right]) {
+          left = mid + 1; // the minimum is to the right of mid //@right
+        } else {
+          right = mid; // mid could be the minimum //@left
+        }
       }
-      return nums[lo]; //@ret
+      return nums[left]; //@ret
     }
   `),
   run({ nums }, t) {
     let lo = 0,
       hi = nums.length - 1;
     const view = (mid?: number, done = false) => [
-      vars({ lo, hi, mid }),
+      vars({ left: lo, right: hi, mid }),
       arr("nums", nums, {
         window: [lo, hi],
         tones: done ? tones([lo, "success"]) : tones([mid, "active"], [hi, "compare"]),
-        pointers: { lo, mid, hi },
+        pointers: { left: lo, mid, right: hi },
       }),
     ];
     t.step("init", "Search the whole array.", view());

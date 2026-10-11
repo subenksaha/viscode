@@ -15,20 +15,21 @@ const dfs = defineSolution<Input>({
   idea: "Pass the largest value seen on the path from the root down. A node is good if it is ≥ that max; its children get max(max, node.val).",
   code: code(`
     function goodNodes(root: TreeNode | null): number {
-      function dfs(n: TreeNode | null, max: number): number {
-        if (!n) return 0; //@base
-        const good = n.val >= max ? 1 : 0; //@check
-        max = Math.max(max, n.val);
-        return good + dfs(n.left, max) + dfs(n.right, max); //@recurse
+      // Counts good nodes below node; pathMax is the largest value from the root to here.
+      function countGood(node: TreeNode | null, pathMax: number): number {
+        if (node === null) return 0; //@base
+        const isGood = node.val >= pathMax ? 1 : 0; //@check
+        const newPathMax = Math.max(pathMax, node.val);
+        return isGood + countGood(node.left, newPathMax) + countGood(node.right, newPathMax); //@recurse
       }
-      return dfs(root, -Infinity); //@ret
+      return countGood(root, -Infinity); //@ret
     }
   `),
   run({ root }, t) {
     let count = 0;
     const marks: [TreeNode, Tone][] = [];
     const notes: [TreeNode, string][] = [];
-    const view = (n: TreeNode | null, max: number) => [vars({ "path max": max === -Infinity ? "−∞" : max, good: count }), tree("tree", root, { tones: [...marks, [n, "active"]], notes })];
+    const view = (n: TreeNode | null, max: number) => [vars({ pathMax: max === -Infinity ? "−∞" : max, good: count }), tree("tree", root, { tones: [...marks, [n, "active"]], notes })];
     const go = (n: TreeNode | null, max: number): number => {
       if (!n) return 0;
       const good = n.val >= max;
@@ -54,15 +55,15 @@ const bfs = defineSolution<Input>({
   idea: "Same rule, iteratively: the queue holds each node together with the max on the path to it.",
   code: code(`
     function goodNodes(root: TreeNode | null): number {
-      if (!root) return 0;
-      const queue: [TreeNode, number][] = [[root, -Infinity]]; //@init
+      if (root === null) return 0;
+      const queue: [TreeNode, number][] = [[root, -Infinity]]; // [node, path max above it] //@init
       let good = 0;
-      while (queue.length) {
-        const [n, max] = queue.shift()!; //@pop
-        if (n.val >= max) good++; //@check
-        const m = Math.max(max, n.val);
-        if (n.left) queue.push([n.left, m]);
-        if (n.right) queue.push([n.right, m]); //@push
+      while (queue.length > 0) {
+        const [node, pathMax] = queue.shift()!; //@pop
+        if (node.val >= pathMax) good++; //@check
+        const newPathMax = Math.max(pathMax, node.val);
+        if (node.left !== null) queue.push([node.left, newPathMax]);
+        if (node.right !== null) queue.push([node.right, newPathMax]); //@push
       }
       return good; //@ret
     }

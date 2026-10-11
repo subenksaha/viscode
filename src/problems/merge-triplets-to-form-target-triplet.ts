@@ -15,12 +15,16 @@ const mergeUsable = defineSolution<Input>({
   idea: "A triplet with any value above the target can never be used (merging only takes maxima). Merging all the other triplets is always safe; check whether that merge equals the target.",
   code: code(`
     function mergeTriplets(triplets: number[][], target: number[]): boolean {
-      const cur = [0, 0, 0]; //@init
-      for (const t of triplets) {
-        if (t[0] > target[0] || t[1] > target[1] || t[2] > target[2]) continue; //@skip
-        for (let k = 0; k < 3; k++) cur[k] = Math.max(cur[k], t[k]); //@merge
+      const merged = [0, 0, 0]; //@init
+      for (const triplet of triplets) {
+        // Any value above the target would ruin the result, so skip this triplet.
+        const tooBig = triplet[0] > target[0] || triplet[1] > target[1] || triplet[2] > target[2];
+        if (tooBig) continue; //@skip
+        for (let k = 0; k < 3; k++) { //@merge
+          merged[k] = Math.max(merged[k], triplet[k]);
+        }
       }
-      return cur.every((v, k) => v === target[k]); //@ret
+      return merged[0] === target[0] && merged[1] === target[1] && merged[2] === target[2]; //@ret
     }
   `),
   run({ triplets, target }, t) {
@@ -56,12 +60,15 @@ const coverFlags = defineSolution<Input>({
   idea: "Only the three target values matter. Among safe triplets (nothing above the target), note which positions hit the target value exactly. All three must be covered.",
   code: code(`
     function mergeTriplets(triplets: number[][], target: number[]): boolean {
-      const hit = [false, false, false]; //@init
-      for (const t of triplets) {
-        if (t.some((v, k) => v > target[k])) continue; //@skip
-        t.forEach((v, k) => { if (v === target[k]) hit[k] = true; }); //@cover
+      const covered = [false, false, false]; // can we reach target[k] exactly? //@init
+      for (const triplet of triplets) {
+        const tooBig = triplet[0] > target[0] || triplet[1] > target[1] || triplet[2] > target[2];
+        if (tooBig) continue; //@skip
+        for (let k = 0; k < 3; k++) { //@cover
+          if (triplet[k] === target[k]) covered[k] = true;
+        }
       }
-      return hit.every(Boolean); //@ret
+      return covered[0] && covered[1] && covered[2]; //@ret
     }
   `),
   run({ triplets, target }, t) {

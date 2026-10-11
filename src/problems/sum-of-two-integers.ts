@@ -14,6 +14,8 @@ const xorCarry = defineSolution<Input>({
   idea: "a ^ b adds without carrying; (a & b) << 1 is the carry. Repeat until there is no carry left.",
   code: code(`
     function getSum(a: number, b: number): number {
+      // a ^ b adds the bits without carrying; (a & b) << 1 is the carry.
+      // Keep adding the carry until there is none left.
       while (b !== 0) { //@loop
         const carry = (a & b) << 1; //@carry
         a = a ^ b; //@xor
@@ -53,13 +55,17 @@ const fullAdder = defineSolution<Input>({
   idea: "Add one bit position at a time like a hardware ripple-carry adder: sum bit = x ^ y ^ c, next carry = majority(x, y, c).",
   code: code(`
     function getSum(a: number, b: number): number {
-      let res = 0, c = 0; //@init
+      // Add one bit position at a time, like column addition in binary.
+      let result = 0; //@init
+      let carry = 0;
       for (let i = 0; i < 32; i++) { //@loop
-        const x = (a >>> i) & 1, y = (b >>> i) & 1; //@bits
-        res |= (x ^ y ^ c) << i; //@sum
-        c = (x & y) | (x & c) | (y & c); //@carry
+        const bitA = (a >>> i) & 1; //@bits
+        const bitB = (b >>> i) & 1;
+        const sumBit = bitA ^ bitB ^ carry; // 1 when an odd number of the three are 1
+        result = result | (sumBit << i); //@sum
+        carry = (bitA & bitB) | (bitA & carry) | (bitB & carry); // 1 when at least two are 1 //@carry
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ a, b }, t) {
@@ -68,7 +74,7 @@ const fullAdder = defineSolution<Input>({
       c = 0;
     const view = (i?: number) => {
       const tone = i !== undefined ? { [i]: "active" as const } : {};
-      return [vars({ i, carry: c, res }), bits("a", a, w, tone), bits("b", b, w, tone), bits("res", res, w, tone)];
+      return [vars({ i, carry: c, result: res }), bits("a", a, w, tone), bits("b", b, w, tone), bits("result", res, w, tone)];
     };
     t.step("init", "res = 0, carry = 0.", view());
     for (let i = 0; i < 32; i++) {

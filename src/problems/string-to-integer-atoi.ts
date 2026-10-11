@@ -16,10 +16,14 @@ const regex = defineSolution<Input>({
   idea: "Match optional whitespace, an optional sign and a run of digits with a regular expression, convert, then clamp to the 32-bit range.",
   code: code(`
     function myAtoi(s: string): number {
-      const m = s.match(/^ *([+-]?\\d+)/); //@match
-      if (!m) return 0; //@none
-      const n = Number(m[1]);
-      return Math.min(2 ** 31 - 1, Math.max(-(2 ** 31), n)) || 0; //@clamp
+      // Optional spaces, an optional sign, then digits.
+      const found = s.match(/^ *([+-]?\\d+)/); //@match
+      if (found === null) return 0; //@none
+      const value = Number(found[1]);
+      const MIN = -(2 ** 31);
+      const MAX = 2 ** 31 - 1;
+      const clamped = Math.min(MAX, Math.max(MIN, value)); //@clamp
+      return clamped === 0 ? 0 : clamped; // turn -0 into 0
     }
   `),
   run({ s }, t) {
@@ -45,15 +49,25 @@ const scan = defineSolution<Input>({
   idea: "Skip spaces, read a sign, then fold digits into the result. Before each multiply-by-10, check whether it would overflow and clamp right away.",
   code: code(`
     function myAtoi(s: string): number {
-      let i = 0, sign = 1, res = 0;
+      const MAX = 2 ** 31 - 1;
+      const MIN = -(2 ** 31);
+      let i = 0;
+      let sign = 1;
+      let result = 0;
       while (s[i] === " ") i++; //@space
-      if (s[i] === "+" || s[i] === "-") sign = s[i++] === "-" ? -1 : 1; //@sign
-      while (i < s.length && s[i] >= "0" && s[i] <= "9") { //@digit
-        const d = +s[i++];
-        if (res > (2 ** 31 - 1 - d) / 10) return sign === 1 ? 2 ** 31 - 1 : -(2 ** 31); //@overflow
-        res = res * 10 + d; //@fold
+      if (s[i] === "+" || s[i] === "-") { //@sign
+        sign = s[i] === "-" ? -1 : 1;
+        i++;
       }
-      return sign * res || 0; //@ret
+      while (i < s.length && s[i] >= "0" && s[i] <= "9") { //@digit
+        const digit = Number(s[i]);
+        i++;
+        // Would result * 10 + digit go past MAX?
+        if (result > (MAX - digit) / 10) return sign === 1 ? MAX : MIN; //@overflow
+        result = result * 10 + digit; //@fold
+      }
+      const answer = sign * result;
+      return answer === 0 ? 0 : answer; // turn -0 into 0 //@ret
     }
   `),
   run({ s }, t) {
@@ -61,7 +75,7 @@ const scan = defineSolution<Input>({
       sign = 1,
       res = 0;
     const view = (tone: "active" | "danger" | "success" = "active") => [
-      vars({ sign, res }),
+      vars({ sign, result: res }),
       arr("s", [...s], { tones: tones(...range(0, i - 1, "muted"), [i < s.length ? i : null, tone]), pointers: { i: i < s.length ? i : null } }),
     ];
     while (s[i] === " ") {

@@ -28,16 +28,21 @@ const dfs = defineSolution<Input>({
   idea: "Scan for land. From each unvisited land cell, DFS returns 1 plus the areas of its four neighbors, sinking cells so they are counted once. Track the largest result.",
   code: code(`
     function maxAreaOfIsland(grid: number[][]): number {
-      const m = grid.length, n = grid[0].length;
-      const area = (r: number, c: number): number => {
-        if (r < 0 || c < 0 || r >= m || c >= n || grid[r][c] !== 1) return 0;
-        grid[r][c] = 0; //@sink
-        return 1 + area(r + 1, c) + area(r - 1, c) + area(r, c + 1) + area(r, c - 1);
-      };
+      const rows = grid.length;
+      const cols = grid[0].length;
+      // Counts the land cells connected to (row, col), turning each one into water so it's counted once.
+      function area(row: number, col: number): number {
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || grid[row][col] !== 1) return 0;
+        grid[row][col] = 0; //@sink
+        return 1 + area(row + 1, col) + area(row - 1, col) + area(row, col + 1) + area(row, col - 1);
+      }
       let best = 0;
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++)
-          if (grid[r][c] === 1) best = Math.max(best, area(r, c)); //@island
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (grid[row][col] === 1) best = Math.max(best, area(row, col)); //@island
+        }
+      }
       return best; //@ret
     }
   `),
@@ -85,21 +90,32 @@ const bfs = defineSolution<Input>({
   idea: "Same scan, but measure each island with a queue: count cells as they are dequeued and enqueue unvisited land neighbors.",
   code: code(`
     function maxAreaOfIsland(grid: number[][]): number {
-      const m = grid.length, n = grid[0].length;
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
       let best = 0;
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) {
-          if (grid[r][c] !== 1) continue;
-          grid[r][c] = 0;
-          const queue = [[r, c]];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (grid[row][col] !== 1) continue;
+          grid[row][col] = 0; // mark as visited
+          const queue = [[row, col]];
           let area = 0; //@start
-          while (queue.length) {
-            const [i, j] = queue.shift()!; area++; //@pop
-            for (const [x, y] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]])
-              if (x >= 0 && y >= 0 && x < m && y < n && grid[x][y] === 1) { grid[x][y] = 0; queue.push([x, y]); } //@push
+          while (queue.length > 0) {
+            const [r, c] = queue.shift()!; //@pop
+            area++;
+            for (const [rowStep, colStep] of directions) {
+              const nextRow = r + rowStep;
+              const nextCol = c + colStep;
+              const inside = nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols;
+              if (inside && grid[nextRow][nextCol] === 1) { //@push
+                grid[nextRow][nextCol] = 0;
+                queue.push([nextRow, nextCol]);
+              }
+            }
           }
           best = Math.max(best, area); //@best
         }
+      }
       return best; //@ret
     }
   `),

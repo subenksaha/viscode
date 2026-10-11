@@ -15,16 +15,19 @@ const memo = defineSolution<Input>({
   code: code(`
     function numDistinct(s: string, t: string): number {
       const memo = new Map<string, number>();
-      const count = (i: number, j: number): number => {
+      // Ways to form t[j..] from s[i..].
+      function count(i: number, j: number): number {
         if (j === t.length) return 1; //@full
         if (i === s.length) return 0; //@empty
         const key = i + "," + j;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        let res = count(i + 1, j); // skip s[i]
-        if (s[i] === t[j]) res += count(i + 1, j + 1); //@match
-        memo.set(key, res); //@store
-        return res;
-      };
+        let ways = count(i + 1, j); // skip s[i]
+        if (s[i] === t[j]) { //@match
+          ways += count(i + 1, j + 1); // use s[i] to match t[j]
+        }
+        memo.set(key, ways); //@store
+        return ways;
+      }
       return count(0, 0); //@ret
     }
   `),
@@ -72,11 +75,18 @@ const table = defineSolution<Input>({
   idea: "dp[i][j] = ways the first i chars of s form the first j chars of t. dp[i][j] = dp[i−1][j] (ignore s[i−1]) + dp[i−1][j−1] when s[i−1] = t[j−1].",
   code: code(`
     function numDistinct(s: string, t: string): number {
+      // dp[i][j] = ways to form the first j letters of t from the first i letters of s
       const dp = Array.from({ length: s.length + 1 }, () => new Array(t.length + 1).fill(0));
-      for (let i = 0; i <= s.length; i++) dp[i][0] = 1; //@init
-      for (let i = 1; i <= s.length; i++)
-        for (let j = 1; j <= t.length; j++) //@cell
-          dp[i][j] = dp[i - 1][j] + (s[i - 1] === t[j - 1] ? dp[i - 1][j - 1] : 0);
+      for (let i = 0; i <= s.length; i++) { //@init
+        dp[i][0] = 1; // the empty string can always be formed one way
+      }
+      for (let i = 1; i <= s.length; i++) {
+        for (let j = 1; j <= t.length; j++) { //@cell
+          const skipLetter = dp[i - 1][j];
+          const useLetter = s[i - 1] === t[j - 1] ? dp[i - 1][j - 1] : 0;
+          dp[i][j] = skipLetter + useLetter;
+        }
+      }
       return dp[s.length][t.length]; //@ret
     }
   `),

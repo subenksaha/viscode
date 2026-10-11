@@ -15,9 +15,9 @@ const hashSet = defineSolution<Input>({
   code: code(`
     function hasCycle(head: ListNode | null): boolean {
       const seen = new Set<ListNode>(); //@init
-      for (let n = head; n; n = n.next) { //@loop
-        if (seen.has(n)) return true; //@found
-        seen.add(n); //@add
+      for (let node = head; node !== null; node = node.next) { //@loop
+        if (seen.has(node)) return true; //@found
+        seen.add(node); //@add
       }
       return false; //@ret
     }
@@ -26,7 +26,7 @@ const hashSet = defineSolution<Input>({
     const nodes = listNodes(head);
     const seen = new Set<ListNode>();
     const view = (n?: ListNode | null, hit = false) => [
-      list("list", nodes, { tones: [...[...seen].map((s) => [s, "visited"] as [ListNode, "visited"]), [n, hit ? "danger" : "active"]], pointers: { n } }),
+      list("list", nodes, { tones: [...[...seen].map((s) => [s, "visited"] as [ListNode, "visited"]), [n, hit ? "danger" : "active"]], pointers: { node: n } }),
       map("seen", [...seen].map((s) => [`#${nodes.indexOf(s)} (${s.val})`, ""])),
     ];
     t.step("init", "Empty set.", view());
@@ -52,8 +52,9 @@ const floyd = defineSolution<Input>({
   idea: "Move slow one step and fast two steps at a time. In a cycle, fast gains one step per move and must land on slow; otherwise fast falls off the end.",
   code: code(`
     function hasCycle(head: ListNode | null): boolean {
-      let slow = head, fast = head; //@init
-      while (fast && fast.next) { //@loop
+      let slow = head; //@init
+      let fast = head;
+      while (fast !== null && fast.next !== null) { //@loop
         slow = slow!.next; //@slow
         fast = fast.next.next; //@fast
         if (slow === fast) return true; //@meet

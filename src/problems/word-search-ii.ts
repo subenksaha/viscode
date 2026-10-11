@@ -28,22 +28,34 @@ const perWord = defineSolution<Input>({
   idea: "Run the classic Word Search backtracking once for every word: start from each cell, extend the path one matching letter at a time, and mark cells while they are in use.",
   code: code(`
     function findWords(board: string[][], words: string[]): string[] {
-      const m = board.length, n = board[0].length;
-      const dfs = (w: string, i: number, r: number, c: number): boolean => {
-        if (i === w.length) return true; //@done
-        if (r < 0 || c < 0 || r >= m || c >= n || board[r][c] !== w[i]) return false;
-        const ch = board[r][c]; board[r][c] = "#"; //@visit
-        const ok = dfs(w, i + 1, r + 1, c) || dfs(w, i + 1, r - 1, c) || dfs(w, i + 1, r, c + 1) || dfs(w, i + 1, r, c - 1);
-        board[r][c] = ch; //@undo
-        return ok;
-      };
-      const res: string[] = [];
-      for (const w of words) { //@word
-        let hit = false;
-        for (let r = 0; r < m && !hit; r++) for (let c = 0; c < n && !hit; c++) hit = dfs(w, 0, r, c);
-        if (hit) res.push(w); //@found
+      const rows = board.length;
+      const cols = board[0].length;
+      // Can we spell word[index..] starting at (row, col)?
+      function spell(word: string, index: number, row: number, col: number): boolean {
+        if (index === word.length) return true; //@done
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || board[row][col] !== word[index]) return false;
+        const letter = board[row][col];
+        board[row][col] = "#"; // mark as used on this path //@visit
+        const found =
+          spell(word, index + 1, row + 1, col) ||
+          spell(word, index + 1, row - 1, col) ||
+          spell(word, index + 1, row, col + 1) ||
+          spell(word, index + 1, row, col - 1);
+        board[row][col] = letter; // restore //@undo
+        return found;
       }
-      return res; //@ret
+      const result: string[] = [];
+      for (const word of words) { //@word
+        let found = false;
+        for (let row = 0; row < rows && !found; row++) {
+          for (let col = 0; col < cols && !found; col++) {
+            found = spell(word, 0, row, col);
+          }
+        }
+        if (found) result.push(word); //@found
+      }
+      return result; //@ret
     }
   `),
   run({ board, words }, t) {
@@ -92,23 +104,42 @@ const trieDfs = defineSolution<Input>({
   idea: "Put all words in a trie and run one DFS from every cell, walking the board and the trie together. A path stops as soon as no word has it as a prefix; reaching a stored word records it once.",
   code: code(`
     function findWords(board: string[][], words: string[]): string[] {
-      const root: Trie = { kids: new Map(), word: null };
-      for (const w of words) { //@build
-        let n = root;
-        for (const c of w) n = n.kids.get(c) ?? n.kids.set(c, { kids: new Map(), word: null }).get(c)!;
-        n.word = w;
+      // Trie node: children by letter, and the full word if one ends here.
+      type TrieNode = { children: Map<string, TrieNode>; word: string | null };
+      const root: TrieNode = { children: new Map(), word: null };
+      for (const word of words) { //@build
+        let node = root;
+        for (const letter of word) {
+          if (!node.children.has(letter)) node.children.set(letter, { children: new Map(), word: null });
+          node = node.children.get(letter)!;
+        }
+        node.word = word;
       }
-      const res: string[] = [], m = board.length, n = board[0].length;
-      const dfs = (r: number, c: number, node: Trie) => {
-        const ch = board[r]?.[c], next = ch && node.kids.get(ch);
-        if (!next) return; //@prune
-        if (next.word) { res.push(next.word); next.word = null; } //@found
-        board[r][c] = "#"; //@visit
-        dfs(r + 1, c, next); dfs(r - 1, c, next); dfs(r, c + 1, next); dfs(r, c - 1, next);
-        board[r][c] = ch; //@undo
-      };
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) dfs(r, c, root); //@start
-      return res; //@ret
+      const result: string[] = [];
+      const rows = board.length;
+      const cols = board[0].length;
+      // Walk the board and the trie together, so all words are searched at once.
+      function search(row: number, col: number, node: TrieNode) {
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside) return;
+        const letter = board[row][col];
+        const next = node.children.get(letter);
+        if (next === undefined) return; // no word continues this way (or the cell is used) //@prune
+        if (next.word !== null) { //@found
+          result.push(next.word);
+          next.word = null; // don't report it twice
+        }
+        board[row][col] = "#"; // mark as used on this path //@visit
+        search(row + 1, col, next);
+        search(row - 1, col, next);
+        search(row, col + 1, next);
+        search(row, col - 1, next);
+        board[row][col] = letter; // restore //@undo
+      }
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) search(row, col, root); //@start
+      }
+      return result; //@ret
     }
   `),
   run({ board, words }, t) {

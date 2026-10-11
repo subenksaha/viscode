@@ -66,11 +66,13 @@ const dfs = defineSolution<Input>({
   code: code(`
     function cloneGraph(node: _Node | null): _Node | null {
       const clones = new Map<_Node, _Node>();
-      function clone(n: _Node): _Node {
-        if (clones.has(n)) return clones.get(n)!; //@hit
-        const copy = new _Node(n.val); //@create
-        clones.set(n, copy);
-        for (const nb of n.neighbors) copy.neighbors.push(clone(nb)); //@link
+      function clone(original: _Node): _Node {
+        if (clones.has(original)) return clones.get(original)!; //@hit
+        const copy = new _Node(original.val); //@create
+        clones.set(original, copy);
+        for (const neighbor of original.neighbors) {
+          copy.neighbors.push(clone(neighbor)); //@link
+        }
         return copy; //@done
       }
       return node ? clone(node) : null; //@ret
@@ -109,14 +111,18 @@ const bfs = defineSolution<Input>({
   idea: "Clone the start node, then BFS. When a neighbor is first seen, clone it and enqueue it. Always wire the edge from the current copy.",
   code: code(`
     function cloneGraph(node: _Node | null): _Node | null {
-      if (!node) return null;
-      const clones = new Map([[node, new _Node(node.val)]]); //@init
+      if (node === null) return null;
+      const clones = new Map<_Node, _Node>(); //@init
+      clones.set(node, new _Node(node.val));
       const queue = [node];
-      while (queue.length) { //@loop
-        const n = queue.shift()!; //@pop
-        for (const nb of n.neighbors) {
-          if (!clones.has(nb)) { clones.set(nb, new _Node(nb.val)); queue.push(nb); } //@new
-          clones.get(n)!.neighbors.push(clones.get(nb)!); //@link
+      while (queue.length > 0) { //@loop
+        const original = queue.shift()!; //@pop
+        for (const neighbor of original.neighbors) {
+          if (!clones.has(neighbor)) { //@new
+            clones.set(neighbor, new _Node(neighbor.val));
+            queue.push(neighbor);
+          }
+          clones.get(original)!.neighbors.push(clones.get(neighbor)!); //@link
         }
       }
       return clones.get(node)!; //@ret

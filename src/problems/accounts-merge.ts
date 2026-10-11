@@ -30,24 +30,44 @@ const dfs = defineSolution<Input>({
   idea: "Link every email in an account to that account's first email. Connected components of this graph are the merged accounts; find them with DFS and sort each.",
   code: code(`
     function accountsMerge(accounts: string[][]): string[][] {
-      const adj = new Map<string, string[]>(), name = new Map<string, string>();
-      const link = (a: string, b: string) => { if (!adj.has(a)) adj.set(a, []); adj.get(a)!.push(b); };
-      for (const [n, first, ...rest] of accounts) { //@build
-        name.set(first, n); link(first, first);
-        for (const e of rest) { link(first, e); link(e, first); name.set(e, n); }
+      const neighbors = new Map<string, string[]>();
+      const ownerName = new Map<string, string>();
+      function addEdge(from: string, to: string) {
+        if (!neighbors.has(from)) neighbors.set(from, []);
+        neighbors.get(from)!.push(to);
       }
-      const seen = new Set<string>(), res: string[][] = [];
-      for (const start of adj.keys()) { //@start
-        if (seen.has(start)) continue;
-        const comp: string[] = [], stack = [start];
-        seen.add(start);
-        while (stack.length) { //@visit
-          const e = stack.pop()!; comp.push(e);
-          for (const f of adj.get(e)!) if (!seen.has(f)) { seen.add(f); stack.push(f); }
+
+      for (const [name, firstEmail, ...otherEmails] of accounts) { //@build
+        ownerName.set(firstEmail, name);
+        addEdge(firstEmail, firstEmail);
+        for (const email of otherEmails) {
+          addEdge(firstEmail, email);
+          addEdge(email, firstEmail);
+          ownerName.set(email, name);
         }
-        res.push([name.get(start)!, ...comp.sort()]); //@emit
       }
-      return res; //@ret
+
+      const visited = new Set<string>();
+      const result: string[][] = [];
+      for (const startEmail of neighbors.keys()) { //@start
+        if (visited.has(startEmail)) continue;
+        const groupEmails: string[] = [];
+        const stack = [startEmail];
+        visited.add(startEmail);
+        while (stack.length > 0) {
+          const email = stack.pop()!; //@visit
+          groupEmails.push(email);
+          for (const neighbor of neighbors.get(email)!) {
+            if (!visited.has(neighbor)) {
+              visited.add(neighbor);
+              stack.push(neighbor);
+            }
+          }
+        }
+        groupEmails.sort();
+        result.push([ownerName.get(startEmail)!, ...groupEmails]); //@emit
+      }
+      return result; //@ret
     }
   `),
   run({ accounts }, t) {
@@ -110,22 +130,41 @@ const unionFind = defineSolution<Input>({
   idea: "Give each account an id. When an email was already seen in another account, union the two accounts. Finally group emails by their account's root.",
   code: code(`
     function accountsMerge(accounts: string[][]): string[][] {
-      const parent = accounts.map((_, i) => i);
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      const owner = new Map<string, number>(); //@init
-      accounts.forEach(([, ...emails], i) => {
-        for (const e of emails) { //@email
-          if (owner.has(e)) parent[find(i)] = find(owner.get(e)!); //@union
-          else owner.set(e, i); //@own
+      // parent[i] points toward the representative account of i's group.
+      const parent = accounts.map((_, index) => index);
+      function findRoot(account: number): number {
+        while (parent[account] !== account) {
+          account = parent[account];
         }
-      });
-      const groups = new Map<number, string[]>();
-      for (const [e, i] of owner) { //@group
-        const r = find(i);
-        if (!groups.has(r)) groups.set(r, []);
-        groups.get(r)!.push(e);
+        return account;
       }
-      return [...groups].map(([r, es]) => [accounts[r][0], ...es.sort()]); //@ret
+
+      const ownerOfEmail = new Map<string, number>(); //@init
+      for (let account = 0; account < accounts.length; account++) {
+        const emails = accounts[account].slice(1);
+        for (const email of emails) { //@email
+          if (ownerOfEmail.has(email)) {
+            const otherAccount = ownerOfEmail.get(email)!;
+            parent[findRoot(account)] = findRoot(otherAccount); //@union
+          } else {
+            ownerOfEmail.set(email, account); //@own
+          }
+        }
+      }
+
+      const emailsByRoot = new Map<number, string[]>();
+      for (const [email, account] of ownerOfEmail) { //@group
+        const root = findRoot(account);
+        if (!emailsByRoot.has(root)) emailsByRoot.set(root, []);
+        emailsByRoot.get(root)!.push(email);
+      }
+
+      const result: string[][] = [];
+      for (const [root, emails] of emailsByRoot) {
+        const name = accounts[root][0];
+        result.push([name, ...emails.sort()]);
+      }
+      return result; //@ret
     }
   `),
   run({ accounts }, t) {

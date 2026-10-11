@@ -15,13 +15,19 @@ const bfs = defineSolution<Input>({
   idea: "Traverse level by level. The last node of each level is the one you see from the right.",
   code: code(`
     function rightSideView(root: TreeNode | null): number[] {
-      const res: number[] = [];
-      let level = root ? [root] : []; //@init
-      while (level.length) { //@level
-        res.push(level.at(-1)!.val); //@take
-        level = level.flatMap((n) => [n.left, n.right].filter((c): c is TreeNode => !!c)); //@next
+      const result: number[] = [];
+      let level: TreeNode[] = root !== null ? [root] : []; //@init
+      while (level.length > 0) { //@level
+        const rightmost = level[level.length - 1];
+        result.push(rightmost.val); //@take
+        const nextLevel: TreeNode[] = [];
+        for (const node of level) { //@next
+          if (node.left !== null) nextLevel.push(node.left);
+          if (node.right !== null) nextLevel.push(node.right);
+        }
+        level = nextLevel;
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ root }, t) {
@@ -56,15 +62,16 @@ const dfs = defineSolution<Input>({
   idea: "Visit right before left and track depth. The first node you meet at each depth is the visible one.",
   code: code(`
     function rightSideView(root: TreeNode | null): number[] {
-      const res: number[] = [];
-      function dfs(n: TreeNode | null, depth: number) {
-        if (!n) return;
-        if (depth === res.length) res.push(n.val); //@first
-        dfs(n.right, depth + 1); //@right
-        dfs(n.left, depth + 1); //@left
+      const result: number[] = [];
+      function visit(node: TreeNode | null, depth: number) {
+        if (node === null) return;
+        // The first node we reach at a new depth is the rightmost one.
+        if (depth === result.length) result.push(node.val); //@first
+        visit(node.right, depth + 1); //@right
+        visit(node.left, depth + 1); //@left
       }
-      dfs(root, 0);
-      return res; //@ret
+      visit(root, 0);
+      return result; //@ret
     }
   `),
   run({ root }, t) {

@@ -13,11 +13,14 @@ const bruteForce = defineSolution<Input>({
   idea: "Two meetings conflict when each starts before the other ends. Test every pair.",
   code: code(`
     function canAttendMeetings(intervals: number[][]): boolean {
-      for (let i = 0; i < intervals.length; i++) //@i
+      for (let i = 0; i < intervals.length; i++) { //@i
         for (let j = i + 1; j < intervals.length; j++) { //@j
-          const [a, b] = [intervals[i], intervals[j]];
-          if (a[0] < b[1] && b[0] < a[1]) return false; //@clash
+          const [startA, endA] = intervals[i];
+          const [startB, endB] = intervals[j];
+          // Two meetings overlap if each one starts before the other ends.
+          if (startA < endB && startB < endA) return false; //@clash
         }
+      }
       return true; //@ret
     }
   `),
@@ -48,7 +51,9 @@ const sorting = defineSolution<Input>({
     function canAttendMeetings(intervals: number[][]): boolean {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
       for (let i = 1; i < intervals.length; i++) { //@loop
-        if (intervals[i][0] < intervals[i - 1][1]) return false; //@clash
+        const previousEnd = intervals[i - 1][1];
+        const currentStart = intervals[i][0];
+        if (currentStart < previousEnd) return false; //@clash
       }
       return true; //@ret
     }

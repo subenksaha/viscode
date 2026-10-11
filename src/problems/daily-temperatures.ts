@@ -13,11 +13,16 @@ const brute = defineSolution<Input>({
   idea: "For each day, walk forward until a warmer day appears.",
   code: code(`
     function dailyTemperatures(temps: number[]): number[] {
-      const res = new Array(temps.length).fill(0);
-      for (let i = 0; i < temps.length; i++) //@i
-        for (let j = i + 1; j < temps.length; j++) //@j
-          if (temps[j] > temps[i]) { res[i] = j - i; break; } //@found
-      return res; //@ret
+      const daysToWait = new Array(temps.length).fill(0);
+      for (let i = 0; i < temps.length; i++) { //@i
+        for (let j = i + 1; j < temps.length; j++) { //@j
+          if (temps[j] > temps[i]) { //@found
+            daysToWait[i] = j - i;
+            break;
+          }
+        }
+      }
+      return daysToWait; //@ret
     }
   `),
   run({ temperatures: temps }, t) {
@@ -50,23 +55,26 @@ const monoStack = defineSolution<Input>({
   idea: "Keep a stack of days still waiting for a warmer one; their temperatures decrease from bottom to top. A warmer day pops every cooler day off the top and answers it.",
   code: code(`
     function dailyTemperatures(temps: number[]): number[] {
-      const res = new Array(temps.length).fill(0), stack: number[] = [];
-      for (let i = 0; i < temps.length; i++) { //@loop
-        while (stack.length && temps[stack.at(-1)!] < temps[i]) { //@cmp
-          const j = stack.pop()!;
-          res[j] = i - j; //@pop
+      const daysToWait = new Array(temps.length).fill(0);
+      const waitingDays: number[] = []; // stack of days still waiting for a warmer day
+      for (let today = 0; today < temps.length; today++) { //@loop
+        while (waitingDays.length > 0) { //@cmp
+          const lastWaiting = waitingDays[waitingDays.length - 1];
+          if (temps[lastWaiting] >= temps[today]) break;
+          waitingDays.pop();
+          daysToWait[lastWaiting] = today - lastWaiting; //@pop
         }
-        stack.push(i); //@push
+        waitingDays.push(today); //@push
       }
-      return res; //@ret
+      return daysToWait; //@ret
     }
   `),
   run({ temperatures: temps }, t) {
     const res = new Array(temps.length).fill(0),
       stack: number[] = [];
     const view = (i: number, j?: number) => [
-      arr("temperatures", temps, { tones: tones(...stack.map((s) => [s, "compare"] as [number, "compare"]), [j, "success"], [i, "active"]), pointers: { i } }),
-      arr("stack (waiting days)", stack.map((s) => `${s}:${temps[s]}°`), { indexLabels: false }),
+      arr("temperatures", temps, { tones: tones(...stack.map((s) => [s, "compare"] as [number, "compare"]), [j, "success"], [i, "active"]), pointers: { today: i } }),
+      arr("waitingDays (stack)", stack.map((s) => `${s}:${temps[s]}°`), { indexLabels: false }),
       arr("answer", res, { tones: tones([j, "success"]) }),
     ];
     for (let i = 0; i < temps.length; i++) {

@@ -13,19 +13,36 @@ const recursive = defineSolution<Input>({
   idea: "Parse a sum of signed terms. A term is a number or a parenthesized expression, which is parsed by a recursive call that stops at the matching ')'.",
   code: code(`
     function calculate(s: string): number {
-      let i = 0;
-      function expr(): number {
-        let total = 0, sign = 1;
-        while (i < s.length && s[i] !== ")") { //@loop
-          const c = s[i];
-          if (c === " ") i++;
-          else if (c === "+" || c === "-") { sign = c === "-" ? -1 : 1; i++; } //@sign
-          else if (c === "(") { i++; total += sign * expr(); i++; sign = 1; } //@paren
-          else { let n = 0; while (s[i] >= "0" && s[i] <= "9") n = n * 10 + +s[i++]; total += sign * n; sign = 1; } //@num
+      let pos = 0;
+      // Evaluates from pos until the end of the string or a closing ")".
+      function evaluate(): number {
+        let total = 0;
+        let sign = 1;
+        while (pos < s.length && s[pos] !== ")") { //@loop
+          const char = s[pos];
+          if (char === " ") {
+            pos++;
+          } else if (char === "+" || char === "-") {
+            sign = char === "-" ? -1 : 1; //@sign
+            pos++;
+          } else if (char === "(") {
+            pos++; // skip "("
+            total += sign * evaluate(); //@paren
+            pos++; // skip ")"
+            sign = 1;
+          } else {
+            let number = 0;
+            while (pos < s.length && s[pos] >= "0" && s[pos] <= "9") {
+              number = number * 10 + Number(s[pos]);
+              pos++;
+            }
+            total += sign * number; //@num
+            sign = 1;
+          }
         }
         return total; //@ret
       }
-      return expr();
+      return evaluate();
     }
   `),
   run({ s }, t) {
@@ -33,7 +50,7 @@ const recursive = defineSolution<Input>({
     const frames: string[] = [];
     const view = (lo: number, hi: number, extra: Record<string, unknown>) => [
       vars(extra),
-      arr("s", [...s], { tones: tones(...range(lo, hi, "active")), pointers: { i: i < s.length ? i : null } }),
+      arr("s", [...s], { tones: tones(...range(lo, hi, "active")), pointers: { pos: i < s.length ? i : null } }),
       arr("call stack (running totals)", frames, { indexLabels: false }),
     ];
     const expr = (): number => {
@@ -84,14 +101,31 @@ const stack = defineSolution<Input>({
   code: code(`
     function calculate(s: string): number {
       const stack: number[] = [];
-      let result = 0, sign = 1, num = 0; //@init
-      for (const c of s) {
-        if (c >= "0" && c <= "9") num = num * 10 + +c; //@digit
-        else if (c === "+" || c === "-") { result += sign * num; num = 0; sign = c === "+" ? 1 : -1; } //@op
-        else if (c === "(") { stack.push(result, sign); result = 0; sign = 1; } //@open
-        else if (c === ")") { result += sign * num; num = 0; result = result * stack.pop()! + stack.pop()!; } //@close
+      let result = 0; //@init
+      let sign = 1;
+      let number = 0;
+      for (const char of s) {
+        if (char >= "0" && char <= "9") {
+          number = number * 10 + Number(char); //@digit
+        } else if (char === "+" || char === "-") {
+          result += sign * number; //@op
+          number = 0;
+          sign = char === "+" ? 1 : -1;
+        } else if (char === "(") {
+          // Save what we had so far and start a fresh result inside the parentheses.
+          stack.push(result); //@open
+          stack.push(sign);
+          result = 0;
+          sign = 1;
+        } else if (char === ")") {
+          result += sign * number; //@close
+          number = 0;
+          const signBefore = stack.pop()!;
+          const resultBefore = stack.pop()!;
+          result = resultBefore + signBefore * result;
+        }
       }
-      return result + sign * num; //@ret
+      return result + sign * number; //@ret
     }
   `),
   run({ s }, t) {
@@ -100,16 +134,16 @@ const stack = defineSolution<Input>({
       sign = 1,
       num = 0;
     const view = (i?: number) => [
-      vars({ result, sign, num }),
+      vars({ result, sign, number: num }),
       arr("s", [...s], { tones: tones([i, "active"]), pointers: { i } }),
       arr("stack (result, sign pairs)", st, { indexLabels: false }),
     ];
-    t.step("init", "result = 0, sign = +, num = 0.", view());
+    t.step("init", "result = 0, sign = +, number = 0.", view());
     for (let i = 0; i < s.length; i++) {
       const c = s[i];
       if (c >= "0" && c <= "9") {
         num = num * 10 + +c;
-        t.step("digit", `Digit ${c}: num = ${num}.`, view(i));
+        t.step("digit", `Digit ${c}: number = ${num}.`, view(i));
       } else if (c === "+" || c === "-") {
         result += sign * num;
         num = 0;

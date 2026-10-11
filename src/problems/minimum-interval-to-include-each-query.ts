@@ -17,12 +17,15 @@ const brute = defineSolution<Input>({
   idea: "For each query, scan all intervals and keep the smallest size among those that contain it.",
   code: code(`
     function minInterval(intervals: number[][], queries: number[]): number[] {
-      return queries.map((q) => { //@query
-        let best = Infinity;
-        for (const [l, r] of intervals) //@check
-          if (l <= q && q <= r) best = Math.min(best, r - l + 1);
-        return best === Infinity ? -1 : best; //@answer
-      });
+      const answers: number[] = [];
+      for (const query of queries) { //@query
+        let smallest = Infinity;
+        for (const [left, right] of intervals) { //@check
+          if (left <= query && query <= right) smallest = Math.min(smallest, right - left + 1);
+        }
+        answers.push(smallest === Infinity ? -1 : smallest); //@answer
+      }
+      return answers;
     }
   `),
   run({ intervals: iv, queries }, t) {
@@ -30,7 +33,7 @@ const brute = defineSolution<Input>({
     queries.forEach((q, qi) => {
       let best = Infinity,
         bestAt = -1;
-      t.step("query", `Query ${q}.`, [vars({ q }), intervals("intervals", iv), arr("queries", queries, { tones: tones([qi, "active"]) })]);
+      t.step("query", `Query ${q}.`, [vars({ query: q }), intervals("intervals", iv), arr("queries", queries, { tones: tones([qi, "active"]) })]);
       iv.forEach(([l, r], k) => {
         const inside = l <= q && q <= r;
         if (inside && r - l + 1 < best) {
@@ -38,7 +41,7 @@ const brute = defineSolution<Input>({
           bestAt = k;
         }
         t.step("check", inside ? `[${l}, ${r}] contains ${q} (size ${r - l + 1}).` : `[${l}, ${r}] misses ${q}.`, () => [
-          vars({ q, best: best === Infinity ? "∞" : best }),
+          vars({ query: q, smallest: best === Infinity ? "∞" : best }),
           intervals("intervals", iv, tones([bestAt, "success"], [k, inside ? "active" : "danger"])),
         ]);
       });
@@ -58,19 +61,26 @@ const sweepHeap = defineSolution<Input>({
   code: code(`
     function minInterval(intervals: number[][], queries: number[]): number[] {
       intervals.sort((a, b) => a[0] - b[0]);
-      const order = queries.map((_, i) => i).sort((a, b) => queries[a] - queries[b]); //@sort
-      const heap = new MinPriorityQueue<[number, number]>((e) => e[0]); // [size, right]
-      const res = new Array(queries.length).fill(-1);
-      let i = 0;
-      for (const qi of order) {
-        const q = queries[qi];
-        while (i < intervals.length && intervals[i][0] <= q) { //@push
-          const [l, r] = intervals[i++]; heap.enqueue([r - l + 1, r]);
+      // Answer queries from smallest to largest, remembering where each one came from.
+      const queryOrder = queries.map((_, index) => index);
+      queryOrder.sort((a, b) => queries[a] - queries[b]); //@sort
+      // Min-heap of intervals that have started, smallest size first: [size, right end].
+      const heap = new MinPriorityQueue<[number, number]>((entry) => entry[0]);
+      const answers = new Array(queries.length).fill(-1);
+      let next = 0; // next interval to consider
+      for (const queryIndex of queryOrder) {
+        const query = queries[queryIndex];
+        // Add every interval that starts at or before the query.
+        while (next < intervals.length && intervals[next][0] <= query) { //@push
+          const [left, right] = intervals[next];
+          heap.enqueue([right - left + 1, right]);
+          next++;
         }
-        while (heap.size() && heap.front()![1] < q) heap.dequeue(); //@pop
-        if (heap.size()) res[qi] = heap.front()![0]; //@answer
+        // Drop intervals that end before the query.
+        while (heap.size() > 0 && heap.front()![1] < query) heap.dequeue(); //@pop
+        if (heap.size() > 0) answers[queryIndex] = heap.front()![0]; //@answer
       }
-      return res; //@ret
+      return answers; //@ret
     }
   `),
   run({ intervals: iv, queries }, t) {
@@ -81,7 +91,7 @@ const sweepHeap = defineSolution<Input>({
     const state: Tone[] = iv.map(() => "muted");
     let i = 0;
     const view = (qi?: number) => [
-      vars({ q: qi !== undefined ? queries[qi] : undefined }),
+      vars({ query: qi !== undefined ? queries[qi] : undefined }),
       intervals("intervals (sorted by start)", iv, tones(...state.map((s, k) => [k, s] as [number, Tone]), [heap[0]?.[2], "success"])),
       arr("min-heap (size, right)", heap.map(([sz, r]) => `${sz}, ${r}`), { indexLabels: false, tones: tones([0, "success"]) }),
       arr("answers", res.map((x) => x ?? ""), { indexLabels: queries.map(String), tones: tones([qi, "active"]) }),

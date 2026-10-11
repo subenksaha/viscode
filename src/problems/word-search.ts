@@ -55,18 +55,28 @@ const backtracking = defineSolution<Input>({
   idea: "From each cell, DFS in four directions matching one letter at a time. Temporarily mark cells on the current path so they are not reused, and restore them on the way back.",
   code: code(`
     function exist(board: string[][], word: string): boolean {
-      const m = board.length, n = board[0].length;
-      function dfs(r: number, c: number, k: number): boolean {
-        if (k === word.length) return true; //@found
-        if (r < 0 || c < 0 || r >= m || c >= n || board[r][c] !== word[k]) return false; //@miss
-        const ch = board[r][c];
-        board[r][c] = "#"; //@mark
-        const ok = dfs(r + 1, c, k + 1) || dfs(r - 1, c, k + 1) || dfs(r, c + 1, k + 1) || dfs(r, c - 1, k + 1);
-        board[r][c] = ch; //@undo
-        return ok;
+      const rows = board.length;
+      const cols = board[0].length;
+      // Can we spell word[index..] starting at (row, col)?
+      function spell(row: number, col: number, index: number): boolean {
+        if (index === word.length) return true; //@found
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || board[row][col] !== word[index]) return false; //@miss
+        const letter = board[row][col];
+        board[row][col] = "#"; // mark as used on this path //@mark
+        const found =
+          spell(row + 1, col, index + 1) ||
+          spell(row - 1, col, index + 1) ||
+          spell(row, col + 1, index + 1) ||
+          spell(row, col - 1, index + 1);
+        board[row][col] = letter; // restore //@undo
+        return found;
       }
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) if (dfs(r, c, 0)) return true; //@start
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (spell(row, col, 0)) return true; //@start
+        }
+      }
       return false; //@ret
     }
   `),
@@ -81,27 +91,44 @@ const pruned = defineSolution<Input>({
   idea: "Two cheap checks first: if the board lacks enough of some letter, fail immediately. If the word's last letter is rarer than its first, search for the reversed word, which cuts off more branches early.",
   code: code(`
     function exist(board: string[][], word: string): boolean {
-      const total = new Map<string, number>(), need = new Map<string, number>();
-      for (const row of board) for (const ch of row) total.set(ch, (total.get(ch) ?? 0) + 1);
-      for (const ch of word) { //@count
-        need.set(ch, (need.get(ch) ?? 0) + 1);
-        if (need.get(ch)! > (total.get(ch) ?? 0)) return false; //@prune
+      // Quick checks before the expensive search.
+      const onBoard = new Map<string, number>();
+      for (const line of board) {
+        for (const letter of line) onBoard.set(letter, (onBoard.get(letter) ?? 0) + 1);
       }
-      const freq = (ch: string) => total.get(ch) ?? 0;
-      if (freq(word[0]) > freq(word[word.length - 1])) word = [...word].reverse().join(""); //@reverse
-      // ...then the same backtracking search as before
-      const m = board.length, n = board[0].length;
-      function dfs(r: number, c: number, k: number): boolean {
-        if (k === word.length) return true; //@found
-        if (r < 0 || c < 0 || r >= m || c >= n || board[r][c] !== word[k]) return false; //@miss
-        const ch = board[r][c];
-        board[r][c] = "#"; //@mark
-        const ok = dfs(r + 1, c, k + 1) || dfs(r - 1, c, k + 1) || dfs(r, c + 1, k + 1) || dfs(r, c - 1, k + 1);
-        board[r][c] = ch; //@undo
-        return ok;
+      const needed = new Map<string, number>();
+      for (const letter of word) { //@count
+        needed.set(letter, (needed.get(letter) ?? 0) + 1);
+        if (needed.get(letter)! > (onBoard.get(letter) ?? 0)) return false; // not enough on the board //@prune
       }
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) if (dfs(r, c, 0)) return true; //@start
+      // Start from the rarer end of the word: fewer starting cells to try.
+      const countOf = (letter: string) => onBoard.get(letter) ?? 0;
+      if (countOf(word[0]) > countOf(word[word.length - 1])) { //@reverse
+        word = word.split("").reverse().join("");
+      }
+      // Then the same backtracking search as before.
+      const rows = board.length;
+      const cols = board[0].length;
+      // Can we spell word[index..] starting at (row, col)?
+      function spell(row: number, col: number, index: number): boolean {
+        if (index === word.length) return true; //@found
+        const outside = row < 0 || col < 0 || row >= rows || col >= cols;
+        if (outside || board[row][col] !== word[index]) return false; //@miss
+        const letter = board[row][col];
+        board[row][col] = "#"; // mark as used on this path //@mark
+        const found =
+          spell(row + 1, col, index + 1) ||
+          spell(row - 1, col, index + 1) ||
+          spell(row, col + 1, index + 1) ||
+          spell(row, col - 1, index + 1);
+        board[row][col] = letter; // restore //@undo
+        return found;
+      }
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (spell(row, col, 0)) return true; //@start
+        }
+      }
       return false; //@ret
     }
   `),

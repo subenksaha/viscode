@@ -15,8 +15,8 @@ function mergeTwo(a: ListNode | null, b: ListNode | null, t: Tracer, label: stri
     const pick: ListNode = a.val <= b.val ? a : b;
     t.step(label, `Compare ${a.val} and ${b.val}: take ${pick.val}.`, () => [
       ...context(),
-      list("a", listNodes(a), { tones: [[a, pick === a ? "success" : "compare"]] }),
-      list("b", listNodes(b), { tones: [[b, pick === b ? "success" : "compare"]] }),
+      list("first", listNodes(a), { tones: [[a, pick === a ? "success" : "compare"]] }),
+      list("second", listNodes(b), { tones: [[b, pick === b ? "success" : "compare"]] }),
       list("merged so far", listNodes(dummy.next)),
     ]);
     tail.next = pick;
@@ -36,13 +36,18 @@ const sortAll = defineSolution<Input>({
   idea: "Pour every value into one array, sort it and build a new list.",
   code: code(`
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
-      const vals: number[] = [];
-      for (let head of lists) for (; head; head = head.next) vals.push(head.val); //@collect
-      vals.sort((a, b) => a - b); //@sort
-      const dummy = new ListNode(0);
-      let tail = dummy;
-      for (const v of vals) tail = tail.next = new ListNode(v); //@build
-      return dummy.next; //@ret
+      const values: number[] = [];
+      for (const head of lists) { //@collect
+        for (let node = head; node !== null; node = node.next) values.push(node.val);
+      }
+      values.sort((a, b) => a - b); //@sort
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead;
+      for (const value of values) { //@build
+        tail.next = new ListNode(value);
+        tail = tail.next;
+      }
+      return dummyHead.next; //@ret
     }
   `),
   run({ lists }, t) {
@@ -67,33 +72,40 @@ const oneByOne = defineSolution<Input>({
   space: "O(1)",
   idea: "Fold the lists: merge list 0 with list 1, then the result with list 2, and so on.",
   code: code(`
-    function mergeTwo(a: ListNode | null, b: ListNode | null): ListNode | null {
-      const dummy = new ListNode(0);
-      let tail = dummy;
-      while (a && b) {
-        if (a.val <= b.val) { tail.next = a; a = a.next; } //@pick
-        else { tail.next = b; b = b.next; }
+    function mergeTwo(first: ListNode | null, second: ListNode | null): ListNode | null {
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead;
+      while (first !== null && second !== null) {
+        if (first.val <= second.val) { //@pick
+          tail.next = first;
+          first = first.next;
+        } else {
+          tail.next = second;
+          second = second.next;
+        }
         tail = tail.next;
       }
-      tail.next = a ?? b;
-      return dummy.next;
+      tail.next = first !== null ? first : second;
+      return dummyHead.next;
     }
 
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
-      let res: ListNode | null = null; //@init
-      for (const l of lists) res = mergeTwo(res, l); //@fold
-      return res; //@ret
+      let result: ListNode | null = null; //@init
+      for (const list of lists) { //@fold
+        result = mergeTwo(result, list);
+      }
+      return result; //@ret
     }
   `),
   run({ lists }, t) {
     let res: ListNode | null = null;
-    t.step("init", "res = empty.", [list("res", [])]);
+    t.step("init", "result = empty.", [list("result", [])]);
     lists.forEach((l, i) => {
-      const ctx = () => [vars({ merging: `res + list ${i}` })];
-      t.step("fold", `Merge list ${i} into the result.`, () => [list("res", listNodes(res)), list(`list ${i}`, listNodes(l))]);
+      const ctx = () => [vars({ merging: `result + list ${i}` })];
+      t.step("fold", `Merge list ${i} into the result.`, () => [list("result", listNodes(res)), list(`list ${i}`, listNodes(l))]);
       res = mergeTwo(res, l, t, "pick", ctx);
     });
-    t.step("ret", "Return res.", [list("result", listNodes(res))]);
+    t.step("ret", "Return result.", [list("result", listNodes(res))]);
     return listToArray(res);
   },
 });
@@ -105,25 +117,33 @@ const divide = defineSolution<Input>({
   space: "O(1)",
   idea: "Merge lists in pairs: k lists become k/2, then k/4, … Every node takes part in log k merges.",
   code: code(`
-    function mergeTwo(a: ListNode | null, b: ListNode | null): ListNode | null {
-      const dummy = new ListNode(0);
-      let tail = dummy;
-      while (a && b) {
-        if (a.val <= b.val) { tail.next = a; a = a.next; } //@pick
-        else { tail.next = b; b = b.next; }
+    function mergeTwo(first: ListNode | null, second: ListNode | null): ListNode | null {
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead;
+      while (first !== null && second !== null) {
+        if (first.val <= second.val) { //@pick
+          tail.next = first;
+          first = first.next;
+        } else {
+          tail.next = second;
+          second = second.next;
+        }
         tail = tail.next;
       }
-      tail.next = a ?? b;
-      return dummy.next;
+      tail.next = first !== null ? first : second;
+      return dummyHead.next;
     }
 
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
-      if (!lists.length) return null;
+      if (lists.length === 0) return null;
+      // Merge lists in pairs, halving their number each round.
       while (lists.length > 1) { //@round
-        const next: (ListNode | null)[] = [];
-        for (let i = 0; i < lists.length; i += 2) //@pair
-          next.push(mergeTwo(lists[i], lists[i + 1] ?? null));
-        lists = next;
+        const merged: (ListNode | null)[] = [];
+        for (let i = 0; i < lists.length; i += 2) { //@pair
+          const second = i + 1 < lists.length ? lists[i + 1] : null;
+          merged.push(mergeTwo(lists[i], second));
+        }
+        lists = merged;
       }
       return lists[0]; //@ret
     }
@@ -158,16 +178,20 @@ const heap = defineSolution<Input>({
   idea: "Keep the current head of every list in a min-heap. Pop the smallest, append it, and push its successor.",
   code: code(`
     function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
+      // Min-heap of the current head of each list.
       const heap = new PriorityQueue<ListNode>((a, b) => a.val - b.val);
-      for (const l of lists) if (l) heap.enqueue(l); //@init
-      const dummy = new ListNode(0);
-      let tail = dummy;
-      while (!heap.isEmpty()) { //@loop
-        const node = heap.dequeue()!; //@pop
-        tail = tail.next = node;
-        if (node.next) heap.enqueue(node.next); //@push
+      for (const head of lists) { //@init
+        if (head !== null) heap.enqueue(head);
       }
-      return dummy.next; //@ret
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead;
+      while (!heap.isEmpty()) { //@loop
+        const smallest = heap.dequeue()!; //@pop
+        tail.next = smallest;
+        tail = smallest;
+        if (smallest.next !== null) heap.enqueue(smallest.next); //@push
+      }
+      return dummyHead.next; //@ret
     }
   `),
   run({ lists }, t) {

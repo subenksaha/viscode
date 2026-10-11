@@ -16,14 +16,33 @@ const bfs = defineSolution<Input>({
   idea: "Start a BFS from every 0 at once. The first time the wave reaches a cell, that distance is its shortest distance to a 0.",
   code: code(`
     function updateMatrix(mat: number[][]): number[][] {
-      const m = mat.length, n = mat[0].length, queue: number[][] = [];
-      const dist = mat.map((row, r) => row.map((v, c) => (v === 0 ? (queue.push([r, c]), 0) : Infinity))); //@seed
-      for (let h = 0; h < queue.length; h++) { //@pop
-        const [r, c] = queue[h];
-        for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-          if (x >= 0 && y >= 0 && x < m && y < n && dist[x][y] > dist[r][c] + 1) { //@check
-            dist[x][y] = dist[r][c] + 1; queue.push([x, y]); //@set
+      const rows = mat.length;
+      const cols = mat[0].length;
+      const queue: number[][] = [];
+      const dist: number[][] = [];
+      for (let row = 0; row < rows; row++) { //@seed
+        dist.push([]);
+        for (let col = 0; col < cols; col++) {
+          if (mat[row][col] === 0) {
+            dist[row].push(0);
+            queue.push([row, col]);
+          } else {
+            dist[row].push(Infinity);
           }
+        }
+      }
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      while (queue.length > 0) {
+        const [row, col] = queue.shift()!; //@pop
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const insideGrid = nextRow >= 0 && nextRow < rows && nextCol >= 0 && nextCol < cols;
+          if (insideGrid && dist[nextRow][nextCol] > dist[row][col] + 1) { //@check
+            dist[nextRow][nextCol] = dist[row][col] + 1; //@set
+            queue.push([nextRow, nextCol]);
+          }
+        }
       }
       return dist; //@ret
     }
@@ -64,15 +83,29 @@ const twoPass = defineSolution<Input>({
   idea: "A shortest path to a 0 comes from some direction. One pass from the top-left handles paths coming from above/left; a second pass from the bottom-right handles below/right.",
   code: code(`
     function updateMatrix(mat: number[][]): number[][] {
-      const m = mat.length, n = mat[0].length, INF = m + n;
-      const d = mat.map((row) => row.map((v) => (v ? INF : 0))); //@init
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) //@down
-          if (d[r][c]) d[r][c] = Math.min(d[r][c], (r ? d[r - 1][c] : INF) + 1, (c ? d[r][c - 1] : INF) + 1);
-      for (let r = m - 1; r >= 0; r--)
-        for (let c = n - 1; c >= 0; c--) //@up
-          if (d[r][c]) d[r][c] = Math.min(d[r][c], (r < m - 1 ? d[r + 1][c] : INF) + 1, (c < n - 1 ? d[r][c + 1] : INF) + 1);
-      return d; //@ret
+      const rows = mat.length;
+      const cols = mat[0].length;
+      const farAway = rows + cols; // bigger than any real distance
+      const dist = mat.map((row) => row.map((cell) => (cell === 0 ? 0 : farAway))); //@init
+
+      // Pass 1: top-left to bottom-right, using the cells above and to the left.
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@down
+          if (dist[row][col] === 0) continue;
+          if (row > 0) dist[row][col] = Math.min(dist[row][col], dist[row - 1][col] + 1);
+          if (col > 0) dist[row][col] = Math.min(dist[row][col], dist[row][col - 1] + 1);
+        }
+      }
+
+      // Pass 2: bottom-right to top-left, using the cells below and to the right.
+      for (let row = rows - 1; row >= 0; row--) {
+        for (let col = cols - 1; col >= 0; col--) { //@up
+          if (dist[row][col] === 0) continue;
+          if (row < rows - 1) dist[row][col] = Math.min(dist[row][col], dist[row + 1][col] + 1);
+          if (col < cols - 1) dist[row][col] = Math.min(dist[row][col], dist[row][col + 1] + 1);
+        }
+      }
+      return dist; //@ret
     }
   `),
   run({ mat }, t) {

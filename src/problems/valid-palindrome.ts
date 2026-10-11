@@ -15,9 +15,10 @@ const cleanReverse = defineSolution<Input>({
   idea: "Keep only letters and digits, lowercase them, and compare the result with its reverse.",
   code: code(`
     function isPalindrome(s: string): boolean {
-      const clean = s.toLowerCase().replace(/[^a-z0-9]/g, ""); //@clean
-      const rev = [...clean].reverse().join(""); //@reverse
-      return clean === rev; //@ret
+      // Keep only letters and digits, all lowercase.
+      const cleaned = s.toLowerCase().replace(/[^a-z0-9]/g, ""); //@clean
+      const reversed = cleaned.split("").reverse().join(""); //@reverse
+      return cleaned === reversed; //@ret
     }
   `),
   run({ s }, t) {
@@ -35,15 +36,24 @@ const twoPointers = defineSolution<Input>({
   name: "Two Pointers, In Place",
   time: "O(n)",
   space: "O(1)",
-  idea: "Move lo and hi toward each other, skipping non-alphanumeric characters, and compare lowercase characters.",
+  idea: "Move left and right toward each other, skipping non-alphanumeric characters, and compare lowercase characters.",
   code: code(`
     function isPalindrome(s: string): boolean {
-      let lo = 0, hi = s.length - 1; //@init
-      while (lo < hi) { //@loop
-        if (!/[a-z0-9]/i.test(s[lo])) { lo++; continue; } //@skipLo
-        if (!/[a-z0-9]/i.test(s[hi])) { hi--; continue; } //@skipHi
-        if (s[lo].toLowerCase() !== s[hi].toLowerCase()) return false; //@cmp
-        lo++; hi--; //@move
+      const isLetterOrDigit = (char: string) => /[a-z0-9]/i.test(char);
+      let left = 0; //@init
+      let right = s.length - 1;
+      while (left < right) { //@loop
+        if (!isLetterOrDigit(s[left])) { //@skipLo
+          left++;
+          continue;
+        }
+        if (!isLetterOrDigit(s[right])) { //@skipHi
+          right--;
+          continue;
+        }
+        if (s[left].toLowerCase() !== s[right].toLowerCase()) return false; //@cmp
+        left++; //@move
+        right--;
       }
       return true; //@ret
     }
@@ -52,7 +62,7 @@ const twoPointers = defineSolution<Input>({
     let lo = 0,
       hi = s.length - 1;
     const chars = [...s].map((c) => (c === " " ? "␣" : c));
-    const view = (bad = false) => [arr("s", chars, { tones: tones(...chars.map((c, i) => [!isAlnum(s[i]) ? i : null, "muted"] as [number | null, "muted"]), [lo, bad ? "danger" : "active"], [hi, bad ? "danger" : "compare"]), pointers: { lo, hi } })];
+    const view = (bad = false) => [arr("s", chars, { tones: tones(...chars.map((c, i) => [!isAlnum(s[i]) ? i : null, "muted"] as [number | null, "muted"]), [lo, bad ? "danger" : "active"], [hi, bad ? "danger" : "compare"]), pointers: { left: lo, right: hi } })];
     t.step("init", "Pointers at both ends.", view());
     while (lo < hi) {
       if (!isAlnum(s[lo])) {

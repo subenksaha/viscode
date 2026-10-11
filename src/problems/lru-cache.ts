@@ -19,19 +19,26 @@ const mapOrder = defineSolution<Input>({
   idea: "A JS Map iterates keys in insertion order. Deleting and re-inserting a key moves it to the newest end, so the first key is always the least recently used.",
   code: code(`
     class LRUCache {
+      // A Map remembers insertion order: the first key is the least recently used.
       cache = new Map<number, number>();
       constructor(private capacity: number) {} //@ctor
+
       get(key: number): number {
         if (!this.cache.has(key)) return -1; //@miss
-        const v = this.cache.get(key)!;
-        this.cache.delete(key); this.cache.set(key, v); //@touch
-        return v;
+        const value = this.cache.get(key)!;
+        // Re-insert so this key moves to the end (most recently used).
+        this.cache.delete(key); //@touch
+        this.cache.set(key, value);
+        return value;
       }
+
       put(key: number, value: number): void {
         this.cache.delete(key);
         this.cache.set(key, value); //@put
-        if (this.cache.size > this.capacity) //@full
-          this.cache.delete(this.cache.keys().next().value!); //@evict
+        if (this.cache.size > this.capacity) { //@full
+          const oldestKey = this.cache.keys().next().value!;
+          this.cache.delete(oldestKey); //@evict
+        }
       }
     }
   `),
@@ -95,26 +102,54 @@ const hashDll = defineSolution<Input>({
   space: "O(capacity)",
   idea: "A doubly linked list keeps usage order (head = most recent, tail = least recent) and a hash map finds any node in O(1). Touching a node unlinks it and reinserts it after head.",
   code: code(`
-    class Node { prev: Node | null = null; next: Node | null = null; constructor(public key = 0, public val = 0) {} }
+    class Node {
+      prev: Node | null = null;
+      next: Node | null = null;
+      constructor(public key = 0, public val = 0) {}
+    }
+
+    // Most recently used nodes sit right after head; the least recently used sits right before tail.
     class LRUCache {
-      map = new Map<number, Node>(); head = new Node(); tail = new Node();
-      constructor(private capacity: number) { this.head.next = this.tail; this.tail.prev = this.head; } //@ctor
-      private unlink(n: Node) { n.prev!.next = n.next; n.next!.prev = n.prev; }
-      private addFront(n: Node) { n.next = this.head.next; n.prev = this.head; this.head.next!.prev = n; this.head.next = n; }
-      get(key: number): number {
-        const n = this.map.get(key);
-        if (!n) return -1; //@miss
-        this.unlink(n); this.addFront(n); //@touch
-        return n.val;
+      nodeByKey = new Map<number, Node>();
+      head = new Node(); // dummy
+      tail = new Node(); // dummy
+
+      constructor(private capacity: number) { //@ctor
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
       }
+
+      private remove(node: Node) {
+        node.prev!.next = node.next;
+        node.next!.prev = node.prev;
+      }
+
+      private addToFront(node: Node) {
+        const first = this.head.next!;
+        node.prev = this.head;
+        node.next = first;
+        first.prev = node;
+        this.head.next = node;
+      }
+
+      get(key: number): number {
+        const node = this.nodeByKey.get(key);
+        if (node === undefined) return -1; //@miss
+        this.remove(node); //@touch
+        this.addToFront(node);
+        return node.val;
+      }
+
       put(key: number, value: number): void {
-        const old = this.map.get(key);
-        if (old) this.unlink(old); //@replace
-        const n = new Node(key, value);
-        this.map.set(key, n); this.addFront(n); //@put
-        if (this.map.size > this.capacity) { //@full
-          const lru = this.tail.prev!;
-          this.unlink(lru); this.map.delete(lru.key); //@evict
+        const existing = this.nodeByKey.get(key);
+        if (existing !== undefined) this.remove(existing); //@replace
+        const node = new Node(key, value);
+        this.nodeByKey.set(key, node); //@put
+        this.addToFront(node);
+        if (this.nodeByKey.size > this.capacity) { //@full
+          const leastRecent = this.tail.prev!;
+          this.remove(leastRecent); //@evict
+          this.nodeByKey.delete(leastRecent.key);
         }
       }
     }

@@ -15,15 +15,20 @@ const iterative = defineSolution<Input>({
   idea: "The digits are stored least-significant first, so add them like on paper: sum the two digits plus the carry, write sum mod 10, carry ⌊sum / 10⌋.",
   code: code(`
     function addTwoNumbers(l1: ListNode | null, l2: ListNode | null): ListNode | null {
-      const dummy = new ListNode(0);
-      let tail = dummy, carry = 0; //@init
-      while (l1 || l2 || carry) { //@loop
-        const sum = (l1?.val ?? 0) + (l2?.val ?? 0) + carry; //@sum
+      const dummyHead = new ListNode(0);
+      let tail = dummyHead; //@init
+      let carry = 0;
+      while (l1 !== null || l2 !== null || carry > 0) { //@loop
+        const digit1 = l1 !== null ? l1.val : 0;
+        const digit2 = l2 !== null ? l2.val : 0;
+        const sum = digit1 + digit2 + carry; //@sum
         carry = Math.floor(sum / 10);
-        tail = tail.next = new ListNode(sum % 10); //@write
-        l1 = l1?.next ?? null; l2 = l2?.next ?? null;
+        tail.next = new ListNode(sum % 10); //@write
+        tail = tail.next;
+        if (l1 !== null) l1 = l1.next;
+        if (l2 !== null) l2 = l2.next;
       }
-      return dummy.next; //@ret
+      return dummyHead.next; //@ret
     }
   `),
   run({ l1, l2 }, t) {
@@ -63,10 +68,14 @@ const recursive = defineSolution<Input>({
   idea: "add(a, b, carry) builds one digit node and recursively adds the rest of both lists with the new carry.",
   code: code(`
     function addTwoNumbers(l1: ListNode | null, l2: ListNode | null, carry = 0): ListNode | null {
-      if (!l1 && !l2 && !carry) return null; //@base
-      const sum = (l1?.val ?? 0) + (l2?.val ?? 0) + carry; //@sum
+      if (l1 === null && l2 === null && carry === 0) return null; //@base
+      const digit1 = l1 !== null ? l1.val : 0;
+      const digit2 = l2 !== null ? l2.val : 0;
+      const sum = digit1 + digit2 + carry; //@sum
       const node = new ListNode(sum % 10);
-      node.next = addTwoNumbers(l1?.next ?? null, l2?.next ?? null, Math.floor(sum / 10)); //@link
+      const next1 = l1 !== null ? l1.next : null;
+      const next2 = l2 !== null ? l2.next : null;
+      node.next = addTwoNumbers(next1, next2, Math.floor(sum / 10)); //@link
       return node; //@ret
     }
   `),

@@ -19,12 +19,25 @@ const kahn = defineSolution<Input>({
   idea: "Take courses whose prerequisites are all done, in the order they become available. If some course never becomes available, there is a cycle.",
   code: code(`
     function findOrder(numCourses: number, prerequisites: number[][]): number[] {
-      const indeg = new Array(numCourses).fill(0), adj: number[][] = Array.from({ length: numCourses }, () => []);
-      for (const [a, b] of prerequisites) { adj[b].push(a); indeg[a]++; } //@build
-      const queue = indeg.flatMap((d, i) => (d === 0 ? [i] : [])), order: number[] = []; //@seed
-      while (queue.length) {
-        const c = queue.shift()!; order.push(c); //@take
-        for (const next of adj[c]) if (--indeg[next] === 0) queue.push(next); //@relax
+      // unlocks[c] = courses that need c first; inDegree[c] = how many courses c still waits on
+      const unlocks: number[][] = Array.from({ length: numCourses }, () => []);
+      const inDegree = new Array(numCourses).fill(0);
+      for (const [course, required] of prerequisites) { //@build
+        unlocks[required].push(course);
+        inDegree[course]++;
+      }
+      const queue: number[] = [];
+      for (let course = 0; course < numCourses; course++) { //@seed
+        if (inDegree[course] === 0) queue.push(course);
+      }
+      const order: number[] = [];
+      while (queue.length > 0) {
+        const course = queue.shift()!; //@take
+        order.push(course);
+        for (const next of unlocks[course]) { //@relax
+          inDegree[next]--;
+          if (inDegree[next] === 0) queue.push(next);
+        }
       }
       return order.length === numCourses ? order : []; //@ret
     }
@@ -74,19 +87,26 @@ const dfsPost = defineSolution<Input>({
   idea: "A course finishes in DFS only after everything that depends on it has finished. Reversing the finish order gives a valid schedule; reaching a node still on the path means a cycle.",
   code: code(`
     function findOrder(numCourses: number, prerequisites: number[][]): number[] {
-      const adj: number[][] = Array.from({ length: numCourses }, () => []);
-      for (const [a, b] of prerequisites) adj[b].push(a); //@build
-      const state = new Array(numCourses).fill(0), post: number[] = [];
-      const dfs = (u: number): boolean => {
-        if (state[u] === 1) return false; //@cycle
-        if (state[u] === 2) return true;
-        state[u] = 1; //@enter
-        for (const v of adj[u]) if (!dfs(v)) return false;
-        state[u] = 2; post.push(u); //@finish
+      const unlocks: number[][] = Array.from({ length: numCourses }, () => []);
+      for (const [course, required] of prerequisites) unlocks[required].push(course); //@build
+      const state: ("new" | "visiting" | "done")[] = new Array(numCourses).fill("new");
+      const finishOrder: number[] = [];
+      // Returns false if a cycle is found.
+      function visit(course: number): boolean {
+        if (state[course] === "visiting") return false; //@cycle
+        if (state[course] === "done") return true;
+        state[course] = "visiting"; //@enter
+        for (const next of unlocks[course]) {
+          if (!visit(next)) return false;
+        }
+        state[course] = "done"; //@finish
+        finishOrder.push(course);
         return true;
-      };
-      for (let i = 0; i < numCourses; i++) if (!dfs(i)) return [];
-      return post.reverse(); //@ret
+      }
+      for (let course = 0; course < numCourses; course++) {
+        if (!visit(course)) return [];
+      }
+      return finishOrder.reverse(); //@ret
     }
   `),
   run({ numCourses, prerequisites }, t) {
@@ -104,7 +124,7 @@ const dfsPost = defineSolution<Input>({
           tones: tn,
           edgeTones: from !== undefined && u !== undefined ? tones([edgeKey(from, u), bad ? "danger" : "active"]) : {},
         }),
-        vars({ "finish order": `[${post}]` }),
+        vars({ finishOrder: `[${post}]` }),
       ];
     };
     t.step("build", "Build the adjacency list.", view());

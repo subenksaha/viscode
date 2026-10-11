@@ -16,11 +16,24 @@ const withArray = defineSolution<Input>({
   code: code(`
     function reverseKGroup(head: ListNode | null, k: number): ListNode | null {
       const nodes: ListNode[] = [];
-      for (let n = head; n; n = n.next) nodes.push(n); //@collect
-      for (let i = 0; i + k <= nodes.length; i += k) //@block
-        nodes.splice(i, k, ...nodes.slice(i, i + k).reverse()); //@reverse
-      nodes.forEach((n, i) => (n.next = nodes[i + 1] ?? null)); //@relink
-      return nodes[0] ?? null; //@ret
+      for (let node = head; node !== null; node = node.next) nodes.push(node); //@collect
+      // Reverse each full block of k nodes inside the array.
+      for (let start = 0; start + k <= nodes.length; start += k) { //@block
+        let left = start;
+        let right = start + k - 1;
+        while (left < right) { //@reverse
+          const temp = nodes[left];
+          nodes[left] = nodes[right];
+          nodes[right] = temp;
+          left++;
+          right--;
+        }
+      }
+      // Rebuild the links in the new order.
+      for (let i = 0; i < nodes.length; i++) { //@relink
+        nodes[i].next = i + 1 < nodes.length ? nodes[i + 1] : null;
+      }
+      return nodes.length > 0 ? nodes[0] : null; //@ret
     }
   `),
   run({ head, k }, t) {
@@ -46,19 +59,28 @@ const inPlace = defineSolution<Input>({
   idea: "Keep a pointer to the node before the current group. Check that k nodes remain, reverse them with the usual prev/curr loop, then splice the reversed group back between its neighbours.",
   code: code(`
     function reverseKGroup(head: ListNode | null, k: number): ListNode | null {
-      const dummy = new ListNode(0, head);
-      let before = dummy; //@init
+      const dummyHead = new ListNode(0, head);
+      let before = dummyHead; // the node just before the current group //@init
       while (true) {
+        // Find the k-th node of this group.
         let kth: ListNode | null = before;
-        for (let i = 0; i < k && kth; i++) kth = kth.next; //@kth
-        if (!kth) break; //@short
-        const after = kth.next, first = before.next!;
-        let prev = after, curr: ListNode | null = first;
-        while (curr !== after) { const nx: ListNode | null = curr!.next; curr!.next = prev; prev = curr; curr = nx; } //@flip
-        before.next = kth; //@splice
-        before = first;
+        for (let i = 0; i < k && kth !== null; i++) kth = kth.next; //@kth
+        if (kth === null) break; // fewer than k nodes left //@short
+        const after = kth.next; // first node of the next group
+        const first = before.next!;
+        // Reverse the group, pointing its first node at the next group.
+        let prev = after;
+        let curr: ListNode | null = first;
+        while (curr !== after) { //@flip
+          const next: ListNode | null = curr!.next;
+          curr!.next = prev;
+          prev = curr;
+          curr = next;
+        }
+        before.next = kth; // kth is now the start of the group //@splice
+        before = first; // first is now the end of the group
       }
-      return dummy.next; //@ret
+      return dummyHead.next; //@ret
     }
   `),
   run({ head, k }, t) {

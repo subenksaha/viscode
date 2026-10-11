@@ -14,13 +14,20 @@ const columnAdd = defineSolution<Input>({
   idea: "Add like on paper: walk both strings from the right, sum the two digits and the carry, write sum % 2 and carry sum >> 1.",
   code: code(`
     function addBinary(a: string, b: string): string {
-      let i = a.length - 1, j = b.length - 1, carry = 0, out = ""; //@init
-      while (i >= 0 || j >= 0 || carry) { //@loop
-        const sum = (i >= 0 ? +a[i--] : 0) + (j >= 0 ? +b[j--] : 0) + carry; //@sum
-        out = (sum % 2) + out; //@write
-        carry = sum >> 1; //@carry
+      let i = a.length - 1; //@init
+      let j = b.length - 1;
+      let carry = 0;
+      let result = "";
+      while (i >= 0 || j >= 0 || carry > 0) { //@loop
+        const digitA = i >= 0 ? Number(a[i]) : 0;
+        const digitB = j >= 0 ? Number(b[j]) : 0;
+        const sum = digitA + digitB + carry; //@sum
+        result = (sum % 2) + result; //@write
+        carry = Math.floor(sum / 2); //@carry
+        i--;
+        j--;
       }
-      return out; //@ret
+      return result; //@ret
     }
   `),
   run({ a, b }, t) {
@@ -32,7 +39,7 @@ const columnAdd = defineSolution<Input>({
       vars({ carry, sum }),
       arr("a", [...a], { tones: tones(...range(i + 1, a.length - 1, "muted"), [i, "active"]), pointers: { i: i >= 0 ? i : null } }),
       arr("b", [...b], { tones: tones(...range(j + 1, b.length - 1, "muted"), [j, "active"]), pointers: { j: j >= 0 ? j : null } }),
-      arr("out", [...out], { tones: tones([0, "success"]) }),
+      arr("result", [...out], { tones: tones([0, "success"]) }),
     ];
     t.step("init", "Start at the rightmost digit of each string.", view());
     while (i >= 0 || j >= 0 || carry) {
@@ -61,13 +68,15 @@ const bitwise = defineSolution<Input>({
   idea: "Treat both strings as big integers. XOR adds without carrying; AND shifted left is the carry. Repeat until there is no carry.",
   code: code(`
     function addBinary(a: string, b: string): string {
-      let x = BigInt("0b" + a), y = BigInt("0b" + b); //@init
-      while (y !== 0n) { //@loop
-        const noCarry = x ^ y; //@xor
-        const carry = (x & y) << 1n; //@and
-        x = noCarry; y = carry; //@swap
+      let sum = BigInt("0b" + a); //@init
+      let carry = BigInt("0b" + b);
+      while (carry !== 0n) { //@loop
+        const sumWithoutCarry = sum ^ carry; //@xor
+        const nextCarry = (sum & carry) << 1n; //@and
+        sum = sumWithoutCarry; //@swap
+        carry = nextCarry;
       }
-      return x.toString(2); //@ret
+      return sum.toString(2); //@ret
     }
   `),
   run({ a, b }, t) {
@@ -78,19 +87,19 @@ const bitwise = defineSolution<Input>({
     const width = Math.max(a.length, b.length) + 1;
     const pad = (n: bigint) => [...n.toString(2).padStart(width, "0")];
     const view = (hi?: "x" | "y") => [
-      arr("x", pad(x), { indexLabels: false, tones: hi === "x" ? tones(...range(0, width - 1, "compare")) : {} }),
-      arr("y (carry)", pad(y), { indexLabels: false, tones: hi === "y" ? tones(...range(0, width - 1, "compare")) : {} }),
+      arr("sum", pad(x), { indexLabels: false, tones: hi === "x" ? tones(...range(0, width - 1, "compare")) : {} }),
+      arr("carry", pad(y), { indexLabels: false, tones: hi === "y" ? tones(...range(0, width - 1, "compare")) : {} }),
     ];
     t.step("init", "Parse both strings as BigInts.", view());
     while (y !== ZERO) {
       t.step("loop", "Carry is non-zero: another round.", view());
       const noCarry = x ^ y;
-      t.step("xor", `x ^ y = ${noCarry.toString(2)} (sum ignoring carries).`, [...view(), arr("x ^ y", pad(noCarry), { indexLabels: false })]);
+      t.step("xor", `sum ^ carry = ${noCarry.toString(2)} (sum ignoring carries).`, [...view(), arr("sum ^ carry", pad(noCarry), { indexLabels: false })]);
       const carry = (x & y) << ONE;
-      t.step("and", `(x & y) << 1 = ${carry.toString(2)} (the carries).`, [...view(), arr("carry", pad(carry), { indexLabels: false })]);
+      t.step("and", `(sum & carry) << 1 = ${carry.toString(2)} (the carries).`, [...view(), arr("next carry", pad(carry), { indexLabels: false })]);
       x = noCarry;
       y = carry;
-      t.step("swap", "x = sum, y = carry.", view("x"));
+      t.step("swap", "Move on with the new sum and carry.", view("x"));
     }
     t.step("ret", `Return "${x.toString(2)}".`, view("x"));
     return x.toString(2);

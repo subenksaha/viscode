@@ -14,12 +14,18 @@ const bruteForce = defineSolution<Input>({
   code: code(`
     function countSubstrings(s: string): number {
       let count = 0; //@init
-      for (let i = 0; i < s.length; i++)
+      for (let i = 0; i < s.length; i++) {
         for (let j = i; j < s.length; j++) { //@check
-          let l = i, r = j;
-          while (l < r && s[l] === s[r]) { l++; r--; }
-          if (l >= r) count++; //@hit
+          let left = i;
+          let right = j;
+          while (left < right && s[left] === s[right]) {
+            left++;
+            right--;
+          }
+          const isPalindrome = left >= right;
+          if (isPalindrome) count++; //@hit
         }
+      }
       return count; //@ret
     }
   `),
@@ -53,12 +59,17 @@ const expand = defineSolution<Input>({
   code: code(`
     function countSubstrings(s: string): number {
       let count = 0;
-      const expand = (l: number, r: number) => {
-        while (l >= 0 && r < s.length && s[l] === s[r]) { count++; l--; r++; } //@grow
-      };
-      for (let i = 0; i < s.length; i++) { //@center
-        expand(i, i);
-        expand(i, i + 1);
+      // Each step outward that still matches is one more palindrome.
+      function expand(left: number, right: number) {
+        while (left >= 0 && right < s.length && s[left] === s[right]) { //@grow
+          count++;
+          left--;
+          right++;
+        }
+      }
+      for (let center = 0; center < s.length; center++) { //@center
+        expand(center, center); // odd length
+        expand(center, center + 1); // even length
       }
       return count; //@ret
     }
@@ -94,13 +105,17 @@ const dp = defineSolution<Input>({
   idea: "dp[i][j] = s[i..j] is a palindrome: the ends match and the inside is a palindrome. Count the true cells.",
   code: code(`
     function countSubstrings(s: string): number {
-      const n = s.length, dp = Array.from({ length: n }, () => new Array(n).fill(false));
+      const n = s.length;
+      // isPal[i][j] = is s[i..j] a palindrome? Filled from the bottom row up.
+      const isPal = Array.from({ length: n }, () => new Array(n).fill(false));
       let count = 0;
-      for (let i = n - 1; i >= 0; i--) //@row
+      for (let i = n - 1; i >= 0; i--) { //@row
         for (let j = i; j < n; j++) {
-          dp[i][j] = s[i] === s[j] && (j - i < 2 || dp[i + 1][j - 1]); //@cell
-          if (dp[i][j]) count++;
+          const innerIsPal = j - i < 2 || isPal[i + 1][j - 1];
+          isPal[i][j] = s[i] === s[j] && innerIsPal; //@cell
+          if (isPal[i][j]) count++;
         }
+      }
       return count; //@ret
     }
   `),

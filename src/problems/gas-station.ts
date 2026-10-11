@@ -15,14 +15,18 @@ const simulate = defineSolution<Input>({
   code: code(`
     function canCompleteCircuit(gas: number[], cost: number[]): number {
       const n = gas.length;
-      for (let s = 0; s < n; s++) { //@start
-        let tank = 0, k = 0;
-        for (; k < n; k++) {
-          const i = (s + k) % n;
-          tank += gas[i] - cost[i]; //@drive
-          if (tank < 0) break; //@fail
+      for (let start = 0; start < n; start++) { //@start
+        let tank = 0;
+        let madeIt = true;
+        for (let step = 0; step < n; step++) {
+          const station = (start + step) % n;
+          tank += gas[station] - cost[station]; //@drive
+          if (tank < 0) { //@fail
+            madeIt = false;
+            break;
+          }
         }
-        if (k === n) return s; //@ret
+        if (madeIt) return start; //@ret
       }
       return -1; //@none
     }
@@ -62,11 +66,18 @@ const greedy = defineSolution<Input>({
   idea: "If total gas < total cost, no start works. Otherwise, whenever the running tank goes negative at i, no start in [start, i] can work either, so restart at i + 1.",
   code: code(`
     function canCompleteCircuit(gas: number[], cost: number[]): number {
-      let total = 0, tank = 0, start = 0; //@init
+      let total = 0; // gas left after the whole loop //@init
+      let tank = 0;  // gas left since the current start
+      let start = 0;
       for (let i = 0; i < gas.length; i++) {
-        const d = gas[i] - cost[i];
-        total += d; tank += d; //@add
-        if (tank < 0) { start = i + 1; tank = 0; } //@reset
+        const gain = gas[i] - cost[i];
+        total += gain; //@add
+        tank += gain;
+        if (tank < 0) { //@reset
+          // We can't reach i + 1 from start, so no station up to i works. Try i + 1.
+          start = i + 1;
+          tank = 0;
+        }
       }
       return total < 0 ? -1 : start; //@ret
     }

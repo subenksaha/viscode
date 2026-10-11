@@ -56,18 +56,22 @@ const iterative = defineSolution<Input>({
   idea: "The same decision as the recursive version, written as a loop, so it needs no stack space.",
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
-      let n = root; //@init
+      let node = root; //@init
       while (true) {
-        if (p.val < n.val && q.val < n.val) n = n.left!; //@left
-        else if (p.val > n.val && q.val > n.val) n = n.right!; //@right
-        else return n; //@found
+        if (p.val < node.val && q.val < node.val) {
+          node = node.left!; // both are on the left //@left
+        } else if (p.val > node.val && q.val > node.val) {
+          node = node.right!; // both are on the right //@right
+        } else {
+          return node; // they split here (or one of them is node) //@found
+        }
       }
     }
   `),
   run({ root, p, q }, t) {
     let n = root!;
     const path: [TreeNode, Tone][] = [];
-    const view = (hit = false) => [vars({ p: p.val, q: q.val }), tree("tree", root, { tones: [...markPQ(p, q), ...path, [n, hit ? "success" : "active"]], pointers: { n } })];
+    const view = (hit = false) => [vars({ p: p.val, q: q.val }), tree("tree", root, { tones: [...markPQ(p, q), ...path, [n, hit ? "success" : "active"]], pointers: { node: n } })];
     t.step("init", "Start at the root.", view());
     for (;;) {
       if (p.val < n.val && q.val < n.val) {
@@ -94,18 +98,22 @@ const generic = defineSolution<Input>({
   idea: "Record the search path from the root to p and to q. The LCA is the last node the two paths share. This works for any tree if you swap the BST search for a DFS.",
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
-      const path = (target: TreeNode) => {
-        const out: TreeNode[] = [];
-        for (let n: TreeNode | null = root; n; n = target.val < n.val ? n.left : n.right) {
-          out.push(n);
-          if (n === target) break;
+      // Nodes visited going from the root down to target.
+      function pathTo(target: TreeNode): TreeNode[] {
+        const path: TreeNode[] = [];
+        let node: TreeNode | null = root;
+        while (node !== null) {
+          path.push(node);
+          if (node === target) break;
+          node = target.val < node.val ? node.left : node.right;
         }
-        return out;
-      };
-      const a = path(p), b = path(q); //@paths
+        return path;
+      }
+      const pathP = pathTo(p); //@paths
+      const pathQ = pathTo(q);
       let i = 0;
-      while (i < a.length && i < b.length && a[i] === b[i]) i++; //@common
-      return a[i - 1]; //@ret
+      while (i < pathP.length && i < pathQ.length && pathP[i] === pathQ[i]) i++; //@common
+      return pathP[i - 1]; // last node the two paths share //@ret
     }
   `),
   run({ root, p, q }, t) {

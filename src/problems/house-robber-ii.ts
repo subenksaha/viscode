@@ -15,16 +15,21 @@ const twoPasses = defineSolution<Input>({
   code: code(`
     function rob(nums: number[]): number {
       if (nums.length === 1) return nums[0]; //@single
-      const line = (lo: number, hi: number) => {
-        let prev2 = 0, prev1 = 0;
-        for (let i = lo; i <= hi; i++) { //@loop
-          [prev2, prev1] = [prev1, Math.max(prev1, prev2 + nums[i])]; //@step
+      // Plain House Robber on the houses first..last (in a straight line).
+      function robLine(first: number, last: number): number {
+        let bestTwoBack = 0;
+        let bestOneBack = 0;
+        for (let i = first; i <= last; i++) { //@loop
+          const current = Math.max(bestOneBack, bestTwoBack + nums[i]); //@step
+          bestTwoBack = bestOneBack;
+          bestOneBack = current;
         }
-        return prev1; //@done
-      };
-      const a = line(0, nums.length - 2); //@a
-      const b = line(1, nums.length - 1); //@b
-      return Math.max(a, b); //@ret
+        return bestOneBack; //@done
+      }
+      // The first and last houses touch, so we can never rob both.
+      const skipLast = robLine(0, nums.length - 2); //@a
+      const skipFirst = robLine(1, nums.length - 1); //@b
+      return Math.max(skipLast, skipFirst); //@ret
     }
   `),
   run({ nums }, t) {
@@ -36,7 +41,7 @@ const twoPasses = defineSolution<Input>({
       let prev2 = 0,
         prev1 = 0;
       const view = (i?: number) => [
-        vars({ ...results, prev2, prev1 }),
+        vars({ ...results, bestTwoBack: prev2, bestOneBack: prev1 }),
         arr("houses (circle)", nums, {
           tones: tones(...(lo === 0 ? [[nums.length - 1, "muted"] as [number, "muted"]] : [[0, "muted"] as [number, "muted"]]), [i, "active"]),
           window: [lo, hi],
@@ -52,11 +57,11 @@ const twoPasses = defineSolution<Input>({
       return prev1;
     };
     const a = line(0, nums.length - 2, "Without the last house", {});
-    t.step("a", `a = ${a}.`, [vars({ a }), arr("houses", nums)]);
-    const b = line(1, nums.length - 1, "Without the first house", { a });
-    t.step("b", `b = ${b}.`, [vars({ a, b }), arr("houses", nums)]);
+    t.step("a", `skipLast = ${a}.`, [vars({ skipLast: a }), arr("houses", nums)]);
+    const b = line(1, nums.length - 1, "Without the first house", { skipLast: a });
+    t.step("b", `skipFirst = ${b}.`, [vars({ skipLast: a, skipFirst: b }), arr("houses", nums)]);
     const res = Math.max(a, b);
-    t.step("ret", `Return max(${a}, ${b}) = ${res}.`, [vars({ a, b, answer: res })]);
+    t.step("ret", `Return max(${a}, ${b}) = ${res}.`, [vars({ skipLast: a, skipFirst: b, answer: res })]);
     return res;
   },
 });
@@ -87,13 +92,21 @@ const tables = defineSolution<Input>({
   code: code(`
     function rob(nums: number[]): number {
       if (nums.length === 1) return nums[0]; //@single
-      const line = (lo: number, hi: number) => {
-        const n = hi - lo + 1, dp = new Array(n + 1).fill(0);
-        dp[1] = nums[lo]; //@init
-        for (let k = 2; k <= n; k++) dp[k] = Math.max(dp[k - 1], dp[k - 2] + nums[lo + k - 1]); //@fill
-        return dp[n];
-      };
-      return Math.max(line(0, nums.length - 2), line(1, nums.length - 1)); //@ret
+      // Plain House Robber on the houses first..last (in a straight line).
+      function robLine(first: number, last: number): number {
+        const count = last - first + 1;
+        // dp[k] = most money from the first k houses of this line
+        const dp = new Array(count + 1).fill(0);
+        dp[1] = nums[first]; //@init
+        for (let k = 2; k <= count; k++) { //@fill
+          const house = nums[first + k - 1];
+          dp[k] = Math.max(dp[k - 1], dp[k - 2] + house);
+        }
+        return dp[count];
+      }
+      const skipLast = robLine(0, nums.length - 2);
+      const skipFirst = robLine(1, nums.length - 1);
+      return Math.max(skipLast, skipFirst); //@ret
     }
   `),
   run({ nums }, t) {
@@ -104,7 +117,7 @@ const tables = defineSolution<Input>({
     const a = dpLine(nums, 0, nums.length - 2, t, "skip last");
     const b = dpLine(nums, 1, nums.length - 1, t, "skip first");
     const res = Math.max(a, b);
-    t.step("ret", `max(${a}, ${b}) = ${res}.`, [vars({ "skip last": a, "skip first": b, answer: res })]);
+    t.step("ret", `max(${a}, ${b}) = ${res}.`, [vars({ skipLast: a, skipFirst: b, answer: res })]);
     return res;
   },
 });

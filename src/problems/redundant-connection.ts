@@ -16,15 +16,23 @@ const dfsCheck = defineSolution<Input>({
   idea: "Add edges one by one. Before adding (u, v), DFS from u over the edges so far: if v is already reachable, this edge closes a cycle and is the answer.",
   code: code(`
     function findRedundantConnection(edges: number[][]): number[] {
-      const adj = new Map<number, number[]>();
-      const reach = (u: number, v: number, seen: Set<number>): boolean => {
-        if (u === v) return true;
-        seen.add(u); //@visit
-        return (adj.get(u) ?? []).some((w) => !seen.has(w) && reach(w, v, seen));
-      };
-      for (const [u, v] of edges) { //@edge
-        if (reach(u, v, new Set())) return [u, v]; //@cycle
-        adj.set(u, [...(adj.get(u) ?? []), v]); adj.set(v, [...(adj.get(v) ?? []), u]); //@add
+      const neighbors = new Map<number, number[]>();
+      // Is there already a path from start to target?
+      function canReach(start: number, target: number, visited: Set<number>): boolean {
+        if (start === target) return true;
+        visited.add(start); //@visit
+        for (const next of neighbors.get(start) ?? []) {
+          if (!visited.has(next) && canReach(next, target, visited)) return true;
+        }
+        return false;
+      }
+      for (const [a, b] of edges) { //@edge
+        // If a and b are already connected, this edge closes a cycle.
+        if (canReach(a, b, new Set())) return [a, b]; //@cycle
+        if (!neighbors.has(a)) neighbors.set(a, []); //@add
+        if (!neighbors.has(b)) neighbors.set(b, []);
+        neighbors.get(a)!.push(b);
+        neighbors.get(b)!.push(a);
       }
       return [];
     }
@@ -73,12 +81,16 @@ const unionFind = defineSolution<Input>({
   idea: "Union the endpoints of each edge. The first edge whose endpoints already share a root connects two nodes that were already connected: that edge is redundant.",
   code: code(`
     function findRedundantConnection(edges: number[][]): number[] {
-      const parent = Array.from({ length: edges.length + 1 }, (_, i) => i); //@init
-      const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      for (const [u, v] of edges) {
-        const a = find(u), b = find(v); //@find
-        if (a === b) return [u, v]; //@cycle
-        parent[a] = b; //@union
+      const parent = Array.from({ length: edges.length + 1 }, (_, node) => node); //@init
+      function findRoot(node: number): number {
+        while (parent[node] !== node) node = parent[node];
+        return node;
+      }
+      for (const [a, b] of edges) {
+        const rootA = findRoot(a); //@find
+        const rootB = findRoot(b);
+        if (rootA === rootB) return [a, b]; // already connected: this edge makes a cycle //@cycle
+        parent[rootA] = rootB; //@union
       }
       return [];
     }
@@ -98,7 +110,7 @@ const unionFind = defineSolution<Input>({
     for (const [u, v] of edges) {
       const a = find(u),
         b = find(v);
-      t.step("find", `Edge [${u}, ${v}]: root(${u}) = ${a}, root(${v}) = ${b}.`, () => [...view([u, v]), vars({ "root(u)": a, "root(v)": b })]);
+      t.step("find", `Edge [${u}, ${v}]: root(${u}) = ${a}, root(${v}) = ${b}.`, () => [...view([u, v]), vars({ rootA: a, rootB: b })]);
       if (a === b) {
         t.step("cycle", "Same root: already connected. This edge is redundant.", view([u, v], "danger"));
         return [u, v];

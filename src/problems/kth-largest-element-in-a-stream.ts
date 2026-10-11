@@ -22,15 +22,15 @@ const sorted = defineSolution<Input>({
   idea: "Keep every value in a sorted array. The kth largest is k positions from the end.",
   code: code(`
     class KthLargest {
-      vals: number[];
+      sorted: number[];
       constructor(private k: number, nums: number[]) {
-        this.vals = [...nums].sort((a, b) => a - b); //@ctor
+        this.sorted = [...nums].sort((a, b) => a - b); //@ctor
       }
       add(val: number): number {
-        let i = 0;
-        while (i < this.vals.length && this.vals[i] < val) i++;
-        this.vals.splice(i, 0, val); //@insert
-        return this.vals[this.vals.length - this.k]; //@ret
+        let position = 0;
+        while (position < this.sorted.length && this.sorted[position] < val) position++;
+        this.sorted.splice(position, 0, val); //@insert
+        return this.sorted[this.sorted.length - this.k]; //@ret
       }
     }
   `),
@@ -69,13 +69,14 @@ const minHeap = defineSolution<Input>({
   idea: "Keep only the k largest values in a min-heap. Its smallest element is exactly the kth largest overall; anything smaller can be thrown away.",
   code: code(`
     class KthLargest {
+      // Min-heap holding the k largest values. Its top is the k-th largest.
       heap = new MinPriorityQueue<number>();
       constructor(private k: number, nums: number[]) {
-        for (const x of nums) this.add(x); //@ctor
+        for (const num of nums) this.add(num); //@ctor
       }
       add(val: number): number {
         this.heap.enqueue(val); //@push
-        if (this.heap.size() > this.k) this.heap.dequeue(); //@evict
+        if (this.heap.size() > this.k) this.heap.dequeue(); // drop the smallest //@evict
         return this.heap.front()!; //@ret
       }
     }

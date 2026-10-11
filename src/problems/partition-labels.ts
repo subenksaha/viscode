@@ -14,16 +14,26 @@ const mergeIntervals = defineSolution<Input>({
   idea: "Each letter spans [first, last] occurrence. Pieces must contain whole spans, so merge overlapping spans; each merged block is one piece.",
   code: code(`
     function partitionLabels(s: string): number[] {
+      // span[letter] = [first index, last index] of that letter
       const span = new Map<string, [number, number]>();
-      [...s].forEach((c, i) => span.set(c, [span.get(c)?.[0] ?? i, i])); //@spans
-      const res: number[] = [];
-      let lo = 0, hi = -1;
-      for (const [a, b] of span.values()) { // in order of first occurrence
-        if (a > hi && hi >= 0) { res.push(hi - lo + 1); lo = a; } //@cut
-        hi = Math.max(hi, b); //@extend
+      for (let i = 0; i < s.length; i++) { //@spans
+        const letter = s[i];
+        if (!span.has(letter)) span.set(letter, [i, i]);
+        else span.get(letter)![1] = i;
       }
-      res.push(hi - lo + 1);
-      return res; //@ret
+      const sizes: number[] = [];
+      let partStart = 0;
+      let partEnd = -1;
+      for (const [first, last] of span.values()) { // in order of first appearance
+        // This letter starts after the current part ends, so the part is finished.
+        if (partEnd >= 0 && first > partEnd) { //@cut
+          sizes.push(partEnd - partStart + 1);
+          partStart = first;
+        }
+        partEnd = Math.max(partEnd, last); //@extend
+      }
+      sizes.push(partEnd - partStart + 1);
+      return sizes; //@ret
     }
   `),
   run({ s }, t) {
@@ -35,7 +45,7 @@ const mergeIntervals = defineSolution<Input>({
     let lo = 0,
       hi = -1;
     const view = (k?: number) => [
-      vars({ lo, hi: hi < 0 ? undefined : hi }),
+      vars({ partStart: lo, partEnd: hi < 0 ? undefined : hi }),
       intervals("letter spans (first → last)", spans, tones(...spans.map((sp, i) => [i, sp[0] < lo ? "muted" : i === k ? "active" : sp[0] <= hi ? "window" : "muted"] as [number, Tone]))),
       arr("letters", letters, { tones: tones([k, "active"]), indexLabels: false }),
       arr("pieces", res, { indexLabels: false }),
@@ -64,15 +74,19 @@ const lastIndex = defineSolution<Input>({
   idea: "Record each letter's last index. Scan left to right, stretching the current piece's end to the last index of every letter seen; when i reaches that end, cut.",
   code: code(`
     function partitionLabels(s: string): number[] {
-      const last = new Map<string, number>();
-      [...s].forEach((c, i) => last.set(c, i)); //@last
-      const res: number[] = [];
-      let start = 0, end = 0;
+      const lastIndex = new Map<string, number>();
+      for (let i = 0; i < s.length; i++) lastIndex.set(s[i], i); //@last
+      const sizes: number[] = [];
+      let start = 0;
+      let end = 0; // the current part must reach at least this far
       for (let i = 0; i < s.length; i++) {
-        end = Math.max(end, last.get(s[i])!); //@stretch
-        if (i === end) { res.push(end - start + 1); start = i + 1; } //@cut
+        end = Math.max(end, lastIndex.get(s[i])!); //@stretch
+        if (i === end) { //@cut
+          sizes.push(end - start + 1);
+          start = i + 1;
+        }
       }
-      return res; //@ret
+      return sizes; //@ret
     }
   `),
   run({ s }, t) {

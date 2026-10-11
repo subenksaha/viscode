@@ -17,13 +17,21 @@ const sortStack = defineSolution<Input>({
   idea: "Process cars from closest to the target backwards. A car whose arrival time is ≤ the fleet ahead of it catches up and joins that fleet; otherwise it leads a new fleet.",
   code: code(`
     function carFleet(target: number, position: number[], speed: number[]): number {
-      const cars = position.map((p, i) => [p, (target - p) / speed[i]]).sort((a, b) => b[0] - a[0]); //@sort
-      const stack: number[] = [];
-      for (const [, time] of cars) { //@car
-        stack.push(time); //@push
-        if (stack.length >= 2 && stack.at(-1)! <= stack.at(-2)!) stack.pop(); //@merge
+      const cars = position.map((pos, i) => ({
+        position: pos,
+        arrivalTime: (target - pos) / speed[i],
+      }));
+      cars.sort((a, b) => b.position - a.position); // closest to target first //@sort
+      const fleetTimes: number[] = [];
+      for (const car of cars) { //@car
+        fleetTimes.push(car.arrivalTime); //@push
+        const count = fleetTimes.length;
+        // A car that would arrive no later than the fleet ahead catches it and joins it.
+        if (count >= 2 && fleetTimes[count - 1] <= fleetTimes[count - 2]) { //@merge
+          fleetTimes.pop();
+        }
       }
-      return stack.length; //@ret
+      return fleetTimes.length; //@ret
     }
   `),
   run({ target, position, speed }, t) {
@@ -58,11 +66,16 @@ const sortCount = defineSolution<Input>({
   idea: "The stack only ever needs its top. Walk from the front car back, tracking the slowest arrival time ahead; a car that would arrive later than that starts a new fleet.",
   code: code(`
     function carFleet(target: number, position: number[], speed: number[]): number {
-      const order = position.map((_, i) => i).sort((a, b) => position[b] - position[a]); //@sort
-      let fleets = 0, lead = 0;
-      for (const i of order) {
+      const carIndices = position.map((_, i) => i);
+      carIndices.sort((a, b) => position[b] - position[a]); // closest to target first //@sort
+      let fleets = 0;
+      let leadArrival = 0; // arrival time of the fleet just ahead
+      for (const i of carIndices) {
         const time = (target - position[i]) / speed[i]; //@time
-        if (time > lead) { fleets++; lead = time; } //@new
+        if (time > leadArrival) { //@new
+          fleets++;
+          leadArrival = time;
+        }
       }
       return fleets; //@ret
     }
@@ -74,7 +87,7 @@ const sortCount = defineSolution<Input>({
     let fleets = 0,
       lead = 0;
     const view = (k: number, tone: "active" | "success" | "muted" = "active") => [
-      vars({ fleets, "lead arrival": fmtT(lead) }),
+      vars({ fleets, leadArrival: fmtT(lead) }),
       arr("cars (front first)", labels, { tones: tones([k, tone]), pointers: { car: k } }),
     ];
     t.step("sort", "Sort cars front to back.", view(-1));

@@ -16,21 +16,27 @@ const threePasses = defineSolution<Input>({
   idea: "Run three passes over the board: one per row, one per column and one per 3×3 box. Each unit uses a fresh set; a repeated digit makes the board invalid.",
   code: code(`
     function isValidSudoku(board: string[][]): boolean {
-      const cell = [
-        (u: number, k: number) => board[u][k],                  // rows
-        (u: number, k: number) => board[k][u],                  // columns
-        (u: number, k: number) => board[3 * Math.floor(u / 3) + Math.floor(k / 3)][3 * (u % 3) + (k % 3)], // boxes
+      // Three ways to read "the k-th cell of unit number u": by row, by column, by 3x3 box.
+      const cellReaders = [
+        (unit: number, k: number) => board[unit][k], // rows
+        (unit: number, k: number) => board[k][unit], // columns
+        (unit: number, k: number) => {
+          const boxRow = Math.floor(unit / 3) * 3;
+          const boxCol = (unit % 3) * 3;
+          return board[boxRow + Math.floor(k / 3)][boxCol + (k % 3)]; // boxes
+        },
       ];
-      for (const get of cell)
-        for (let u = 0; u < 9; u++) { //@unit
+      for (const readCell of cellReaders) {
+        for (let unit = 0; unit < 9; unit++) { //@unit
           const seen = new Set<string>();
           for (let k = 0; k < 9; k++) { //@cell
-            const d = get(u, k);
-            if (d === ".") continue;
-            if (seen.has(d)) return false; //@dup
-            seen.add(d);
+            const digit = readCell(unit, k);
+            if (digit === ".") continue;
+            if (seen.has(digit)) return false; //@dup
+            seen.add(digit);
           }
         }
+      }
       return true; //@ret
     }
   `),
@@ -79,14 +85,18 @@ const onePass = defineSolution<Input>({
       const rows = Array.from({ length: 9 }, () => new Set<string>());
       const cols = Array.from({ length: 9 }, () => new Set<string>());
       const boxes = Array.from({ length: 9 }, () => new Set<string>()); //@init
-      for (let r = 0; r < 9; r++)
-        for (let c = 0; c < 9; c++) {
-          const d = board[r][c];
-          if (d === ".") continue;
-          const b = Math.floor(r / 3) * 3 + Math.floor(c / 3); //@cell
-          if (rows[r].has(d) || cols[c].has(d) || boxes[b].has(d)) return false; //@dup
-          rows[r].add(d); cols[c].add(d); boxes[b].add(d); //@add
+      for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+          const digit = board[row][col];
+          if (digit === ".") continue;
+          // Boxes are numbered 0..8, left to right, top to bottom.
+          const box = Math.floor(row / 3) * 3 + Math.floor(col / 3); //@cell
+          if (rows[row].has(digit) || cols[col].has(digit) || boxes[box].has(digit)) return false; //@dup
+          rows[row].add(digit); //@add
+          cols[col].add(digit);
+          boxes[box].add(digit);
         }
+      }
       return true; //@ret
     }
   `),

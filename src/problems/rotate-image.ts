@@ -14,10 +14,14 @@ const extra = defineSolution<Input>({
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;
-      const out = matrix.map((row) => row.map(() => 0)); //@init
-      for (let r = 0; r < n; r++)
-        for (let c = 0; c < n; c++) out[c][n - 1 - r] = matrix[r][c]; //@place
-      for (let r = 0; r < n; r++) matrix[r] = out[r]; //@copy
+      const rotated = matrix.map((line) => line.map(() => 0)); //@init
+      for (let row = 0; row < n; row++) {
+        for (let col = 0; col < n; col++) {
+          // Row number "row" becomes column number "n - 1 - row".
+          rotated[col][n - 1 - row] = matrix[row][col]; //@place
+        }
+      }
+      for (let row = 0; row < n; row++) matrix[row] = rotated[row]; //@copy
     }
   `),
   run({ matrix }, t) {
@@ -47,10 +51,16 @@ const transposeReverse = defineSolution<Input>({
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;
-      for (let r = 0; r < n; r++)
-        for (let c = r + 1; c < n; c++) //@transpose
-          [matrix[r][c], matrix[c][r]] = [matrix[c][r], matrix[r][c]];
-      for (const row of matrix) row.reverse(); //@reverse
+      // 1. Transpose: flip across the main diagonal.
+      for (let row = 0; row < n; row++) {
+        for (let col = row + 1; col < n; col++) { //@transpose
+          const temp = matrix[row][col];
+          matrix[row][col] = matrix[col][row];
+          matrix[col][row] = temp;
+        }
+      }
+      // 2. Reverse each row.
+      for (const line of matrix) line.reverse(); //@reverse
     }
   `),
   run({ matrix }, t) {
@@ -77,15 +87,18 @@ const layers = defineSolution<Input>({
   code: code(`
     function rotate(matrix: number[][]): void {
       const n = matrix.length;
-      for (let layer = 0; layer < n >> 1; layer++) { //@layer
-        const first = layer, last = n - 1 - layer;
+      const layers = Math.floor(n / 2);
+      for (let layer = 0; layer < layers; layer++) { //@layer
+        const first = layer;
+        const last = n - 1 - layer;
         for (let i = first; i < last; i++) {
-          const off = i - first;
+          const offset = i - first;
+          // Rotate four cells at a time: top <- left <- bottom <- right <- top.
           const top = matrix[first][i]; //@save
-          matrix[first][i] = matrix[last - off][first]; // left → top
-          matrix[last - off][first] = matrix[last][last - off]; // bottom → left
-          matrix[last][last - off] = matrix[i][last]; // right → bottom
-          matrix[i][last] = top; //@cycle
+          matrix[first][i] = matrix[last - offset][first]; // left -> top
+          matrix[last - offset][first] = matrix[last][last - offset]; // bottom -> left
+          matrix[last][last - offset] = matrix[i][last]; // right -> bottom
+          matrix[i][last] = top; // top -> right //@cycle
         }
       }
     }

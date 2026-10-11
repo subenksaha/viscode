@@ -14,14 +14,15 @@ const memo = defineSolution<Input>({
   code: code(`
     function minCostClimbingStairs(cost: number[]): number {
       const memo = new Map<number, number>();
-      const from = (i: number): number => {
+      // Cheapest cost to reach the top starting on step i.
+      function costFrom(i: number): number {
         if (i >= cost.length) return 0; //@top
         if (memo.has(i)) return memo.get(i)!; //@hit
-        const res = cost[i] + Math.min(from(i + 1), from(i + 2)); //@calc
-        memo.set(i, res);
-        return res;
-      };
-      return Math.min(from(0), from(1)); //@ret
+        const result = cost[i] + Math.min(costFrom(i + 1), costFrom(i + 2)); //@calc
+        memo.set(i, result);
+        return result;
+      }
+      return Math.min(costFrom(0), costFrom(1)); //@ret
     }
   `),
   run({ cost }, t) {
@@ -55,12 +56,16 @@ const rolling = defineSolution<Input>({
   idea: "dp[i] = cheapest way to arrive at step i = min(dp[i−1] + cost[i−1], dp[i−2] + cost[i−2]). Only the last two values are needed.",
   code: code(`
     function minCostClimbingStairs(cost: number[]): number {
-      let a = 0, b = 0; // cost to reach step i-2 and i-1
+      let twoBack = 0; // cheapest cost to reach step i - 2
+      let oneBack = 0; // cheapest cost to reach step i - 1
       for (let i = 2; i <= cost.length; i++) { //@loop
-        const c = Math.min(b + cost[i - 1], a + cost[i - 2]); //@calc
-        a = b; b = c; //@shift
+        const fromOneBelow = oneBack + cost[i - 1];
+        const fromTwoBelow = twoBack + cost[i - 2];
+        const current = Math.min(fromOneBelow, fromTwoBelow); //@calc
+        twoBack = oneBack; //@shift
+        oneBack = current;
       }
-      return b; //@ret
+      return oneBack; //@ret
     }
   `),
   run({ cost }, t) {
@@ -68,7 +73,7 @@ const rolling = defineSolution<Input>({
       b = 0;
     const reach: (number | null)[] = [0, 0, ...new Array(Math.max(0, cost.length - 1)).fill(null)];
     const view = (i: number) => [
-      vars({ a, b }),
+      vars({ twoBack: a, oneBack: b }),
       arr("cost (index = step)", [...cost, "top"], { tones: tones([i - 1, "compare"], [i - 2, "compare"], [i, "active"]) }),
       arr("cheapest to reach", reach, { tones: tones([i, "success"]) }),
     ];

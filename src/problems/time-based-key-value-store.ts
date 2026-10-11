@@ -55,9 +55,12 @@ const linear = defineSolution<Input>({
         this.store.get(key)!.push([timestamp, value]); //@set
       }
       get(key: string, timestamp: number): string {
-        const hist = this.store.get(key) ?? [];
-        for (let i = hist.length - 1; i >= 0; i--) //@scan
-          if (hist[i][0] <= timestamp) return hist[i][1]; //@found
+        const history = this.store.get(key) ?? []; // sorted by timestamp
+        // Walk back from the newest entry to the first one not after timestamp.
+        for (let i = history.length - 1; i >= 0; i--) { //@scan
+          const [time, value] = history[i];
+          if (time <= timestamp) return value; //@found
+        }
         return ""; //@ret
       }
     }
@@ -90,14 +93,22 @@ const binary = defineSolution<Input>({
         this.store.get(key)!.push([timestamp, value]); //@set
       }
       get(key: string, timestamp: number): string {
-        const hist = this.store.get(key) ?? [];
-        let lo = 0, hi = hist.length - 1, ans = ""; //@init
-        while (lo <= hi) { //@loop
-          const mid = (lo + hi) >> 1;
-          if (hist[mid][0] <= timestamp) { ans = hist[mid][1]; lo = mid + 1; } //@ok
-          else hi = mid - 1; //@too-late
+        const history = this.store.get(key) ?? []; // sorted by timestamp
+        // Binary search for the last entry whose time is <= timestamp.
+        let left = 0; //@init
+        let right = history.length - 1;
+        let answer = "";
+        while (left <= right) { //@loop
+          const mid = Math.floor((left + right) / 2);
+          const [time, value] = history[mid];
+          if (time <= timestamp) {
+            answer = value; // a candidate; look for a later one //@ok
+            left = mid + 1;
+          } else {
+            right = mid - 1; //@too-late
+          }
         }
-        return ans; //@ret
+        return answer; //@ret
       }
     }
   `),
@@ -108,10 +119,10 @@ const binary = defineSolution<Input>({
         ans = "";
       const v = (mid?: number) =>
         view([
-          vars({ timestamp: ts, ans: `"${ans}"` }),
+          vars({ timestamp: ts, answer: `"${ans}"` }),
           arr("history", hist.map(([s, val]) => `${s}:${val}`), {
             tones: tones(...range(0, lo - 1, "muted"), ...range(hi + 1, hist.length - 1, "muted"), [mid, "active"]),
-            pointers: { lo, mid, hi },
+            pointers: { left: lo, mid, right: hi },
             window: lo <= hi ? [lo, hi] : null,
           }),
         ]);

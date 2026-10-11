@@ -16,7 +16,8 @@ const bruteForce = defineSolution<Input>({
       let best = 0; //@init
       for (let i = 0; i < s.length; i++) { //@i
         const seen = new Set<string>();
-        for (let j = i; j < s.length && !seen.has(s[j]); j++) { //@j
+        for (let j = i; j < s.length; j++) { //@j
+          if (seen.has(s[j])) break;
           seen.add(s[j]);
           best = Math.max(best, j - i + 1); //@best
         }
@@ -56,12 +57,17 @@ const windowSet = defineSolution<Input>({
   idea: "Grow the window on the right. While the new character is already inside, drop characters from the left.",
   code: code(`
     function lengthOfLongestSubstring(s: string): number {
-      const inWin = new Set<string>();
-      let lo = 0, best = 0; //@init
-      for (let hi = 0; hi < s.length; hi++) { //@hi
-        while (inWin.has(s[hi])) inWin.delete(s[lo++]); //@shrink
-        inWin.add(s[hi]); //@add
-        best = Math.max(best, hi - lo + 1); //@best
+      const inWindow = new Set<string>();
+      let left = 0; //@init
+      let best = 0;
+      for (let right = 0; right < s.length; right++) { //@hi
+        // Shrink from the left until s[right] is no longer in the window.
+        while (inWindow.has(s[right])) { //@shrink
+          inWindow.delete(s[left]);
+          left++;
+        }
+        inWindow.add(s[right]); //@add
+        best = Math.max(best, right - left + 1); //@best
       }
       return best; //@ret
     }
@@ -73,7 +79,7 @@ const windowSet = defineSolution<Input>({
     const chars = [...s];
     const view = (hi: number, dup = false) => [
       vars({ best }),
-      arr("s", chars, { window: lo <= hi - (dup ? 1 : 0) ? [lo, hi - (dup ? 1 : 0)] : null, tones: tones([hi, dup ? "danger" : "active"]), pointers: { lo, hi } }),
+      arr("s", chars, { window: lo <= hi - (dup ? 1 : 0) ? [lo, hi - (dup ? 1 : 0)] : null, tones: tones([hi, dup ? "danger" : "active"]), pointers: { left: lo, right: hi } }),
       map("window chars", inWin),
     ];
     t.step("init", "Empty window.", [arr("s", chars)]);
@@ -98,15 +104,20 @@ const windowMap = defineSolution<Input>({
   name: "Sliding Window + Last Index (Jump)",
   time: "O(n)",
   space: "O(k)",
-  idea: "Remember the last index of each character. On a repeat, jump lo straight past the previous occurrence instead of removing characters one by one.",
+  idea: "Remember the last index of each character. On a repeat, jump left straight past the previous occurrence instead of removing characters one by one.",
   code: code(`
     function lengthOfLongestSubstring(s: string): number {
-      const last = new Map<string, number>();
-      let lo = 0, best = 0; //@init
-      for (let hi = 0; hi < s.length; hi++) { //@hi
-        if (last.has(s[hi]) && last.get(s[hi])! >= lo) lo = last.get(s[hi])! + 1; //@jump
-        last.set(s[hi], hi); //@record
-        best = Math.max(best, hi - lo + 1); //@best
+      const lastSeen = new Map<string, number>(); // letter -> index where we last saw it
+      let left = 0; //@init
+      let best = 0;
+      for (let right = 0; right < s.length; right++) { //@hi
+        const char = s[right];
+        // If char repeats inside the window, jump left past its last position.
+        if (lastSeen.has(char) && lastSeen.get(char)! >= left) { //@jump
+          left = lastSeen.get(char)! + 1;
+        }
+        lastSeen.set(char, right); //@record
+        best = Math.max(best, right - left + 1); //@best
       }
       return best; //@ret
     }
@@ -116,7 +127,7 @@ const windowMap = defineSolution<Input>({
     let lo = 0,
       best = 0;
     const chars = [...s];
-    const view = (hi: number, key?: string) => [vars({ best }), arr("s", chars, { window: [lo, hi], tones: tones([hi, "active"]), pointers: { lo, hi } }), map("last index", last, tones([key, "compare"]))];
+    const view = (hi: number, key?: string) => [vars({ best }), arr("s", chars, { window: [lo, hi], tones: tones([hi, "active"]), pointers: { left: lo, right: hi } }), map("lastSeen", last, tones([key, "compare"]))];
     t.step("init", "Empty map.", [arr("s", chars)]);
     for (let hi = 0; hi < s.length; hi++) {
       t.step("hi", `s[${hi}] = '${s[hi]}'.`, () => view(hi, s[hi]));

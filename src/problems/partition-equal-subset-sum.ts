@@ -14,13 +14,18 @@ const sumSet = defineSolution<Input>({
   idea: "We need a subset summing to half the total. Keep the set of sums reachable so far; each number adds itself to every existing sum.",
   code: code(`
     function canPartition(nums: number[]): boolean {
-      const total = nums.reduce((a, b) => a + b, 0);
-      if (total % 2) return false; //@odd
+      let total = 0;
+      for (const num of nums) total += num;
+      if (total % 2 !== 0) return false; //@odd
       const half = total / 2;
-      let sums = new Set([0]); //@init
-      for (const x of nums) { //@num
-        sums = new Set([...sums, ...[...sums].map((s) => s + x).filter((s) => s <= half)]); //@add
-        if (sums.has(half)) return true; //@found
+      let reachable = new Set([0]); // subset sums we can make so far //@init
+      for (const num of nums) { //@num
+        const next = new Set(reachable);
+        for (const sum of reachable) { //@add
+          if (sum + num <= half) next.add(sum + num);
+        }
+        reachable = next;
+        if (reachable.has(half)) return true; //@found
       }
       return false; //@ret
     }
@@ -61,15 +66,20 @@ const dp = defineSolution<Input>({
   idea: "dp[s] says whether some subset sums to s. For each number, sweep s from high to low so each number is used at most once: dp[s] |= dp[s − x].",
   code: code(`
     function canPartition(nums: number[]): boolean {
-      const total = nums.reduce((a, b) => a + b, 0);
-      if (total % 2) return false; //@odd
+      let total = 0;
+      for (const num of nums) total += num;
+      if (total % 2 !== 0) return false; //@odd
       const half = total / 2;
-      const dp = new Array(half + 1).fill(false);
-      dp[0] = true; //@init
-      for (const x of nums) //@num
-        for (let s = half; s >= x; s--) //@sum
-          if (dp[s - x]) dp[s] = true; //@set
-      return dp[half]; //@ret
+      // canMake[sum] = some subset of the numbers seen so far adds up to sum
+      const canMake = new Array(half + 1).fill(false);
+      canMake[0] = true; //@init
+      for (const num of nums) { //@num
+        // Go downward so each number is used at most once.
+        for (let sum = half; sum >= num; sum--) { //@sum
+          if (canMake[sum - num]) canMake[sum] = true; //@set
+        }
+      }
+      return canMake[half]; //@ret
     }
   `),
   run({ nums }, t) {
@@ -82,10 +92,10 @@ const dp = defineSolution<Input>({
     const dp: boolean[] = new Array(half + 1).fill(false);
     dp[0] = true;
     const view = (x?: number, s?: number, tone: Tone = "active") => [
-      vars({ half, x }),
+      vars({ half, num: x }),
       arr("dp (T = reachable)", dp.map((b) => (b ? "T" : "·")), {
         tones: tones(...dp.map((b, k) => [b ? k : null, "success"] as [number | null, Tone]), [s !== undefined && x !== undefined ? s - x : null, "compare"], [s, tone]),
-        pointers: { s },
+        pointers: { sum: s },
       }),
     ];
     t.step("init", "dp[0] = true: the empty subset sums to 0.", view());

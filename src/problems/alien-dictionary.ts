@@ -49,24 +49,53 @@ const bfs = defineSolution<Input>({
   idea: "Adjacent words reveal one ordering edge at their first differing letter. Topologically sort the letters. If some letter never reaches in-degree 0, there is a cycle and no valid order.",
   code: code(`
     function alienOrder(words: string[]): string {
-      const adj = new Map<string, Set<string>>(), indeg = new Map<string, number>();
-      for (const ch of words.join("")) { adj.set(ch, new Set()); indeg.set(ch, 0); } //@letters
-      for (let i = 0; i + 1 < words.length; i++) { //@compare
-        const [a, b] = [words[i], words[i + 1]];
-        const k = [...a].findIndex((ch, j) => ch !== b[j]);
-        if (k === -1 || k >= b.length) { if (a.length > b.length) return ""; continue; } //@prefix
-        if (!adj.get(a[k])!.has(b[k])) { adj.get(a[k])!.add(b[k]); indeg.set(b[k], indeg.get(b[k])! + 1); }
-      }
-      const queue = [...indeg].filter(([, d]) => d === 0).map(([ch]) => ch); //@seed
-      let order = "";
-      while (queue.length) { //@loop
-        const ch = queue.shift()!; order += ch; //@take
-        for (const next of adj.get(ch)!) {
-          indeg.set(next, indeg.get(next)! - 1);
-          if (indeg.get(next) === 0) queue.push(next); //@ready
+      // lettersAfter.get(x) = letters that must come after x
+      const lettersAfter = new Map<string, Set<string>>();
+      const inDegree = new Map<string, number>();
+      for (const word of words) { //@letters
+        for (const letter of word) {
+          if (!lettersAfter.has(letter)) {
+            lettersAfter.set(letter, new Set());
+            inDegree.set(letter, 0);
+          }
         }
       }
-      return order.length === adj.size ? order : ""; //@ret
+
+      for (let i = 0; i + 1 < words.length; i++) { //@compare
+        const word = words[i];
+        const nextWord = words[i + 1];
+        let pos = 0;
+        while (pos < word.length && pos < nextWord.length && word[pos] === nextWord[pos]) {
+          pos++;
+        }
+        if (pos === word.length || pos === nextWord.length) { //@prefix
+          // One word is a prefix of the other. A longer word can't come before its prefix.
+          if (word.length > nextWord.length) return "";
+          continue;
+        }
+        const before = word[pos];
+        const after = nextWord[pos];
+        if (!lettersAfter.get(before)!.has(after)) {
+          lettersAfter.get(before)!.add(after);
+          inDegree.set(after, inDegree.get(after)! + 1);
+        }
+      }
+
+      const queue: string[] = [];
+      for (const [letter, degree] of inDegree) { //@seed
+        if (degree === 0) queue.push(letter);
+      }
+      let order = "";
+      while (queue.length > 0) { //@loop
+        const letter = queue.shift()!; //@take
+        order += letter;
+        for (const nextLetter of lettersAfter.get(letter)!) {
+          inDegree.set(nextLetter, inDegree.get(nextLetter)! - 1);
+          if (inDegree.get(nextLetter) === 0) queue.push(nextLetter); //@ready
+        }
+      }
+      const usedEveryLetter = order.length === lettersAfter.size;
+      return usedEveryLetter ? order : ""; //@ret
     }
   `),
   run({ words }, t) {
@@ -117,26 +146,47 @@ const dfs = defineSolution<Input>({
   idea: "Build the same graph. DFS each letter; after visiting everything that must come after it, prepend the letter. A gray (in-progress) letter seen again means a cycle.",
   code: code(`
     function alienOrder(words: string[]): string {
-      const adj = new Map<string, Set<string>>();
-      for (const ch of words.join("")) adj.set(ch, new Set()); //@letters
-      for (let i = 0; i + 1 < words.length; i++) { //@compare
-        const [a, b] = [words[i], words[i + 1]];
-        const k = [...a].findIndex((ch, j) => ch !== b[j]);
-        if (k === -1 || k >= b.length) { if (a.length > b.length) return ""; continue; } //@prefix
-        adj.get(a[k])!.add(b[k]);
+      // lettersAfter.get(x) = letters that must come after x
+      const lettersAfter = new Map<string, Set<string>>();
+      for (const word of words) { //@letters
+        for (const letter of word) {
+          if (!lettersAfter.has(letter)) lettersAfter.set(letter, new Set());
+        }
       }
-      const state = new Map<string, number>(); // 1 = visiting, 2 = done
-      const out: string[] = [];
-      function visit(ch: string): boolean {
-        if (state.get(ch) === 1) return false; //@cycle
-        if (state.get(ch) === 2) return true; //@done
-        state.set(ch, 1); //@enter
-        for (const next of adj.get(ch)!) if (!visit(next)) return false;
-        state.set(ch, 2); out.push(ch); //@exit
+
+      for (let i = 0; i + 1 < words.length; i++) { //@compare
+        const word = words[i];
+        const nextWord = words[i + 1];
+        let pos = 0;
+        while (pos < word.length && pos < nextWord.length && word[pos] === nextWord[pos]) {
+          pos++;
+        }
+        if (pos === word.length || pos === nextWord.length) { //@prefix
+          // One word is a prefix of the other. A longer word can't come before its prefix.
+          if (word.length > nextWord.length) return "";
+          continue;
+        }
+        lettersAfter.get(word[pos])!.add(nextWord[pos]);
+      }
+
+      const state = new Map<string, "visiting" | "done">();
+      const finished: string[] = [];
+      function visit(letter: string): boolean {
+        if (state.get(letter) === "visiting") return false; //@cycle
+        if (state.get(letter) === "done") return true; //@done
+        state.set(letter, "visiting"); //@enter
+        for (const nextLetter of lettersAfter.get(letter)!) {
+          if (!visit(nextLetter)) return false;
+        }
+        state.set(letter, "done"); //@exit
+        finished.push(letter);
         return true;
       }
-      for (const ch of adj.keys()) if (!visit(ch)) return ""; //@start
-      return out.reverse().join(""); //@ret
+
+      for (const letter of lettersAfter.keys()) { //@start
+        if (!visit(letter)) return "";
+      }
+      return finished.reverse().join(""); //@ret
     }
   `),
   run({ words }, t) {

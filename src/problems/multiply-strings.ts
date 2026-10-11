@@ -27,21 +27,42 @@ const partials = defineSolution<Input>({
   space: "O(m + n)",
   idea: "Multiply num1 by one digit of num2 at a time (with a carry), shift it by that digit's place with trailing zeros, and add it to a running string sum.",
   code: code(`
-    // addStrings(a, b): grade-school addition of two digit strings.
     function multiply(num1: string, num2: string): string {
       if (num1 === "0" || num2 === "0") return "0";
       let total = "0";
+      // Multiply num1 by one digit of num2 at a time, like on paper.
       for (let j = num2.length - 1; j >= 0; j--) { //@digit
-        let row = "", carry = 0;
+        let row = "";
+        let carry = 0;
         for (let i = num1.length - 1; i >= 0; i--) {
-          const p = +num1[i] * +num2[j] + carry;
-          row = (p % 10) + row; carry = Math.floor(p / 10);
+          const product = Number(num1[i]) * Number(num2[j]) + carry;
+          row = (product % 10) + row;
+          carry = Math.floor(product / 10);
         }
-        if (carry) row = carry + row;
-        row += "0".repeat(num2.length - 1 - j); //@row
+        if (carry > 0) row = carry + row;
+        const zerosToShift = num2.length - 1 - j;
+        row += "0".repeat(zerosToShift); //@row
         total = addStrings(total, row); //@add
       }
       return total; //@ret
+    }
+
+    // Grade-school addition of two digit strings.
+    function addStrings(a: string, b: string): string {
+      let i = a.length - 1;
+      let j = b.length - 1;
+      let carry = 0;
+      let result = "";
+      while (i >= 0 || j >= 0 || carry > 0) {
+        const digitA = i >= 0 ? Number(a[i]) : 0;
+        const digitB = j >= 0 ? Number(b[j]) : 0;
+        const sum = digitA + digitB + carry;
+        result = (sum % 10) + result;
+        carry = Math.floor(sum / 10);
+        i--;
+        j--;
+      }
+      return result;
     }
   `),
   run({ num1, num2 }, t) {
@@ -86,15 +107,21 @@ const positions = defineSolution<Input>({
   idea: "The product of num1[i] and num2[j] lands in positions i + j and i + j + 1 of an (m + n)-digit result. Add each product into place, push the carry left, then strip leading zeros.",
   code: code(`
     function multiply(num1: string, num2: string): string {
-      const m = num1.length, n = num2.length, res = new Array(m + n).fill(0); //@init
-      for (let i = m - 1; i >= 0; i--)
+      const m = num1.length;
+      const n = num2.length;
+      // digits[k] holds one digit of the answer; num1[i] * num2[j] lands on digits[i + j + 1].
+      const digits = new Array(m + n).fill(0); //@init
+      for (let i = m - 1; i >= 0; i--) {
         for (let j = n - 1; j >= 0; j--) {
-          const sum = +num1[i] * +num2[j] + res[i + j + 1]; //@mul
-          res[i + j + 1] = sum % 10;
-          res[i + j] += Math.floor(sum / 10); //@carry
+          const sum = Number(num1[i]) * Number(num2[j]) + digits[i + j + 1]; //@mul
+          digits[i + j + 1] = sum % 10;
+          digits[i + j] += Math.floor(sum / 10); //@carry
         }
-      const s = res.join("").replace(/^0+/, ""); //@strip
-      return s || "0"; //@ret
+      }
+      // Skip leading zeros.
+      let start = 0;
+      while (start < digits.length - 1 && digits[start] === 0) start++; //@strip
+      return digits.slice(start).join(""); //@ret
     }
   `),
   run({ num1, num2 }, t) {

@@ -19,15 +19,27 @@ const pushHeavy = defineSolution<Input>({
   idea: "Keep the oldest element on top of the main stack. To push, move everything to a helper stack, push the new value, then move everything back.",
   code: code(`
     class MyQueue {
-      s: number[] = []; tmp: number[] = []; //@ctor
+      // The top of main (its last element) is always the front of the queue.
+      main: number[] = []; //@ctor
+      temp: number[] = [];
+
       push(x: number): void {
-        while (this.s.length) this.tmp.push(this.s.pop()!); //@unload
-        this.s.push(x); //@push
-        while (this.tmp.length) this.s.push(this.tmp.pop()!); //@reload
+        while (this.main.length > 0) this.temp.push(this.main.pop()!); //@unload
+        this.main.push(x); //@push
+        while (this.temp.length > 0) this.main.push(this.temp.pop()!); //@reload
       }
-      pop(): number { return this.s.pop()!; } //@pop
-      peek(): number { return this.s.at(-1)!; } //@peek
-      empty(): boolean { return this.s.length === 0; } //@empty
+
+      pop(): number {
+        return this.main.pop()!; //@pop
+      }
+
+      peek(): number {
+        return this.main[this.main.length - 1]; //@peek
+      }
+
+      empty(): boolean {
+        return this.main.length === 0; //@empty
+      }
     }
   `),
   run({ ops, args }, t) {
@@ -36,8 +48,8 @@ const pushHeavy = defineSolution<Input>({
       out: Out[] = [];
     const view = (op: string, hi?: "s" | "tmp") => [
       vars({ op }),
-      arr("s (top = right = front of queue)", s, { tones: tones([hi === "s" ? s.length - 1 : null, "active"]), indexLabels: false }),
-      arr("tmp", tmp, { tones: tones([hi === "tmp" ? tmp.length - 1 : null, "active"]), indexLabels: false }),
+      arr("main (top = right = front of queue)", s, { tones: tones([hi === "s" ? s.length - 1 : null, "active"]), indexLabels: false }),
+      arr("temp", tmp, { tones: tones([hi === "tmp" ? tmp.length - 1 : null, "active"]), indexLabels: false }),
       arr("output", fmtOut(out), { indexLabels: false }),
     ];
     ops.forEach((op, k) => {
@@ -81,15 +93,34 @@ const amortized = defineSolution<Input>({
   idea: "Push onto an inbox stack. When you need the front and the outbox is empty, pour the whole inbox into the outbox, which reverses the order. Each element moves at most once.",
   code: code(`
     class MyQueue {
-      inbox: number[] = []; outbox: number[] = []; //@ctor
-      push(x: number): void { this.inbox.push(x); } //@push
-      private shift(): void {
-        if (!this.outbox.length) //@check
-          while (this.inbox.length) this.outbox.push(this.inbox.pop()!); //@pour
+      inbox: number[] = []; // new items go here //@ctor
+      outbox: number[] = []; // items come out from here, oldest on top
+
+      push(x: number): void {
+        this.inbox.push(x); //@push
       }
-      pop(): number { this.shift(); return this.outbox.pop()!; } //@pop
-      peek(): number { this.shift(); return this.outbox.at(-1)!; } //@peek
-      empty(): boolean { return !this.inbox.length && !this.outbox.length; } //@empty
+
+      // Refill the outbox only when it is empty. Pouring reverses the order.
+      private refillOutbox(): void {
+        if (this.outbox.length > 0) return; //@check
+        while (this.inbox.length > 0) { //@pour
+          this.outbox.push(this.inbox.pop()!);
+        }
+      }
+
+      pop(): number {
+        this.refillOutbox();
+        return this.outbox.pop()!; //@pop
+      }
+
+      peek(): number {
+        this.refillOutbox();
+        return this.outbox[this.outbox.length - 1]; //@peek
+      }
+
+      empty(): boolean {
+        return this.inbox.length === 0 && this.outbox.length === 0; //@empty
+      }
     }
   `),
   run({ ops, args }, t) {

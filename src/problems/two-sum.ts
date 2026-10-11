@@ -58,16 +58,26 @@ const twoPointers = defineSolution<Input>({
   name: "Sort + Two Pointers",
   time: "O(n log n)",
   space: "O(n)",
-  idea: "Sort indices by value, then move two pointers inward: a small sum moves lo up, a big sum moves hi down.",
+  idea: "Sort indices by value, then move two pointers inward: a small sum moves left forward, a big sum moves right back.",
   code: code(`
     function twoSum(nums: number[], target: number): number[] {
-      const idx = nums.map((_, i) => i).sort((a, b) => nums[a] - nums[b]); //@sort
-      let lo = 0, hi = idx.length - 1; //@init
-      while (lo < hi) { //@loop
-        const sum = nums[idx[lo]] + nums[idx[hi]]; //@sum
-        if (sum === target) return [idx[lo], idx[hi]].sort((a, b) => a - b); //@found
-        if (sum < target) lo++; //@lo
-        else hi--; //@hi
+      // Sort the indices by their values, so we can still return original positions.
+      const order = nums.map((_, index) => index);
+      order.sort((a, b) => nums[a] - nums[b]); //@sort
+      let left = 0; //@init
+      let right = order.length - 1;
+      while (left < right) { //@loop
+        const sum = nums[order[left]] + nums[order[right]]; //@sum
+        if (sum === target) { //@found
+          const first = Math.min(order[left], order[right]);
+          const second = Math.max(order[left], order[right]);
+          return [first, second];
+        }
+        if (sum < target) {
+          left++; // need a bigger sum //@lo
+        } else {
+          right--; // need a smaller sum //@hi
+        }
       }
       return []; //@none
     }
@@ -80,7 +90,7 @@ const twoPointers = defineSolution<Input>({
       arr("sorted values", sorted, {
         indexLabels: idx.map((i) => `#${i}`),
         tones: tones([lo, done ? "success" : "active"], [hi, done ? "success" : "compare"]),
-        pointers: { lo, hi },
+        pointers: { left: lo, right: hi },
       }),
     ];
     t.step("sort", "Sort indices by their value (labels show original indices).", [
@@ -90,7 +100,7 @@ const twoPointers = defineSolution<Input>({
       hi = idx.length - 1;
     t.step("init", "Start with the smallest and largest values.", view(lo, hi));
     while (lo < hi) {
-      t.step("loop", `lo = ${lo}, hi = ${hi}.`, view(lo, hi));
+      t.step("loop", `left = ${lo}, right = ${hi}.`, view(lo, hi));
       const sum = sorted[lo] + sorted[hi];
       t.step("sum", `${sorted[lo]} + ${sorted[hi]} = ${sum}.`, view(lo, hi, false, sum));
       if (sum === target) {
@@ -100,10 +110,10 @@ const twoPointers = defineSolution<Input>({
       }
       if (sum < target) {
         lo++;
-        t.step("lo", "Sum too small: move lo right.", view(lo, hi));
+        t.step("lo", "Sum too small: move left forward.", view(lo, hi));
       } else {
         hi--;
-        t.step("hi", "Sum too big: move hi left.", view(lo, hi));
+        t.step("hi", "Sum too big: move right back.", view(lo, hi));
       }
     }
     t.step("none", "Pointers met. No pair found.");

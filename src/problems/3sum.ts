@@ -16,15 +16,23 @@ const bruteForce = defineSolution<Input>({
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
-      const seen = new Set<string>(), res: number[][] = [];
-      for (let i = 0; i < nums.length; i++) //@i
-        for (let j = i + 1; j < nums.length; j++)
+      const seenTriplets = new Set<string>();
+      const result: number[][] = [];
+      for (let i = 0; i < nums.length; i++) { //@i
+        for (let j = i + 1; j < nums.length; j++) {
           for (let k = j + 1; k < nums.length; k++) { //@k
-            if (nums[i] + nums[j] + nums[k] !== 0) continue; //@check
-            const key = [nums[i], nums[j], nums[k]].join(",");
-            if (!seen.has(key)) { seen.add(key); res.push([nums[i], nums[j], nums[k]]); } //@add
+            const sum = nums[i] + nums[j] + nums[k];
+            if (sum !== 0) continue; //@check
+            const triplet = [nums[i], nums[j], nums[k]];
+            const key = triplet.join(",");
+            if (!seenTriplets.has(key)) { //@add
+              seenTriplets.add(key);
+              result.push(triplet);
+            }
           }
-      return res; //@ret
+        }
+      }
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -65,20 +73,23 @@ const hashSet = defineSolution<Input>({
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
-      const res: number[][] = [];
+      const result: number[][] = [];
       for (let i = 0; i < nums.length; i++) { //@i
-        if (i > 0 && nums[i] === nums[i - 1]) continue; //@skip-i
+        const sameAsPrevious = i > 0 && nums[i] === nums[i - 1];
+        if (sameAsPrevious) continue; //@skip-i
         const seen = new Set<number>(); //@reset
         for (let j = i + 1; j < nums.length; j++) { //@j
-          const need = -nums[i] - nums[j];
+          const need = 0 - nums[i] - nums[j];
           if (seen.has(need)) { //@check
-            res.push([nums[i], need, nums[j]]); //@add
-            while (j + 1 < nums.length && nums[j] === nums[j + 1]) j++; //@skip-j
+            result.push([nums[i], need, nums[j]]); //@add
+            while (j + 1 < nums.length && nums[j] === nums[j + 1]) { //@skip-j
+              j++;
+            }
           }
           seen.add(nums[j]); //@store
         }
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -123,28 +134,33 @@ const twoPointers = defineSolution<Input>({
   name: "Sort + Two Pointers",
   time: "O(n²)",
   space: "O(1)",
-  idea: "Sort, fix nums[i], then move lo and hi inward on the rest: a small sum moves lo right, a big sum moves hi left. Skip equal values to avoid duplicates.",
+  idea: "Sort, fix nums[i], then move left and right inward on the rest: a small sum moves left forward, a big sum moves right back. Skip equal values to avoid duplicates.",
   code: code(`
     function threeSum(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
-      const res: number[][] = [];
+      const result: number[][] = [];
       for (let i = 0; i < nums.length - 2; i++) { //@i
         if (nums[i] > 0) break; //@stop
-        if (i > 0 && nums[i] === nums[i - 1]) continue; //@skip
-        let lo = i + 1, hi = nums.length - 1; //@init
-        while (lo < hi) { //@loop
-          const sum = nums[i] + nums[lo] + nums[hi]; //@sum
-          if (sum < 0) lo++; //@lo
-          else if (sum > 0) hi--; //@hi
-          else {
-            res.push([nums[i], nums[lo], nums[hi]]); //@add
-            while (lo < hi && nums[lo] === nums[lo + 1]) lo++; //@dedupe
-            while (lo < hi && nums[hi] === nums[hi - 1]) hi--;
-            lo++; hi--; //@move
+        const sameAsPrevious = i > 0 && nums[i] === nums[i - 1];
+        if (sameAsPrevious) continue; //@skip
+        let left = i + 1; //@init
+        let right = nums.length - 1;
+        while (left < right) { //@loop
+          const sum = nums[i] + nums[left] + nums[right]; //@sum
+          if (sum < 0) {
+            left++; //@lo
+          } else if (sum > 0) {
+            right--; //@hi
+          } else {
+            result.push([nums[i], nums[left], nums[right]]); //@add
+            while (left < right && nums[left] === nums[left + 1]) left++; //@dedupe
+            while (left < right && nums[right] === nums[right - 1]) right--;
+            left++; //@move
+            right--;
           }
         }
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -154,7 +170,7 @@ const twoPointers = defineSolution<Input>({
       vars({ sum }),
       arr("nums (sorted)", nums, {
         tones: tones([i, "active"], [lo, hit ? "success" : "compare"], [hi, hit ? "success" : "compare"]),
-        pointers: { i, lo, hi },
+        pointers: { i, left: lo, right: hi },
       }),
       text("result", show(res)),
     ];
@@ -171,16 +187,16 @@ const twoPointers = defineSolution<Input>({
       }
       let lo = i + 1,
         hi = nums.length - 1;
-      t.step("init", `lo = ${lo}, hi = ${hi}.`, view(i, lo, hi));
+      t.step("init", `left = ${lo}, right = ${hi}.`, view(i, lo, hi));
       while (lo < hi) {
         const sum = nums[i] + nums[lo] + nums[hi];
         t.step("sum", `${nums[i]} + ${nums[lo]} + ${nums[hi]} = ${sum}.`, view(i, lo, hi, sum));
         if (sum < 0) {
           lo++;
-          t.step("lo", "Too small: lo++.", view(i, lo, hi));
+          t.step("lo", "Too small: move left forward.", view(i, lo, hi));
         } else if (sum > 0) {
           hi--;
-          t.step("hi", "Too big: hi--.", view(i, lo, hi));
+          t.step("hi", "Too big: move right back.", view(i, lo, hi));
         } else {
           res.push([nums[i], nums[lo], nums[hi]]);
           t.step("add", `Zero sum. Add [${nums[i]},${nums[lo]},${nums[hi]}].`, view(i, lo, hi, sum, true));

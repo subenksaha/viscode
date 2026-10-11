@@ -22,23 +22,30 @@ const binary = defineSolution<Input>({
   code: code(`
     function swimInWater(grid: number[][]): number {
       const n = grid.length;
-      const canCross = (T: number) => {
-        const seen = new Set<number>();
-        const dfs = (r: number, c: number): boolean => {
-          if (r < 0 || c < 0 || r >= n || c >= n || seen.has(r * n + c) || grid[r][c] > T) return false;
-          if (r === n - 1 && c === n - 1) return true;
-          seen.add(r * n + c); //@visit
-          return dfs(r + 1, c) || dfs(r - 1, c) || dfs(r, c + 1) || dfs(r, c - 1);
-        };
-        return dfs(0, 0);
-      };
-      let lo = grid[0][0], hi = n * n - 1; //@init
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1; //@mid
-        if (canCross(mid)) hi = mid; //@yes
-        else lo = mid + 1; //@no
+      // Can we get from the top-left to the bottom-right once the water is at level time?
+      function canCross(time: number): boolean {
+        const visited = new Set<string>();
+        function reach(row: number, col: number): boolean {
+          const outside = row < 0 || col < 0 || row >= n || col >= n;
+          if (outside || visited.has(row + "," + col) || grid[row][col] > time) return false;
+          if (row === n - 1 && col === n - 1) return true;
+          visited.add(row + "," + col); //@visit
+          return reach(row + 1, col) || reach(row - 1, col) || reach(row, col + 1) || reach(row, col - 1);
+        }
+        return reach(0, 0);
       }
-      return lo; //@ret
+      // Binary search for the smallest time that works.
+      let low = grid[0][0]; //@init
+      let high = n * n - 1;
+      while (low < high) {
+        const mid = Math.floor((low + high) / 2); //@mid
+        if (canCross(mid)) {
+          high = mid; //@yes
+        } else {
+          low = mid + 1; //@no
+        }
+      }
+      return low; //@ret
     }
   `),
   run({ grid: g }, t) {
@@ -48,7 +55,7 @@ const binary = defineSolution<Input>({
       g.forEach((row, r) => row.forEach((v, c) => v > T && (tn[rc(r, c)] = "muted")));
       seen.forEach((k) => (tn[rc(Math.floor(k / n), k % n)] = "visited"));
       if (cur !== undefined) tn[rc(Math.floor(cur / n), cur % n)] = "active";
-      return [vars({ lo, hi, T }), grid("elevation (grey = above T)", g, { tones: tn })];
+      return [vars({ low: lo, high: hi, time: T }), grid("elevation (grey = above T)", g, { tones: tn })];
     };
     const canCross = (T: number, lo: number, hi: number) => {
       const seen = new Set<number>();
@@ -88,16 +95,25 @@ const dijkstra = defineSolution<Input>({
   idea: "The cost of a path is its highest elevation. Expand cells from a min-heap keyed by that cost; the first time the corner is popped, its cost is the answer.",
   code: code(`
     function swimInWater(grid: number[][]): number {
-      const n = grid.length, seen = new Set<number>([0]);
-      const heap = new MinPriorityQueue<[number, number, number]>((e) => e[0]);
+      const n = grid.length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const visited = new Set<string>(["0,0"]);
+      // Min-heap of [earliest time we can stand here, row, col].
+      const heap = new MinPriorityQueue<[number, number, number]>((entry) => entry[0]);
       heap.enqueue([grid[0][0], 0, 0]); //@init
       while (true) {
-        const [t, r, c] = heap.dequeue(); //@pop
-        if (r === n - 1 && c === n - 1) return t; //@ret
-        for (const [x, y] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]])
-          if (x >= 0 && y >= 0 && x < n && y < n && !seen.has(x * n + y)) {
-            seen.add(x * n + y); heap.enqueue([Math.max(t, grid[x][y]), x, y]); //@push
+        const [time, row, col] = heap.dequeue(); //@pop
+        if (row === n - 1 && col === n - 1) return time; //@ret
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const inside = nextRow >= 0 && nextCol >= 0 && nextRow < n && nextCol < n;
+          if (inside && !visited.has(nextRow + "," + nextCol)) {
+            visited.add(nextRow + "," + nextCol); //@push
+            // We must wait until the water covers both the path so far and the next cell.
+            heap.enqueue([Math.max(time, grid[nextRow][nextCol]), nextRow, nextCol]);
           }
+        }
       }
     }
   `),

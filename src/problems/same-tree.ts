@@ -16,8 +16,8 @@ const recursive = defineSolution<Input>({
   idea: "Two trees are equal if both are empty, or both roots have the same value and their left and right subtrees are equal.",
   code: code(`
     function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
-      if (!p && !q) return true; //@both-null
-      if (!p || !q || p.val !== q.val) return false; //@differ
+      if (p === null && q === null) return true; //@both-null
+      if (p === null || q === null || p.val !== q.val) return false; //@differ
       return isSameTree(p.left, q.left) && isSameTree(p.right, q.right); //@recurse
     }
   `),
@@ -56,12 +56,13 @@ const bfs = defineSolution<Input>({
   idea: "Walk both trees in lockstep with a queue of node pairs, comparing each pair.",
   code: code(`
     function isSameTree(p: TreeNode | null, q: TreeNode | null): boolean {
-      const queue: [TreeNode | null, TreeNode | null][] = [[p, q]]; //@init
-      while (queue.length) { //@loop
-        const [a, b] = queue.shift()!; //@pop
-        if (!a && !b) continue;
-        if (!a || !b || a.val !== b.val) return false; //@differ
-        queue.push([a.left, b.left], [a.right, b.right]); //@push
+      const queue: [TreeNode | null, TreeNode | null][] = [[p, q]]; // pairs to compare //@init
+      while (queue.length > 0) { //@loop
+        const [first, second] = queue.shift()!; //@pop
+        if (first === null && second === null) continue;
+        if (first === null || second === null || first.val !== second.val) return false; //@differ
+        queue.push([first.left, second.left]); //@push
+        queue.push([first.right, second.right]);
       }
       return true; //@ret
     }

@@ -37,13 +37,19 @@ const hashMap = defineSolution<Input>({
   idea: "First pass: create a copy of every node and remember old → new. Second pass: wire each copy's next and random through the map.",
   code: code(`
     function copyRandomList(head: Node | null): Node | null {
-      const copy = new Map<Node | null, Node | null>([[null, null]]);
-      for (let n = head; n; n = n.next) copy.set(n, new Node(n.val)); //@clone
-      for (let n = head; n; n = n.next) {
-        copy.get(n)!.next = copy.get(n.next)!; //@next
-        copy.get(n)!.random = copy.get(n.random)!; //@random
+      const copyOf = new Map<Node | null, Node | null>();
+      copyOf.set(null, null);
+      // Pass 1: make a copy of every node.
+      for (let node = head; node !== null; node = node.next) { //@clone
+        copyOf.set(node, new Node(node.val));
       }
-      return copy.get(head)!; //@ret
+      // Pass 2: wire up next and random on the copies.
+      for (let node = head; node !== null; node = node.next) {
+        const copy = copyOf.get(node)!;
+        copy.next = copyOf.get(node.next)!; //@next
+        copy.random = copyOf.get(node.random)!; //@random
+      }
+      return copyOf.get(head)!; //@ret
     }
   `),
   run({ head, random }, t) {
@@ -53,7 +59,7 @@ const hashMap = defineSolution<Input>({
     const newRandom = new Map<ListNode, ListNode | null>();
     const label = (n: ListNode) => name.get(n) ?? `#${olds.findIndex((o) => copy.get(o) === n)}'`;
     const view = (n?: ListNode) => [
-      list("original", olds, { tones: [[n, "active"]], pointers: { n } }),
+      list("original", olds, { tones: [[n, "active"]], pointers: { node: n } }),
       arr("original random", randomLabels(olds, random, label), { indexLabels: false }),
       list("copy", [...copy.values()], { tones: [[n && copy.get(n), "success"]] }),
       map("old → new", [...copy].map(([o, c]) => [label(o), label(c)] as [string, string])),
@@ -84,14 +90,25 @@ const interleave = defineSolution<Input>({
   idea: "Insert each copy right after its original (A → A' → B → B'). Then A'.random = A.random.next. Finally unzip the two lists.",
   code: code(`
     function copyRandomList(head: Node | null): Node | null {
-      for (let n = head; n; n = n.next.next) n.next = new Node(n.val, n.next); //@weave
-      for (let n = head; n; n = n.next.next) n.next.random = n.random ? n.random.next : null; //@random
-      const dummy = new Node(0);
-      for (let n = head, tail = dummy; n; n = n.next) { //@unzip
-        tail = tail.next = n.next;
-        n.next = n.next.next;
+      // Step 1: put each copy right after its original: A -> A' -> B -> B' ...
+      for (let node = head; node !== null; node = node.next.next) { //@weave
+        node.next = new Node(node.val, node.next);
       }
-      return dummy.next; //@ret
+      // Step 2: the copy of node.random is node.random.next.
+      for (let node = head; node !== null; node = node.next.next) { //@random
+        const copy = node.next;
+        copy.random = node.random ? node.random.next : null;
+      }
+      // Step 3: split the woven list back into the original and the copy.
+      const dummyHead = new Node(0);
+      let tail = dummyHead;
+      for (let node = head; node !== null; node = node.next) { //@unzip
+        const copy = node.next;
+        tail.next = copy;
+        tail = copy;
+        node.next = copy.next;
+      }
+      return dummyHead.next; //@ret
     }
   `),
   run({ head, random }, t) {

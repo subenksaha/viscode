@@ -26,15 +26,25 @@ const sortedArray = defineSolution<Input>({
   idea: "Keep all numbers sorted. Binary search the insert position (shifting costs O(n)); the median is the middle element or the average of the middle two.",
   code: code(`
     class MedianFinder {
-      a: number[] = []; //@ctor
+      sorted: number[] = []; //@ctor
+
       addNum(num: number): void {
-        let lo = 0, hi = this.a.length;
-        while (lo < hi) { const mid = (lo + hi) >> 1; if (this.a[mid] <= num) lo = mid + 1; else hi = mid; }
-        this.a.splice(lo, 0, num); //@add
+        // Binary search for the first position holding a value bigger than num.
+        let left = 0;
+        let right = this.sorted.length;
+        while (left < right) {
+          const mid = Math.floor((left + right) / 2);
+          if (this.sorted[mid] <= num) left = mid + 1;
+          else right = mid;
+        }
+        this.sorted.splice(left, 0, num); //@add
       }
+
       findMedian(): number {
-        const n = this.a.length, m = n >> 1;
-        return n % 2 ? this.a[m] : (this.a[m - 1] + this.a[m]) / 2; //@median
+        const count = this.sorted.length;
+        const middle = Math.floor(count / 2);
+        if (count % 2 === 1) return this.sorted[middle]; //@median
+        return (this.sorted[middle - 1] + this.sorted[middle]) / 2;
       }
     }
   `),
@@ -75,15 +85,22 @@ const twoHeaps = defineSolution<Input>({
   idea: "A max-heap holds the smaller half and a min-heap the larger half, with the max-heap allowed one extra. The median is the max-heap's top, or the average of both tops.",
   code: code(`
     class MedianFinder {
-      low = new MaxPriorityQueue<number>(); // smaller half
-      high = new MinPriorityQueue<number>(); // larger half //@ctor
+      smallHalf = new MaxPriorityQueue<number>(); // top = biggest of the small numbers
+      largeHalf = new MinPriorityQueue<number>(); // top = smallest of the large numbers //@ctor
+
       addNum(num: number): void {
-        this.low.enqueue(num); //@push-low
-        this.high.enqueue(this.low.dequeue()); //@move-up
-        if (this.high.size() > this.low.size()) this.low.enqueue(this.high.dequeue()); //@rebalance
+        this.smallHalf.enqueue(num); //@push-low
+        // Move the biggest small number up, so every small number stays <= every large one.
+        this.largeHalf.enqueue(this.smallHalf.dequeue()); //@move-up
+        // Keep smallHalf the same size as largeHalf, or one bigger.
+        if (this.largeHalf.size() > this.smallHalf.size()) { //@rebalance
+          this.smallHalf.enqueue(this.largeHalf.dequeue());
+        }
       }
+
       findMedian(): number {
-        return this.low.size() > this.high.size() ? this.low.front() : (this.low.front() + this.high.front()) / 2; //@median
+        if (this.smallHalf.size() > this.largeHalf.size()) return this.smallHalf.front(); //@median
+        return (this.smallHalf.front() + this.largeHalf.front()) / 2;
       }
     }
   `),
@@ -94,8 +111,8 @@ const twoHeaps = defineSolution<Input>({
       out: Out[] = [];
     const view = (op: string, hiLow = false, hiHigh = false) => [
       vars({ op }),
-      arr("low: max-heap (top first)", low, { tones: tones([hiLow ? 0 : null, "active"]), indexLabels: false }),
-      arr("high: min-heap (top first)", high, { tones: tones([hiHigh ? 0 : null, "active"]), indexLabels: false }),
+      arr("smallHalf: max-heap (top first)", low, { tones: tones([hiLow ? 0 : null, "active"]), indexLabels: false }),
+      arr("largeHalf: min-heap (top first)", high, { tones: tones([hiHigh ? 0 : null, "active"]), indexLabels: false }),
       arr("output", fmtOut(out), { indexLabels: false }),
     ];
     ops.forEach((op, k) => {

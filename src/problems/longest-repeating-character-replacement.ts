@@ -17,11 +17,13 @@ const bruteForce = defineSolution<Input>({
       let best = 0; //@init
       for (let i = 0; i < s.length; i++) { //@i
         const count = new Map<string, number>();
-        let top = 0;
+        let mostCommon = 0; // count of the most frequent letter in s[i..j]
         for (let j = i; j < s.length; j++) { //@j
           count.set(s[j], (count.get(s[j]) ?? 0) + 1);
-          top = Math.max(top, count.get(s[j])!);
-          if (j - i + 1 - top <= k) best = Math.max(best, j - i + 1); //@check
+          mostCommon = Math.max(mostCommon, count.get(s[j])!);
+          const length = j - i + 1;
+          const changesNeeded = length - mostCommon;
+          if (changesNeeded <= k) best = Math.max(best, length); //@check
         }
       }
       return best; //@ret
@@ -57,15 +59,18 @@ const slidingWindow = defineSolution<Input>({
   code: code(`
     function characterReplacement(s: string, k: number): number {
       const count = new Map<string, number>();
-      let lo = 0, maxCount = 0, best = 0; //@init
-      for (let hi = 0; hi < s.length; hi++) { //@hi
-        count.set(s[hi], (count.get(s[hi]) ?? 0) + 1);
-        maxCount = Math.max(maxCount, count.get(s[hi])!); //@max
-        if (hi - lo + 1 - maxCount > k) { //@slide
-          count.set(s[lo], count.get(s[lo])! - 1);
-          lo++;
+      let left = 0; //@init
+      let maxCount = 0; // highest count of one letter seen in a window
+      let best = 0;
+      for (let right = 0; right < s.length; right++) { //@hi
+        count.set(s[right], (count.get(s[right]) ?? 0) + 1);
+        maxCount = Math.max(maxCount, count.get(s[right])!); //@max
+        const windowLength = right - left + 1;
+        if (windowLength - maxCount > k) { // too many changes: slide the window //@slide
+          count.set(s[left], count.get(s[left])! - 1);
+          left++;
         }
-        best = Math.max(best, hi - lo + 1); //@best
+        best = Math.max(best, right - left + 1); //@best
       }
       return best; //@ret
     }
@@ -76,7 +81,7 @@ const slidingWindow = defineSolution<Input>({
       maxCount = 0,
       best = 0;
     const chars = [...s];
-    const view = (hi: number) => [vars({ k, maxCount, best }), arr("s", chars, { window: [lo, hi], pointers: { lo, hi } }), map("counts", count)];
+    const view = (hi: number) => [vars({ k, maxCount, best }), arr("s", chars, { window: [lo, hi], pointers: { left: lo, right: hi } }), map("counts", count)];
     t.step("init", "Empty window.", [arr("s", chars)]);
     for (let hi = 0; hi < s.length; hi++) {
       count.set(s[hi], (count.get(s[hi]) ?? 0) + 1);
@@ -106,11 +111,16 @@ const perLetter = defineSolution<Input>({
     function characterReplacement(s: string, k: number): number {
       let best = 0;
       for (const target of new Set(s)) { //@target
-        let lo = 0, diff = 0;
-        for (let hi = 0; hi < s.length; hi++) { //@hi
-          if (s[hi] !== target) diff++;
-          while (diff > k) if (s[lo++] !== target) diff--; //@shrink
-          best = Math.max(best, hi - lo + 1); //@best
+        // Longest window that becomes all target letters with at most k changes.
+        let left = 0;
+        let changes = 0;
+        for (let right = 0; right < s.length; right++) { //@hi
+          if (s[right] !== target) changes++;
+          while (changes > k) { //@shrink
+            if (s[left] !== target) changes--;
+            left++;
+          }
+          best = Math.max(best, right - left + 1); //@best
         }
       }
       return best; //@ret
@@ -128,7 +138,7 @@ const perLetter = defineSolution<Input>({
         const shrinking = diff > k;
         while (diff > k) if (s[lo++] !== target) diff--;
         const h = hi;
-        t.step(shrinking ? "shrink" : "hi", shrinking ? `Too many changes. Shrink to lo = ${lo}.` : `'${s[hi]}' ${s[hi] === target ? "matches" : "needs a change"}. changes = ${diff}.`, () => [vars({ target, changes: diff, best }), arr("s", chars, { window: [lo, h], pointers: { lo, hi: h } })]);
+        t.step(shrinking ? "shrink" : "hi", shrinking ? `Too many changes. Shrink to left = ${lo}.` : `'${s[hi]}' ${s[hi] === target ? "matches" : "needs a change"}. changes = ${diff}.`, () => [vars({ target, changes: diff, best }), arr("s", chars, { window: [lo, h], pointers: { lo, hi: h } })]);
         best = Math.max(best, hi - lo + 1);
       }
       t.step("best", `best = ${best}.`, [vars({ target, best })]);

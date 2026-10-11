@@ -17,12 +17,14 @@ const binarySearch = defineSolution<Input>({
     function twoSum(numbers: number[], target: number): number[] {
       for (let i = 0; i < numbers.length; i++) { //@i
         const need = target - numbers[i];
-        let lo = i + 1, hi = numbers.length - 1;
-        while (lo <= hi) {
-          const mid = (lo + hi) >> 1; //@mid
-          if (numbers[mid] === need) return [i + 1, mid + 1]; //@found
-          if (numbers[mid] < need) lo = mid + 1;
-          else hi = mid - 1;
+        // Binary search for need to the right of i.
+        let left = i + 1;
+        let right = numbers.length - 1;
+        while (left <= right) {
+          const mid = Math.floor((left + right) / 2); //@mid
+          if (numbers[mid] === need) return [i + 1, mid + 1]; // answer is 1-indexed //@found
+          if (numbers[mid] < need) left = mid + 1;
+          else right = mid - 1;
         }
       }
       return []; //@none
@@ -33,7 +35,7 @@ const binarySearch = defineSolution<Input>({
       vars({ target, need: target - numbers[i] }),
       arr("numbers", numbers, {
         tones: tones([i, "active"], [mid, hit ? "success" : "compare"]),
-        pointers: { i, lo, hi },
+        pointers: { i, left: lo, right: hi },
         window: lo !== undefined && hi !== undefined && lo <= hi ? [lo, hi] : null,
       }),
     ];
@@ -66,12 +68,16 @@ const twoPointers = defineSolution<Input>({
   idea: "Start at both ends. Since the array is sorted, a sum that is too small can only grow by moving l right, and a sum that is too big can only shrink by moving r left.",
   code: code(`
     function twoSum(numbers: number[], target: number): number[] {
-      let l = 0, r = numbers.length - 1; //@init
-      while (l < r) {
-        const sum = numbers[l] + numbers[r]; //@sum
-        if (sum === target) return [l + 1, r + 1]; //@found
-        if (sum < target) l++; //@left
-        else r--; //@right
+      let left = 0; //@init
+      let right = numbers.length - 1;
+      while (left < right) {
+        const sum = numbers[left] + numbers[right]; //@sum
+        if (sum === target) return [left + 1, right + 1]; // answer is 1-indexed //@found
+        if (sum < target) {
+          left++; // need a bigger sum //@left
+        } else {
+          right--; // need a smaller sum //@right
+        }
       }
       return []; //@none
     }
@@ -81,7 +87,7 @@ const twoPointers = defineSolution<Input>({
       r = numbers.length - 1;
     const view = (sum?: number, tone: Tone = "active") => [
       vars({ target, sum }),
-      arr("numbers", numbers, { tones: tones([l, tone], [r, tone]), pointers: { l, r }, window: [l, r] }),
+      arr("numbers", numbers, { tones: tones([l, tone], [r, tone]), pointers: { left: l, right: r }, window: [l, r] }),
     ];
     t.step("init", "l at the smallest value, r at the largest.", view());
     while (l < r) {

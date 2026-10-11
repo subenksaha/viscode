@@ -17,13 +17,23 @@ const dedupeSet = defineSolution<Input>({
   code: code(`
     function subsetsWithDup(nums: number[]): number[][] {
       nums.sort((a, b) => a - b); //@sort
-      const seen = new Set<string>(), res: number[][] = [];
-      for (let mask = 0; mask < 1 << nums.length; mask++) { //@mask
-        const sub = nums.filter((_, i) => mask & (1 << i));
-        const key = sub.join(",");
-        if (!seen.has(key)) { seen.add(key); res.push(sub); } //@keep
+      const seen = new Set<string>();
+      const result: number[][] = [];
+      // Each number from 0 to 2^n - 1 picks a subset: bit i says whether nums[i] is in it.
+      const totalSubsets = 2 ** nums.length;
+      for (let mask = 0; mask < totalSubsets; mask++) { //@mask
+        const subset: number[] = [];
+        for (let i = 0; i < nums.length; i++) {
+          const bitIsSet = (mask & (1 << i)) !== 0;
+          if (bitIsSet) subset.push(nums[i]);
+        }
+        const key = subset.join(",");
+        if (!seen.has(key)) { //@keep
+          seen.add(key);
+          result.push(subset);
+        }
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums }, t) {
@@ -55,18 +65,21 @@ const backtrack = defineSolution<Input>({
   code: code(`
     function subsetsWithDup(nums: number[]): number[][] {
       nums.sort((a, b) => a - b);
-      const res: number[][] = [], path: number[] = [];
-      function dfs(start: number) {
-        res.push([...path]); //@record
+      const result: number[][] = [];
+      const path: number[] = [];
+      function build(start: number) {
+        result.push([...path]); //@record
         for (let i = start; i < nums.length; i++) {
-          if (i > start && nums[i] === nums[i - 1]) continue; //@skip
+          // Using an equal number at the same position would repeat a subset.
+          const sameAsPrevious = i > start && nums[i] === nums[i - 1];
+          if (sameAsPrevious) continue; //@skip
           path.push(nums[i]); //@choose
-          dfs(i + 1);
+          build(i + 1);
           path.pop(); //@undo
         }
       }
-      dfs(0);
-      return res; //@ret
+      build(0);
+      return result; //@ret
     }
   `),
   run({ nums }, t) {

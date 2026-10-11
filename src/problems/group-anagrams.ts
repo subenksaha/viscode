@@ -14,10 +14,10 @@ const sortedKey = defineSolution<Input>({
   code: code(`
     function groupAnagrams(strs: string[]): string[][] {
       const groups = new Map<string, string[]>(); //@init
-      for (const w of strs) { //@loop
-        const key = [...w].sort().join(""); //@key
+      for (const word of strs) { //@loop
+        const key = word.split("").sort().join(""); // anagrams share the same sorted letters //@key
         if (!groups.has(key)) groups.set(key, []);
-        groups.get(key)!.push(w); //@add
+        groups.get(key)!.push(word); //@add
       }
       return [...groups.values()]; //@ret
     }
@@ -48,12 +48,15 @@ const countKey = defineSolution<Input>({
   code: code(`
     function groupAnagrams(strs: string[]): string[][] {
       const groups = new Map<string, string[]>(); //@init
-      for (const w of strs) { //@loop
-        const cnt = new Array(26).fill(0);
-        for (const ch of w) cnt[ch.charCodeAt(0) - 97]++;
-        const key = cnt.join("#"); //@key
+      for (const word of strs) { //@loop
+        const letterCounts = new Array(26).fill(0);
+        for (const letter of word) {
+          const position = letter.charCodeAt(0) - "a".charCodeAt(0);
+          letterCounts[position]++;
+        }
+        const key = letterCounts.join("#"); // anagrams have the same letter counts //@key
         if (!groups.has(key)) groups.set(key, []);
-        groups.get(key)!.push(w); //@add
+        groups.get(key)!.push(word); //@add
       }
       return [...groups.values()]; //@ret
     }

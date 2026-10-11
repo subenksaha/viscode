@@ -21,23 +21,37 @@ const bruteForce = defineSolution<Input>({
   idea: "From each cell, flow downhill (to equal or lower neighbors) and check whether the water reaches both oceans.",
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
-      const m = heights.length, n = heights[0].length, res: number[][] = [];
-      for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) { //@cell
-        let pac = false, atl = false;
-        const seen = new Set<number>([r * n + c]), stack = [[r, c]];
-        while (stack.length) { //@flow
-          const [i, j] = stack.pop()!;
-          if (i === 0 || j === 0) pac = true;
-          if (i === m - 1 || j === n - 1) atl = true;
-          for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const x = i + di, y = j + dj;
-            if (x < 0 || y < 0 || x >= m || y >= n || seen.has(x * n + y)) continue;
-            if (heights[x][y] <= heights[i][j]) { seen.add(x * n + y); stack.push([x, y]); }
+      const rows = heights.length;
+      const cols = heights[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      const result: number[][] = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@cell
+          // Let water flow downhill from (row, col) and see which oceans it touches.
+          let reachesPacific = false;
+          let reachesAtlantic = false;
+          const visited = new Set<string>([row + "," + col]);
+          const stack = [[row, col]];
+          while (stack.length > 0) { //@flow
+            const [r, c] = stack.pop()!;
+            if (r === 0 || c === 0) reachesPacific = true;
+            if (r === rows - 1 || c === cols - 1) reachesAtlantic = true;
+            for (const [rowStep, colStep] of directions) {
+              const nextRow = r + rowStep;
+              const nextCol = c + colStep;
+              const key = nextRow + "," + nextCol;
+              const outside = nextRow < 0 || nextCol < 0 || nextRow >= rows || nextCol >= cols;
+              if (outside || visited.has(key)) continue;
+              if (heights[nextRow][nextCol] <= heights[r][c]) {
+                visited.add(key);
+                stack.push([nextRow, nextCol]);
+              }
+            }
           }
+          if (reachesPacific && reachesAtlantic) result.push([row, col]); //@both
         }
-        if (pac && atl) res.push([r, c]); //@both
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ heights }, t) {
@@ -144,25 +158,36 @@ const reverseDfs = defineSolution<Input>({
   idea: "Flip the direction: start at each ocean's border and climb to equal-or-higher neighbors. Cells marked by both searches are the answer.",
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
-      const m = heights.length, n = heights[0].length;
-      const pac = heights.map((row) => row.map(() => false));
-      const atl = heights.map((row) => row.map(() => false));
-      function dfs(r: number, c: number, ocean: boolean[][]) {
-        ocean[r][c] = true; //@climb
-        for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-          const x = r + dr, y = c + dc;
-          if (x < 0 || y < 0 || x >= m || y >= n || ocean[x][y]) continue;
-          if (heights[x][y] >= heights[r][c]) dfs(x, y, ocean);
+      const rows = heights.length;
+      const cols = heights[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      // pacific[row][col] = water from this cell can flow into the Pacific (same for atlantic)
+      const pacific = heights.map((line) => line.map(() => false));
+      const atlantic = heights.map((line) => line.map(() => false));
+      // Walk uphill from the ocean: any cell we can climb to can flow back down to it.
+      function climb(row: number, col: number, canReach: boolean[][]) {
+        canReach[row][col] = true; //@climb
+        for (const [rowStep, colStep] of directions) {
+          const nextRow = row + rowStep;
+          const nextCol = col + colStep;
+          const outside = nextRow < 0 || nextCol < 0 || nextRow >= rows || nextCol >= cols;
+          if (outside || canReach[nextRow][nextCol]) continue;
+          if (heights[nextRow][nextCol] >= heights[row][col]) climb(nextRow, nextCol, canReach);
         }
       }
-      for (let c = 0; c < n; c++) if (!pac[0][c]) dfs(0, c, pac); //@seedP
-      for (let r = 0; r < m; r++) if (!pac[r][0]) dfs(r, 0, pac);
-      for (let c = 0; c < n; c++) if (!atl[m - 1][c]) dfs(m - 1, c, atl); //@seedA
-      for (let r = 0; r < m; r++) if (!atl[r][n - 1]) dfs(r, n - 1, atl);
-      const res: number[][] = [];
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) if (pac[r][c] && atl[r][c]) res.push([r, c]);
-      return res; //@ret
+      // Pacific touches the top row and left column.
+      for (let col = 0; col < cols; col++) if (!pacific[0][col]) climb(0, col, pacific); //@seedP
+      for (let row = 0; row < rows; row++) if (!pacific[row][0]) climb(row, 0, pacific);
+      // Atlantic touches the bottom row and right column.
+      for (let col = 0; col < cols; col++) if (!atlantic[rows - 1][col]) climb(rows - 1, col, atlantic); //@seedA
+      for (let row = 0; row < rows; row++) if (!atlantic[row][cols - 1]) climb(row, cols - 1, atlantic);
+      const result: number[][] = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (pacific[row][col] && atlantic[row][col]) result.push([row, col]);
+        }
+      }
+      return result; //@ret
     }
   `),
   run: ({ heights }, t) => reverseSearch(heights, t, false),
@@ -176,28 +201,48 @@ const reverseBfs = defineSolution<Input>({
   idea: "Same reverse idea with a queue: spread out from both oceans layer by layer.",
   code: code(`
     function pacificAtlantic(heights: number[][]): number[][] {
-      const m = heights.length, n = heights[0].length;
-      const bfs = (seeds: number[][]) => {
-        const ocean = heights.map((row) => row.map(() => false));
-        for (const [r, c] of seeds) ocean[r][c] = true;
-        const queue = [...seeds];
-        while (queue.length) {
-          const [r, c] = queue.shift()!; //@climb
-          for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const x = r + dr, y = c + dc;
-            if (x < 0 || y < 0 || x >= m || y >= n || ocean[x][y]) continue;
-            if (heights[x][y] >= heights[r][c]) { ocean[x][y] = true; queue.push([x, y]); }
+      const rows = heights.length;
+      const cols = heights[0].length;
+      const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      // Walk uphill from the border cells. Returns which cells can flow back down to that ocean.
+      function climbFrom(borderCells: number[][]): boolean[][] {
+        const canReach = heights.map((line) => line.map(() => false));
+        for (const [row, col] of borderCells) canReach[row][col] = true;
+        const queue = [...borderCells];
+        while (queue.length > 0) {
+          const [row, col] = queue.shift()!; //@climb
+          for (const [rowStep, colStep] of directions) {
+            const nextRow = row + rowStep;
+            const nextCol = col + colStep;
+            const outside = nextRow < 0 || nextCol < 0 || nextRow >= rows || nextCol >= cols;
+            if (outside || canReach[nextRow][nextCol]) continue;
+            if (heights[nextRow][nextCol] >= heights[row][col]) {
+              canReach[nextRow][nextCol] = true;
+              queue.push([nextRow, nextCol]);
+            }
           }
         }
-        return ocean;
-      };
-      const cols = [...Array(n).keys()], rows = [...Array(m).keys()];
-      const pac = bfs([...cols.map((c) => [0, c]), ...rows.map((r) => [r, 0])]); //@seedP
-      const atl = bfs([...cols.map((c) => [m - 1, c]), ...rows.map((r) => [r, n - 1])]); //@seedA
-      const res: number[][] = [];
-      for (let r = 0; r < m; r++)
-        for (let c = 0; c < n; c++) if (pac[r][c] && atl[r][c]) res.push([r, c]);
-      return res; //@ret
+        return canReach;
+      }
+      const pacificBorder: number[][] = [];
+      const atlanticBorder: number[][] = [];
+      for (let col = 0; col < cols; col++) {
+        pacificBorder.push([0, col]); // top row
+        atlanticBorder.push([rows - 1, col]); // bottom row
+      }
+      for (let row = 0; row < rows; row++) {
+        pacificBorder.push([row, 0]); // left column
+        atlanticBorder.push([row, cols - 1]); // right column
+      }
+      const pacific = climbFrom(pacificBorder); //@seedP
+      const atlantic = climbFrom(atlanticBorder); //@seedA
+      const result: number[][] = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          if (pacific[row][col] && atlantic[row][col]) result.push([row, col]);
+        }
+      }
+      return result; //@ret
     }
   `),
   run: ({ heights }, t) => reverseSearch(heights, t, true),

@@ -10,35 +10,39 @@ const perNumber = defineSolution<Input>({
   name: "Count Each Number",
   time: "O(n log n)",
   space: "O(1)",
-  idea: "Count the set bits of every i from 0 to n independently, clearing the lowest set bit each time.",
+  idea: "Count the set bits of every i from 0 to n independently: check the last bit, then halve the number, until it reaches 0.",
   code: code(`
     function countBits(n: number): number[] {
-      const ans: number[] = []; //@init
+      const result: number[] = []; //@init
       for (let i = 0; i <= n; i++) { //@loop
-        let x = i, c = 0;
-        while (x) { x &= x - 1; c++; } //@count
-        ans.push(c); //@push
+        let value = i;
+        let ones = 0;
+        while (value > 0) { //@count
+          if (value % 2 === 1) ones++;
+          value = Math.floor(value / 2);
+        }
+        result.push(ones); //@push
       }
-      return ans; //@ret
+      return result; //@ret
     }
   `),
   run({ n }, t) {
     const ans: number[] = [];
     const w = bitWidth(n);
-    t.step("init", "Empty answer.", [arr("ans", ans)]);
+    t.step("init", "Empty result.", [arr("result", ans)]);
     for (let i = 0; i <= n; i++) {
-      t.step("loop", `i = ${i}.`, [bits(`${i} in binary`, i, w), arr("ans", ans)]);
+      t.step("loop", `i = ${i}.`, [bits(`${i} in binary`, i, w), arr("result", ans)]);
       let x = i,
         c = 0;
       while (x) {
         x &= x - 1;
         c++;
       }
-      t.step("count", `${i} has ${c} set bit(s).`, [bits(`${i} in binary`, i, w), arr("ans", ans)]);
+      t.step("count", `${i} has ${c} set bit(s).`, [bits(`${i} in binary`, i, w), arr("result", ans)]);
       ans.push(c);
-      t.step("push", `ans[${i}] = ${c}.`, [arr("ans", ans, { tones: tones([i, "success"]) })]);
+      t.step("push", `result[${i}] = ${c}.`, [arr("result", ans, { tones: tones([i, "success"]) })]);
     }
-    t.step("ret", "Return ans.", [arr("ans", ans)]);
+    t.step("ret", "Return result.", [arr("result", ans)]);
     return ans;
   },
 });
@@ -48,12 +52,16 @@ const shiftDp = defineSolution<Input>({
   name: "DP: Drop the Last Bit",
   time: "O(n)",
   space: "O(1)",
-  idea: "i >> 1 is i without its last bit, and it is smaller, so its answer is already known: dp[i] = dp[i >> 1] + (i & 1).",
+  idea: "Halving i (rounding down) drops its last bit, and the result is smaller, so its answer is already known: dp[i] = dp[⌊i / 2⌋] + (i % 2).",
   code: code(`
     function countBits(n: number): number[] {
+      // dp[i] = number of 1 bits in i
       const dp = new Array(n + 1).fill(0); //@init
       for (let i = 1; i <= n; i++) { //@loop
-        dp[i] = dp[i >> 1] + (i & 1); //@dp
+        // i has the same bits as i / 2, plus one more if i is odd.
+        const half = Math.floor(i / 2);
+        const lastBit = i % 2;
+        dp[i] = dp[half] + lastBit; //@dp
       }
       return dp; //@ret
     }
@@ -85,9 +93,12 @@ const lowBitDp = defineSolution<Input>({
   idea: "i & (i − 1) is i with its lowest 1 removed, so dp[i] = dp[i & (i − 1)] + 1.",
   code: code(`
     function countBits(n: number): number[] {
+      // dp[i] = number of 1 bits in i
       const dp = new Array(n + 1).fill(0); //@init
       for (let i = 1; i <= n; i++) { //@loop
-        dp[i] = dp[i & (i - 1)] + 1; //@dp
+        // i & (i - 1) is i with its lowest 1 bit turned off.
+        const withoutLowestBit = i & (i - 1);
+        dp[i] = dp[withoutLowestBit] + 1; //@dp
       }
       return dp; //@ret
     }
@@ -97,7 +108,7 @@ const lowBitDp = defineSolution<Input>({
     t.step("init", "dp[0] = 0.", [arr("dp", dp)]);
     for (let i = 1; i <= n; i++) {
       const j = i & (i - 1);
-      t.step("loop", `i = ${i}: i & (i − 1) = ${j}.`, [vars({ i, prev: j }), arr("dp", dp, { tones: tones([j, "compare"], [i, "active"]) })]);
+      t.step("loop", `i = ${i}: i & (i − 1) = ${j}.`, [vars({ i, withoutLowestBit: j }), arr("dp", dp, { tones: tones([j, "compare"], [i, "active"]) })]);
       dp[i] = dp[j] + 1;
       t.step("dp", `dp[${i}] = dp[${j}] + 1 = ${dp[i]}.`, [arr("dp", dp, { tones: tones([j, "compare"], [i, "success"]) })]);
     }

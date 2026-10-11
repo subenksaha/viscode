@@ -14,11 +14,12 @@ const countTwice = defineSolution<Input>({
   idea: "First pass counts the nodes. Second pass walks ⌊n / 2⌋ steps from the head.",
   code: code(`
     function middleNode(head: ListNode | null): ListNode | null {
-      let n = 0;
-      for (let p = head; p; p = p.next) n++; //@count
-      let mid = head;
-      for (let k = 0; k < n >> 1; k++) mid = mid!.next; //@walk
-      return mid; //@ret
+      let length = 0;
+      for (let node = head; node !== null; node = node.next) length++; //@count
+      let middle = head;
+      const steps = Math.floor(length / 2);
+      for (let step = 0; step < steps; step++) middle = middle!.next; //@walk
+      return middle; //@ret
     }
   `),
   run({ head }, t) {
@@ -26,14 +27,14 @@ const countTwice = defineSolution<Input>({
     let n = 0;
     for (let p = head; p; p = p.next) {
       n++;
-      t.step("count", `Count ${p.val}: n = ${n}.`, [vars({ n }), list("list", nodes, { tones: [[p, "active"]], pointers: { p } })]);
+      t.step("count", `Count ${p.val}: length = ${n}.`, [vars({ length: n }), list("list", nodes, { tones: [[p, "active"]], pointers: { node: p } })]);
     }
     let mid = head;
     for (let k = 0; k < n >> 1; k++) {
       mid = mid!.next;
-      t.step("walk", `Step ${k + 1} of ${n >> 1}.`, [vars({ n, steps: k + 1 }), list("list", nodes, { tones: [[mid, "active"]], pointers: { mid } })]);
+      t.step("walk", `Step ${k + 1} of ${n >> 1}.`, [vars({ length: n, step: k + 1 }), list("list", nodes, { tones: [[mid, "active"]], pointers: { middle: mid } })]);
     }
-    t.step("ret", `Middle is ${mid?.val ?? "null"}.`, [list("list", nodes, { tones: [[mid, "success"]], pointers: { mid } })]);
+    t.step("ret", `Middle is ${mid?.val ?? "null"}.`, [list("list", nodes, { tones: [[mid, "success"]], pointers: { middle: mid } })]);
     return listToArray(mid);
   },
 });
@@ -46,8 +47,10 @@ const fastSlow = defineSolution<Input>({
   idea: "Move slow one step and fast two steps at a time. When fast runs off the end, slow is in the middle.",
   code: code(`
     function middleNode(head: ListNode | null): ListNode | null {
-      let slow = head, fast = head; //@init
-      while (fast && fast.next) { //@loop
+      // fast moves two steps for each step of slow, so slow ends in the middle.
+      let slow = head; //@init
+      let fast = head;
+      while (fast !== null && fast.next !== null) { //@loop
         slow = slow!.next; //@slow
         fast = fast.next.next; //@fast
       }

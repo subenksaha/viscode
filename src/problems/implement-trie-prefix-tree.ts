@@ -102,24 +102,42 @@ const withMap = defineSolution<Input>({
   space: "O(total chars)",
   idea: "Each node maps a character to its child node and flags whether a word ends there. insert creates missing nodes; search and startsWith just walk.",
   code: code(`
-    class TrieNode { kids = new Map<string, TrieNode>(); end = false; }
+    class TrieNode {
+      children = new Map<string, TrieNode>();
+      isWordEnd = false;
+    }
+
     class Trie {
       root = new TrieNode(); //@ctor
+
       insert(word: string): void {
-        let n = this.root;
-        for (const c of word) { //@insert-step
-          if (!n.kids.has(c)) n.kids.set(c, new TrieNode());
-          n = n.kids.get(c)!;
+        let node = this.root;
+        for (const letter of word) { //@insert-step
+          if (!node.children.has(letter)) node.children.set(letter, new TrieNode());
+          node = node.children.get(letter)!;
         }
-        n.end = true; //@insert-end
+        node.isWordEnd = true; //@insert-end
       }
-      private walk(s: string): TrieNode | null {
-        let n: TrieNode | undefined = this.root;
-        for (const c of s) if (!(n = n.kids.get(c))) return null; //@walk
-        return n;
+
+      // Follows the letters of text from the root. Returns null if the path breaks.
+      private findNode(text: string): TrieNode | null {
+        let node = this.root;
+        for (const letter of text) { //@walk
+          const child = node.children.get(letter);
+          if (child === undefined) return null;
+          node = child;
+        }
+        return node;
       }
-      search(word: string): boolean { return this.walk(word)?.end ?? false; } //@search-end
-      startsWith(prefix: string): boolean { return this.walk(prefix) !== null; } //@prefix-end
+
+      search(word: string): boolean {
+        const node = this.findNode(word);
+        return node !== null && node.isWordEnd; //@search-end
+      }
+
+      startsWith(prefix: string): boolean {
+        return this.findNode(prefix) !== null; //@prefix-end
+      }
     }
   `),
   run: (input, t) => simulate(input, t, mapNode),
@@ -132,22 +150,47 @@ const withArray = defineSolution<Input>({
   space: "O(26 · nodes)",
   idea: "For lowercase words, store children in an array indexed by letter. Lookups are direct, but every node reserves 26 slots.",
   code: code(`
-    class TrieNode { kids: (TrieNode | undefined)[] = new Array(26); end = false; }
-    const idx = (c: string) => c.charCodeAt(0) - 97;
+    class TrieNode {
+      children: (TrieNode | undefined)[] = new Array(26); // one slot per letter a..z
+      isWordEnd = false;
+    }
+
+    function letterIndex(letter: string): number {
+      return letter.charCodeAt(0) - "a".charCodeAt(0);
+    }
+
     class Trie {
       root = new TrieNode(); //@ctor
+
       insert(word: string): void {
-        let n = this.root;
-        for (const c of word) n = n.kids[idx(c)] ??= new TrieNode(); //@insert-step
-        n.end = true; //@insert-end
+        let node = this.root;
+        for (const letter of word) { //@insert-step
+          const index = letterIndex(letter);
+          if (node.children[index] === undefined) node.children[index] = new TrieNode();
+          node = node.children[index]!;
+        }
+        node.isWordEnd = true; //@insert-end
       }
-      private walk(s: string): TrieNode | null {
-        let n = this.root;
-        for (const c of s) { const k = n.kids[idx(c)]; if (!k) return null; n = k; } //@walk
-        return n;
+
+      // Follows the letters of text from the root. Returns null if the path breaks.
+      private findNode(text: string): TrieNode | null {
+        let node = this.root;
+        for (const letter of text) { //@walk
+          const child = node.children[letterIndex(letter)];
+          if (child === undefined) return null;
+          node = child;
+        }
+        return node;
       }
-      search(word: string): boolean { return this.walk(word)?.end ?? false; } //@search-end
-      startsWith(prefix: string): boolean { return this.walk(prefix) !== null; } //@prefix-end
+
+      search(word: string): boolean {
+        const node = this.findNode(word);
+        return node !== null && node.isWordEnd; //@search-end
+      }
+
+      startsWith(prefix: string): boolean {
+        return this.findNode(prefix) !== null; //@prefix-end
+      }
     }
   `),
   run: (input, t) => simulate(input, t, arrayNode),

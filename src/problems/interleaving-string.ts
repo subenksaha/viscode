@@ -17,15 +17,19 @@ const memo = defineSolution<Input>({
     function isInterleave(s1: string, s2: string, s3: string): boolean {
       if (s1.length + s2.length !== s3.length) return false;
       const memo = new Map<string, boolean>();
-      const go = (i: number, j: number): boolean => {
+      // Can s1[i..] and s2[j..] interleave to form s3[i + j..]?
+      function canForm(i: number, j: number): boolean {
         if (i + j === s3.length) return true; //@done
         const key = i + "," + j;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const res = (s1[i] === s3[i + j] && go(i + 1, j)) || (s2[j] === s3[i + j] && go(i, j + 1)); //@try
-        memo.set(key, res);
-        return res;
-      };
-      return go(0, 0); //@ret
+        const nextChar = s3[i + j];
+        let result = false;
+        if (s1[i] === nextChar && canForm(i + 1, j)) result = true; //@try
+        if (!result && s2[j] === nextChar && canForm(i, j + 1)) result = true;
+        memo.set(key, result);
+        return result;
+      }
+      return canForm(0, 0); //@ret
     }
   `),
   run({ s1, s2, s3 }, t) {
@@ -69,16 +73,20 @@ const table = defineSolution<Input>({
   idea: "dp[i][j] = can the first i chars of s1 and the first j of s2 form the first i+j of s3? Come from above if s1[i−1] matches, or from the left if s2[j−1] matches.",
   code: code(`
     function isInterleave(s1: string, s2: string, s3: string): boolean {
-      const m = s1.length, n = s2.length;
-      if (m + n !== s3.length) return false;
-      const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(false));
+      const len1 = s1.length;
+      const len2 = s2.length;
+      if (len1 + len2 !== s3.length) return false;
+      // dp[i][j] = can the first i of s1 and first j of s2 form the first i + j of s3?
+      const dp = Array.from({ length: len1 + 1 }, () => new Array(len2 + 1).fill(false));
       dp[0][0] = true; //@init
-      for (let i = 0; i <= m; i++)
-        for (let j = 0; j <= n; j++) { //@cell
-          if (i && s1[i - 1] === s3[i + j - 1] && dp[i - 1][j]) dp[i][j] = true;
-          if (j && s2[j - 1] === s3[i + j - 1] && dp[i][j - 1]) dp[i][j] = true;
+      for (let i = 0; i <= len1; i++) {
+        for (let j = 0; j <= len2; j++) { //@cell
+          const target = s3[i + j - 1];
+          if (i > 0 && s1[i - 1] === target && dp[i - 1][j]) dp[i][j] = true;
+          if (j > 0 && s2[j - 1] === target && dp[i][j - 1]) dp[i][j] = true;
         }
-      return dp[m][n]; //@ret
+      }
+      return dp[len1][len2]; //@ret
     }
   `),
   run({ s1, s2, s3 }, t) {

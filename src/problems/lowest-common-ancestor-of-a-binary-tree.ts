@@ -17,17 +17,30 @@ const parents = defineSolution<Input>({
   idea: "Record every node's parent with a traversal. Collect all ancestors of p, then walk up from q until you hit one of them.",
   code: code(`
     function lowestCommonAncestor(root: TreeNode, p: TreeNode, q: TreeNode): TreeNode {
-      const parent = new Map<TreeNode, TreeNode | null>([[root, null]]);
+      // Record each node's parent until we have found both p and q.
+      const parent = new Map<TreeNode, TreeNode | null>();
+      parent.set(root, null);
       const stack = [root];
       while (!parent.has(p) || !parent.has(q)) { //@map
-        const n = stack.pop()!;
-        for (const c of [n.left, n.right]) if (c) { parent.set(c, n); stack.push(c); }
+        const node = stack.pop()!;
+        for (const child of [node.left, node.right]) {
+          if (child !== null) {
+            parent.set(child, node);
+            stack.push(child);
+          }
+        }
       }
-      const ancestors = new Set<TreeNode>();
-      for (let a: TreeNode | null = p; a; a = parent.get(a)!) ancestors.add(a); //@up-p
-      let b = q;
-      while (!ancestors.has(b)) b = parent.get(b)!; //@up-q
-      return b; //@ret
+      // Collect every ancestor of p (including p itself).
+      const ancestorsOfP = new Set<TreeNode>();
+      let node: TreeNode | null = p;
+      while (node !== null) { //@up-p
+        ancestorsOfP.add(node);
+        node = parent.get(node)!;
+      }
+      // Walk up from q until we hit one of them.
+      let ancestor = q;
+      while (!ancestorsOfP.has(ancestor)) ancestor = parent.get(ancestor)!; //@up-q
+      return ancestor; //@ret
     }
   `),
   run({ root, p, q }, t) {
@@ -69,11 +82,12 @@ const recursive = defineSolution<Input>({
   idea: "Return p or q if found in a subtree, else null. If both subtrees return something, this node is the split point: the LCA. Otherwise pass up whichever side found something.",
   code: code(`
     function lowestCommonAncestor(root: TreeNode | null, p: TreeNode, q: TreeNode): TreeNode | null {
-      if (!root || root === p || root === q) return root; //@base
-      const left = lowestCommonAncestor(root.left, p, q); //@left
-      const right = lowestCommonAncestor(root.right, p, q); //@right
-      if (left && right) return root; //@split
-      return left ?? right; //@pass
+      if (root === null || root === p || root === q) return root; //@base
+      const fromLeft = lowestCommonAncestor(root.left, p, q); //@left
+      const fromRight = lowestCommonAncestor(root.right, p, q); //@right
+      // p and q were found on different sides, so root is where they meet.
+      if (fromLeft !== null && fromRight !== null) return root; //@split
+      return fromLeft !== null ? fromLeft : fromRight; //@pass
     }
   `),
   run({ root, p, q }, t) {

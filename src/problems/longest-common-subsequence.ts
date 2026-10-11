@@ -13,17 +13,21 @@ const memo = defineSolution<Input>({
   space: "O(m·n)",
   idea: "lcs(i, j): if the characters match, take 1 + lcs(i+1, j+1); otherwise skip one character from either string and take the better result.",
   code: code(`
-    function longestCommonSubsequence(a: string, b: string): number {
+    function longestCommonSubsequence(text1: string, text2: string): number {
       const memo = new Map<string, number>();
+      // Length of the LCS of text1[i..] and text2[j..].
       function lcs(i: number, j: number): number {
-        if (i === a.length || j === b.length) return 0; //@base
+        if (i === text1.length || j === text2.length) return 0; //@base
         const key = i + "," + j;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const res = a[i] === b[j] //@cmp
-          ? 1 + lcs(i + 1, j + 1)
-          : Math.max(lcs(i + 1, j), lcs(i, j + 1));
-        memo.set(key, res); //@store
-        return res;
+        let result: number;
+        if (text1[i] === text2[j]) { //@cmp
+          result = 1 + lcs(i + 1, j + 1);
+        } else {
+          result = Math.max(lcs(i + 1, j), lcs(i, j + 1));
+        }
+        memo.set(key, result); //@store
+        return result;
       }
       return lcs(0, 0); //@ret
     }
@@ -65,14 +69,19 @@ const table = defineSolution<Input>({
   space: "O(m·n)",
   idea: "dp[i][j] = LCS of the first i chars of text1 and the first j chars of text2. On a match take the diagonal + 1, otherwise the max of the cell above and the cell to the left.",
   code: code(`
-    function longestCommonSubsequence(a: string, b: string): number {
-      const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0)); //@init
-      for (let i = 1; i <= a.length; i++) //@i
-        for (let j = 1; j <= b.length; j++) //@j
-          dp[i][j] = a[i - 1] === b[j - 1] //@cell
-            ? dp[i - 1][j - 1] + 1
-            : Math.max(dp[i - 1][j], dp[i][j - 1]);
-      return dp[a.length][b.length]; //@ret
+    function longestCommonSubsequence(text1: string, text2: string): number {
+      // dp[i][j] = LCS length of the first i letters of text1 and the first j of text2
+      const dp = Array.from({ length: text1.length + 1 }, () => new Array(text2.length + 1).fill(0)); //@init
+      for (let i = 1; i <= text1.length; i++) { //@i
+        for (let j = 1; j <= text2.length; j++) { //@j
+          if (text1[i - 1] === text2[j - 1]) { //@cell
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+      return dp[text1.length][text2.length]; //@ret
     }
   `),
   run({ text1: a, text2: b }, t) {
@@ -113,23 +122,28 @@ const rolling = defineSolution<Input>({
   space: "O(n)",
   idea: "Each row only needs the row above it. Keep one row and remember the old diagonal value in a variable.",
   code: code(`
-    function longestCommonSubsequence(a: string, b: string): number {
-      const dp = new Array(b.length + 1).fill(0); //@init
-      for (let i = 1; i <= a.length; i++) { //@i
-        let diag = 0;
-        for (let j = 1; j <= b.length; j++) { //@j
-          const up = dp[j];
-          dp[j] = a[i - 1] === b[j - 1] ? diag + 1 : Math.max(up, dp[j - 1]); //@cell
-          diag = up; //@diag
+    function longestCommonSubsequence(text1: string, text2: string): number {
+      // One row of the 2D table. Before updating, dp[j] still holds the row above.
+      const dp = new Array(text2.length + 1).fill(0); //@init
+      for (let i = 1; i <= text1.length; i++) { //@i
+        let diagonal = 0; // the old dp[j - 1] from the row above
+        for (let j = 1; j <= text2.length; j++) { //@j
+          const above = dp[j];
+          if (text1[i - 1] === text2[j - 1]) { //@cell
+            dp[j] = diagonal + 1;
+          } else {
+            dp[j] = Math.max(above, dp[j - 1]);
+          }
+          diagonal = above; //@diag
         }
       }
-      return dp[b.length]; //@ret
+      return dp[text2.length]; //@ret
     }
   `),
   run({ text1: a, text2: b }, t) {
     const dp = new Array(b.length + 1).fill(0);
     const view = (i?: number, j?: number, diag?: number) => [
-      vars({ char: i !== undefined ? a[i - 1] : undefined, diag }),
+      vars({ char: i !== undefined ? a[i - 1] : undefined, diagonal: diag }),
       arr("dp (current row)", dp, { indexLabels: ["∅", ...b], tones: tones([j, "active"]) }),
     ];
     t.step("init", "One row of zeros.", view());

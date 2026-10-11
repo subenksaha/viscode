@@ -17,18 +17,21 @@ const bfs = defineSolution<Input>({
   idea: "Process the queue one level at a time: its size at the start of a round is exactly the number of nodes on that level.",
   code: code(`
     function levelOrder(root: TreeNode | null): number[][] {
-      const res: number[][] = [], queue = root ? [root] : []; //@init
-      while (queue.length) { //@level
-        const level: number[] = [];
-        for (let k = queue.length; k > 0; k--) { //@node
-          const n = queue.shift()!;
-          level.push(n.val);
-          if (n.left) queue.push(n.left);
-          if (n.right) queue.push(n.right);
+      const result: number[][] = [];
+      const queue: TreeNode[] = []; //@init
+      if (root !== null) queue.push(root);
+      while (queue.length > 0) { //@level
+        const levelValues: number[] = [];
+        const levelSize = queue.length;
+        for (let count = 0; count < levelSize; count++) { //@node
+          const node = queue.shift()!;
+          levelValues.push(node.val);
+          if (node.left !== null) queue.push(node.left);
+          if (node.right !== null) queue.push(node.right);
         }
-        res.push(level); //@push
+        result.push(levelValues); //@push
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ root }, t) {
@@ -66,19 +69,19 @@ const dfs = defineSolution<Input>({
   name: "DFS with Depth",
   time: "O(n)",
   space: "O(h)",
-  idea: "Pre-order DFS carrying the depth. Append each value to res[depth], creating that level the first time it is reached.",
+  idea: "Pre-order DFS carrying the depth. Append each value to result[depth], creating that level the first time it is reached.",
   code: code(`
     function levelOrder(root: TreeNode | null): number[][] {
-      const res: number[][] = [];
-      function dfs(n: TreeNode | null, d: number) {
-        if (!n) return;
-        if (res.length === d) res.push([]); //@new
-        res[d].push(n.val); //@add
-        dfs(n.left, d + 1);
-        dfs(n.right, d + 1);
+      const result: number[][] = [];
+      function visit(node: TreeNode | null, depth: number) {
+        if (node === null) return;
+        if (result.length === depth) result.push([]); //@new
+        result[depth].push(node.val); //@add
+        visit(node.left, depth + 1);
+        visit(node.right, depth + 1);
       }
-      dfs(root, 0);
-      return res; //@ret
+      visit(root, 0);
+      return result; //@ret
     }
   `),
   run({ root }, t) {

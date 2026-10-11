@@ -42,21 +42,33 @@ const pivotThenSearch = defineSolution<Input>({
   idea: "Binary search for the index of the minimum (the pivot). Both sides of it are sorted, so run a normal binary search on the side that can contain target.",
   code: code(`
     function search(nums: number[], target: number): number {
-      let lo = 0, hi = nums.length - 1;
-      while (lo < hi) { //@pivot
-        const mid = (lo + hi) >> 1;
-        if (nums[mid] > nums[hi]) lo = mid + 1;
-        else hi = mid;
+      // 1. Binary search for the smallest element: that is where the rotation happened.
+      let left = 0;
+      let right = nums.length - 1;
+      while (left < right) { //@pivot
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] > nums[right]) left = mid + 1;
+        else right = mid;
       }
-      const pivot = lo; //@found-pivot
-      [lo, hi] = target >= nums[pivot] && target <= nums[nums.length - 1] //@side
-        ? [pivot, nums.length - 1]
-        : [0, pivot - 1];
-      while (lo <= hi) { //@loop
-        const mid = (lo + hi) >> 1; //@mid
+      const pivot = left; //@found-pivot
+      // 2. Pick the sorted half that could contain target.
+      const lastValue = nums[nums.length - 1];
+      if (target >= nums[pivot] && target <= lastValue) { //@side
+        left = pivot;
+        right = nums.length - 1;
+      } else {
+        left = 0;
+        right = pivot - 1;
+      }
+      // 3. Normal binary search in that half.
+      while (left <= right) { //@loop
+        const mid = Math.floor((left + right) / 2); //@mid
         if (nums[mid] === target) return mid; //@found
-        if (nums[mid] < target) lo = mid + 1; //@right
-        else hi = mid - 1; //@left
+        if (nums[mid] < target) {
+          left = mid + 1; //@right
+        } else {
+          right = mid - 1; //@left
+        }
       }
       return -1; //@none
     }
@@ -65,11 +77,11 @@ const pivotThenSearch = defineSolution<Input>({
     let lo = 0,
       hi = nums.length - 1;
     const view = (mid?: number, extra: Record<string, unknown> = {}, hit = false) => [
-      vars({ target, lo, hi, mid, ...extra }),
+      vars({ target, left: lo, right: hi, mid, ...extra }),
       arr("nums", nums, {
         window: lo <= hi ? [lo, hi] : null,
         tones: tones([mid, hit ? "success" : "active"]),
-        pointers: { lo, mid, hi },
+        pointers: { left: lo, mid, right: hi },
       }),
     ];
     while (lo < hi) {
@@ -112,16 +124,26 @@ const onePass = defineSolution<Input>({
   idea: "At every mid, at least one half is sorted. If target lies inside the sorted half's range, search there; otherwise search the other half.",
   code: code(`
     function search(nums: number[], target: number): number {
-      let lo = 0, hi = nums.length - 1; //@init
-      while (lo <= hi) { //@loop
-        const mid = (lo + hi) >> 1; //@mid
+      let left = 0; //@init
+      let right = nums.length - 1;
+      while (left <= right) { //@loop
+        const mid = Math.floor((left + right) / 2); //@mid
         if (nums[mid] === target) return mid; //@found
-        if (nums[lo] <= nums[mid]) { //@left-sorted
-          if (nums[lo] <= target && target < nums[mid]) hi = mid - 1; //@go-left-a
-          else lo = mid + 1; //@go-right-a
+        // One of the two halves is always sorted. Check if target lies inside it.
+        if (nums[left] <= nums[mid]) { //@left-sorted
+          // Left half nums[left..mid] is sorted.
+          if (nums[left] <= target && target < nums[mid]) {
+            right = mid - 1; //@go-left-a
+          } else {
+            left = mid + 1; //@go-right-a
+          }
         } else { //@right-sorted
-          if (nums[mid] < target && target <= nums[hi]) lo = mid + 1; //@go-right-b
-          else hi = mid - 1; //@go-left-b
+          // Right half nums[mid..right] is sorted.
+          if (nums[mid] < target && target <= nums[right]) {
+            left = mid + 1; //@go-right-b
+          } else {
+            right = mid - 1; //@go-left-b
+          }
         }
       }
       return -1; //@none
@@ -131,11 +153,11 @@ const onePass = defineSolution<Input>({
     let lo = 0,
       hi = nums.length - 1;
     const view = (mid?: number, hit = false) => [
-      vars({ target, lo, hi, mid }),
+      vars({ target, left: lo, right: hi, mid }),
       arr("nums", nums, {
         window: lo <= hi ? [lo, hi] : null,
         tones: tones([mid, hit ? "success" : "active"]),
-        pointers: { lo, mid, hi },
+        pointers: { left: lo, mid, right: hi },
       }),
     ];
     t.step("init", "Search the whole array.", view());

@@ -17,14 +17,25 @@ const byLength = defineSolution<Input>({
   idea: "Store words grouped by length. A search compares the pattern with every stored word of the same length, letting '.' match anything.",
   code: code(`
     class WordDictionary {
-      byLen = new Map<number, string[]>(); //@ctor
+      wordsByLength = new Map<number, string[]>(); //@ctor
+
       addWord(word: string): void {
-        if (!this.byLen.has(word.length)) this.byLen.set(word.length, []);
-        this.byLen.get(word.length)!.push(word); //@add
+        if (!this.wordsByLength.has(word.length)) this.wordsByLength.set(word.length, []);
+        this.wordsByLength.get(word.length)!.push(word); //@add
       }
-      search(p: string): boolean {
-        for (const w of this.byLen.get(p.length) ?? []) //@cmp
-          if ([...p].every((c, i) => c === "." || c === w[i])) return true; //@hit
+
+      search(pattern: string): boolean {
+        const candidates = this.wordsByLength.get(pattern.length) ?? [];
+        for (const word of candidates) { //@cmp
+          let matches = true;
+          for (let i = 0; i < pattern.length; i++) {
+            if (pattern[i] !== "." && pattern[i] !== word[i]) {
+              matches = false;
+              break;
+            }
+          }
+          if (matches) return true; //@hit
+        }
         return false; //@miss
       }
     }
@@ -85,19 +96,36 @@ const trie = defineSolution<Input>({
   space: "O(total chars)",
   idea: "Insert words into a trie. Searching follows one child per letter; at a '.', it tries every child and succeeds if any branch matches the rest.",
   code: code(`
+    class TrieNode {
+      children = new Map<string, TrieNode>();
+      isWordEnd = false;
+    }
+
     class WordDictionary {
       root = new TrieNode(); //@ctor
+
       addWord(word: string): void {
-        let n = this.root;
-        for (const c of word) n = n.kids.get(c) ?? n.kids.set(c, new TrieNode()).get(c)!; //@add
-        n.end = true; //@end
+        let node = this.root;
+        for (const letter of word) { //@add
+          if (!node.children.has(letter)) node.children.set(letter, new TrieNode());
+          node = node.children.get(letter)!;
+        }
+        node.isWordEnd = true; //@end
       }
-      search(word: string, i = 0, n = this.root): boolean {
-        if (i === word.length) return n.end; //@leaf
-        if (word[i] === ".") //@dot
-          return [...n.kids.values()].some((k) => this.search(word, i + 1, k));
-        const next = n.kids.get(word[i]); //@letter
-        return !!next && this.search(word, i + 1, next);
+
+      search(word: string, index = 0, node = this.root): boolean {
+        if (index === word.length) return node.isWordEnd; //@leaf
+        const letter = word[index];
+        if (letter === ".") { //@dot
+          // "." matches any letter, so try every child.
+          for (const child of node.children.values()) {
+            if (this.search(word, index + 1, child)) return true;
+          }
+          return false;
+        }
+        const child = node.children.get(letter); //@letter
+        if (child === undefined) return false;
+        return this.search(word, index + 1, child);
       }
     }
   `),

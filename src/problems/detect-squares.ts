@@ -39,14 +39,25 @@ const scanList = defineSolution<Input>({
   code: code(`
     class DetectSquares {
       points: number[][] = []; //@ctor
-      add(p: number[]) { this.points.push(p); } //@add
-      count([x, y]: number[]): number {
+
+      add(point: number[]) {
+        this.points.push(point); //@add
+      }
+
+      countAt(x: number, y: number): number {
+        return this.points.filter((point) => point[0] === x && point[1] === y).length;
+      }
+
+      count(query: number[]): number {
+        const [x, y] = query;
         let total = 0;
-        for (const [px, py] of this.points) { //@diag
-          if (Math.abs(px - x) !== Math.abs(py - y) || px === x) continue;
-          const a = this.points.filter(([qx, qy]) => qx === x && qy === py).length;
-          const b = this.points.filter(([qx, qy]) => qx === px && qy === y).length; //@corners
-          total += a * b;
+        // Treat each stored point as the corner diagonally opposite the query.
+        for (const [cornerX, cornerY] of this.points) { //@diag
+          const isDiagonal = Math.abs(cornerX - x) === Math.abs(cornerY - y) && cornerX !== x;
+          if (!isDiagonal) continue;
+          const corner1 = this.countAt(x, cornerY);
+          const corner2 = this.countAt(cornerX, y); //@corners
+          total += corner1 * corner2;
         }
         return total; //@ret
       }
@@ -82,14 +93,26 @@ const countMap = defineSolution<Input>({
   idea: "Store how many times each point was added. For a query, loop over distinct points as the diagonal and multiply the three corner counts: diagonal × (x, py) × (px, y).",
   code: code(`
     class DetectSquares {
-      cnt = new Map<string, number>(); //@ctor
-      add([x, y]: number[]) { this.cnt.set(x + "," + y, (this.cnt.get(x + "," + y) ?? 0) + 1); } //@add
-      count([x, y]: number[]): number {
+      pointCount = new Map<string, number>(); // "x,y" -> how many times it was added //@ctor
+
+      add(point: number[]) {
+        const key = point[0] + "," + point[1];
+        this.pointCount.set(key, (this.pointCount.get(key) ?? 0) + 1); //@add
+      }
+
+      countAt(x: number, y: number): number {
+        return this.pointCount.get(x + "," + y) ?? 0;
+      }
+
+      count(query: number[]): number {
+        const [x, y] = query;
         let total = 0;
-        for (const [k, c] of this.cnt) {
-          const [px, py] = k.split(",").map(Number);
-          if (Math.abs(px - x) !== Math.abs(py - y) || px === x) continue; //@diag
-          total += c * (this.cnt.get(x + "," + py) ?? 0) * (this.cnt.get(px + "," + y) ?? 0); //@corners
+        // Treat each stored point as the corner diagonally opposite the query.
+        for (const [key, count] of this.pointCount) {
+          const [cornerX, cornerY] = key.split(",").map(Number);
+          const isDiagonal = Math.abs(cornerX - x) === Math.abs(cornerY - y) && cornerX !== x;
+          if (!isDiagonal) continue; //@diag
+          total += count * this.countAt(x, cornerY) * this.countAt(cornerX, y); //@corners
         }
         return total; //@ret
       }

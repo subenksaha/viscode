@@ -19,7 +19,7 @@ const carry = defineSolution<Input>({
         digits[i] = sum % 10;
         carry = Math.floor(sum / 10); //@write
       }
-      if (carry) digits.unshift(carry); //@prepend
+      if (carry > 0) digits.unshift(carry); //@prepend
       return digits; //@ret
     }
   `),
@@ -52,8 +52,11 @@ const earlyExit = defineSolution<Input>({
   code: code(`
     function plusOne(digits: number[]): number[] {
       for (let i = digits.length - 1; i >= 0; i--) {
-        if (digits[i] < 9) { digits[i]++; return digits; } //@bump
-        digits[i] = 0; //@zero
+        if (digits[i] < 9) { //@bump
+          digits[i]++;
+          return digits;
+        }
+        digits[i] = 0; // 9 + 1 = 10: write 0 and carry 1 to the left //@zero
       }
       return [1, ...digits]; //@all-nines
     }

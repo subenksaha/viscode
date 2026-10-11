@@ -15,18 +15,22 @@ const backtrack = defineSolution<Input>({
   code: code(`
     function combinationSum(candidates: number[], target: number): number[][] {
       candidates.sort((a, b) => a - b); //@sort
-      const res: number[][] = [], path: number[] = [];
-      function dfs(start: number, remain: number) {
-        if (remain === 0) { res.push([...path]); return; } //@found
+      const result: number[][] = [];
+      const path: number[] = [];
+      function search(start: number, remain: number) {
+        if (remain === 0) { //@found
+          result.push([...path]);
+          return;
+        }
         for (let i = start; i < candidates.length; i++) { //@try
           if (candidates[i] > remain) break; //@prune
           path.push(candidates[i]); //@choose
-          dfs(i, remain - candidates[i]);
+          search(i, remain - candidates[i]); // i, not i + 1: a number can be reused
           path.pop(); //@undo
         }
       }
-      dfs(0, target);
-      return res; //@ret
+      search(0, target);
+      return result; //@ret
     }
   `),
   run({ candidates, target }, t) {
@@ -71,12 +75,17 @@ const dp = defineSolution<Input>({
   idea: "Like the coin-change table, but store the combinations themselves. Loop candidates in the outer loop so each combination is built in one order only.",
   code: code(`
     function combinationSum(candidates: number[], target: number): number[][] {
-      const dp: number[][][] = Array.from({ length: target + 1 }, () => []);
-      dp[0] = [[]]; //@init
-      for (const c of candidates) //@coin
-        for (let s = c; s <= target; s++) //@sum
-          for (const combo of dp[s - c]) dp[s].push([...combo, c]); //@extend
-      return dp[target]; //@ret
+      // combos[sum] = every combination that adds up to sum
+      const combos: number[][][] = Array.from({ length: target + 1 }, () => []);
+      combos[0] = [[]]; //@init
+      for (const candidate of candidates) { //@coin
+        for (let sum = candidate; sum <= target; sum++) { //@sum
+          for (const combo of combos[sum - candidate]) {
+            combos[sum].push([...combo, candidate]); //@extend
+          }
+        }
+      }
+      return combos[target]; //@ret
     }
   `),
   run({ candidates, target }, t) {
@@ -85,7 +94,7 @@ const dp = defineSolution<Input>({
     const cell = (s: number) => dp[s].map((c) => `[${c}]`).join(" ") || "–";
     const view = (c?: number, s?: number) => [
       vars({ candidate: c }),
-      arr("dp[sum] = combos", dp.map((_, k) => cell(k)), { tones: tones([s !== undefined && c !== undefined ? s - c : null, "compare"], [s, "active"]) }),
+      arr("combos[sum]", dp.map((_, k) => cell(k)), { tones: tones([s !== undefined && c !== undefined ? s - c : null, "compare"], [s, "active"]) }),
     ];
     t.step("init", "The only way to make 0 is the empty combination.", view());
     for (const c of candidates) {

@@ -17,17 +17,27 @@ const linear = defineSolution<Input>({
   idea: "The list is sorted and disjoint. Copy intervals that end before the new one, merge every interval that overlaps it, then copy the rest.",
   code: code(`
     function insert(intervals: number[][], newInterval: number[]): number[][] {
-      const res: number[][] = [];
-      let [s, e] = newInterval, i = 0; //@init
-      while (i < intervals.length && intervals[i][1] < s) res.push(intervals[i++]); //@before
-      while (i < intervals.length && intervals[i][0] <= e) { //@overlap
-        s = Math.min(s, intervals[i][0]);
-        e = Math.max(e, intervals[i][1]); //@merge
+      const result: number[][] = [];
+      let [start, end] = newInterval; //@init
+      let i = 0;
+      // 1. Intervals that end before the new one starts.
+      while (i < intervals.length && intervals[i][1] < start) { //@before
+        result.push(intervals[i]);
         i++;
       }
-      res.push([s, e]); //@place
-      while (i < intervals.length) res.push(intervals[i++]); //@after
-      return res; //@ret
+      // 2. Intervals that overlap the new one: merge them in.
+      while (i < intervals.length && intervals[i][0] <= end) { //@overlap
+        start = Math.min(start, intervals[i][0]);
+        end = Math.max(end, intervals[i][1]); //@merge
+        i++;
+      }
+      result.push([start, end]); //@place
+      // 3. Intervals that start after the new one ends.
+      while (i < intervals.length) { //@after
+        result.push(intervals[i]);
+        i++;
+      }
+      return result; //@ret
     }
   `),
   run({ intervals: list, newInterval }, t) {
@@ -35,7 +45,7 @@ const linear = defineSolution<Input>({
     let [s, e] = newInterval,
       i = 0;
     const view = (tone?: Tone) => [
-      vars({ s, e, i }),
+      vars({ start: s, end: e, i }),
       intervals("intervals (new one last)", [...list, [s, e]], tones([i < list.length ? i : null, tone ?? "active"], [list.length, "compare"])),
       text("result", show(res)),
     ];
@@ -72,14 +82,18 @@ const appendMerge = defineSolution<Input>({
   idea: "Ignore the existing order: add the new interval, sort by start and run the standard merge. Simple, but slower.",
   code: code(`
     function insert(intervals: number[][], newInterval: number[]): number[][] {
-      const all = [...intervals, newInterval].sort((a, b) => a[0] - b[0]); //@sort
-      const res = [all[0]];
-      for (const [s, e] of all.slice(1)) { //@loop
-        const last = res[res.length - 1];
-        if (s <= last[1]) last[1] = Math.max(last[1], e); //@merge
-        else res.push([s, e]); //@push
+      const sorted = [...intervals, newInterval].sort((a, b) => a[0] - b[0]); //@sort
+      const result = [sorted[0]];
+      for (let i = 1; i < sorted.length; i++) { //@loop
+        const [start, end] = sorted[i];
+        const last = result[result.length - 1];
+        if (start <= last[1]) {
+          last[1] = Math.max(last[1], end); //@merge
+        } else {
+          result.push([start, end]); //@push
+        }
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ intervals: list, newInterval }, t) {

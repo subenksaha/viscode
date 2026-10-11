@@ -15,18 +15,23 @@ const memo = defineSolution<Input>({
   code: code(`
     function isMatch(s: string, p: string): boolean {
       const memo = new Map<string, boolean>();
-      const match = (i: number, j: number): boolean => {
+      // Does s[i..] match the pattern p[j..]?
+      function matches(i: number, j: number): boolean {
         if (j === p.length) return i === s.length; //@end
         const key = i + "," + j;
         if (memo.has(key)) return memo.get(key)!; //@hit
-        const first = i < s.length && (p[j] === "." || p[j] === s[i]); //@first
-        const res = p[j + 1] === "*"
-          ? match(i, j + 2) || (first && match(i + 1, j)) //@star
-          : first && match(i + 1, j + 1); //@single
-        memo.set(key, res);
-        return res;
-      };
-      return match(0, 0); //@ret
+        const firstMatches = i < s.length && (p[j] === "." || p[j] === s[i]); //@first
+        let result: boolean;
+        if (p[j + 1] === "*") {
+          // Either skip "x*" entirely, or use it to eat one character and stay on it.
+          result = matches(i, j + 2) || (firstMatches && matches(i + 1, j)); //@star
+        } else {
+          result = firstMatches && matches(i + 1, j + 1); //@single
+        }
+        memo.set(key, result);
+        return result;
+      }
+      return matches(0, 0); //@ret
     }
   `),
   run({ s, p }, t) {
@@ -73,15 +78,24 @@ const table = defineSolution<Input>({
   idea: "dp[i][j] = do the first i chars of s match the first j of p? For 'x*' at p[j−2..j−1]: zero copies (dp[i][j−2]) or one more copy (dp[i−1][j] if s[i−1] matches x). Otherwise match the single char diagonally.",
   code: code(`
     function isMatch(s: string, p: string): boolean {
-      const m = s.length, n = p.length;
+      const m = s.length;
+      const n = p.length;
+      // dp[i][j] = do the first i characters of s match the first j characters of p?
       const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(false));
       dp[0][0] = true; //@init
-      const eq = (i: number, j: number) => p[j - 1] === "." || p[j - 1] === s[i - 1];
-      for (let i = 0; i <= m; i++)
-        for (let j = 1; j <= n; j++) //@cell
-          dp[i][j] = p[j - 1] === "*"
-            ? dp[i][j - 2] || (i > 0 && eq(i, j - 1) && dp[i - 1][j])
-            : i > 0 && eq(i, j) && dp[i - 1][j - 1];
+      // Does s's i-th character match p's j-th character (both counted from 1)?
+      const charMatches = (i: number, j: number) => p[j - 1] === "." || p[j - 1] === s[i - 1];
+      for (let i = 0; i <= m; i++) {
+        for (let j = 1; j <= n; j++) { //@cell
+          if (p[j - 1] === "*") {
+            const skipStar = dp[i][j - 2];
+            const useStar = i > 0 && charMatches(i, j - 1) && dp[i - 1][j];
+            dp[i][j] = skipStar || useStar;
+          } else {
+            dp[i][j] = i > 0 && charMatches(i, j) && dp[i - 1][j - 1];
+          }
+        }
+      }
       return dp[m][n]; //@ret
     }
   `),

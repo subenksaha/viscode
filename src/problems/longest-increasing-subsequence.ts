@@ -13,10 +13,13 @@ const quadratic = defineSolution<Input>({
   idea: "dp[i] = length of the longest increasing subsequence ending at i = 1 + max dp[j] over j < i with nums[j] < nums[i].",
   code: code(`
     function lengthOfLIS(nums: number[]): number {
+      // dp[i] = length of the longest increasing subsequence ending at nums[i]
       const dp = new Array(nums.length).fill(1); //@init
-      for (let i = 1; i < nums.length; i++) //@i
-        for (let j = 0; j < i; j++) //@j
+      for (let i = 1; i < nums.length; i++) { //@i
+        for (let j = 0; j < i; j++) { //@j
           if (nums[j] < nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1); //@extend
+        }
+      }
       return Math.max(...dp); //@ret
     }
   `),
@@ -50,15 +53,18 @@ const patience = defineSolution<Input>({
   idea: "tails[k] = the smallest possible tail of an increasing subsequence of length k+1. For each x, binary-search the first tail ≥ x and replace it, or append x if none exists.",
   code: code(`
     function lengthOfLIS(nums: number[]): number {
+      // tails[len - 1] = smallest possible last number of an increasing subsequence of length len
       const tails: number[] = []; //@init
-      for (const x of nums) { //@loop
-        let lo = 0, hi = tails.length;
-        while (lo < hi) { //@search
-          const mid = (lo + hi) >> 1;
-          if (tails[mid] < x) lo = mid + 1;
-          else hi = mid;
+      for (const num of nums) { //@loop
+        // Binary search for the first tail that is >= num.
+        let left = 0;
+        let right = tails.length;
+        while (left < right) { //@search
+          const mid = Math.floor((left + right) / 2);
+          if (tails[mid] < num) left = mid + 1;
+          else right = mid;
         }
-        tails[lo] = x; //@place
+        tails[left] = num; // replace that tail, or append if left === tails.length //@place
       }
       return tails.length; //@ret
     }

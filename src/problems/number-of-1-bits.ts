@@ -15,8 +15,9 @@ const checkEach = defineSolution<Input>({
     function hammingWeight(n: number): number {
       let count = 0; //@init
       while (n !== 0) { //@loop
-        count += n & 1; //@add
-        n >>>= 1; //@shift
+        const lastBit = n & 1; // 1 if the lowest bit is set
+        count += lastBit; //@add
+        n = n >>> 1; // shift right by one bit //@shift
       }
       return count; //@ret
     }
@@ -49,7 +50,8 @@ const kernighan = defineSolution<Input>({
     function hammingWeight(n: number): number {
       let count = 0; //@init
       while (n !== 0) { //@loop
-        n &= n - 1; //@clear
+        // n - 1 flips the lowest 1 bit (and the 0s below it), so n & (n - 1) clears that bit.
+        n = n & (n - 1); //@clear
         count++; //@count
       }
       return count; //@ret

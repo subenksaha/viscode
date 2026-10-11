@@ -13,21 +13,25 @@ const bruteForce = defineSolution<Input>({
   idea: "Build every string of 2n parentheses and keep the ones whose running balance never drops below zero and ends at zero.",
   code: code(`
     function generateParenthesis(n: number): string[] {
-      const res: string[] = [];
-      const valid = (s: string) => {
-        let bal = 0;
-        for (const c of s) if ((bal += c === "(" ? 1 : -1) < 0) return false;
-        return bal === 0;
-      };
-      function build(s: string) {
-        if (s.length === 2 * n) { //@full
-          if (valid(s)) res.push(s); //@keep
+      const result: string[] = [];
+      function isValid(s: string): boolean {
+        let balance = 0;
+        for (const char of s) {
+          balance += char === "(" ? 1 : -1;
+          if (balance < 0) return false; // a ")" with no matching "("
+        }
+        return balance === 0;
+      }
+      function build(current: string) {
+        if (current.length === 2 * n) { //@full
+          if (isValid(current)) result.push(current); //@keep
           return;
         }
-        build(s + "("); build(s + ")"); //@branch
+        build(current + "("); //@branch
+        build(current + ")");
       }
       build("");
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ n }, t) {
@@ -37,7 +41,7 @@ const bruteForce = defineSolution<Input>({
       for (const c of s) if ((bal += c === "(" ? 1 : -1) < 0) return false;
       return bal === 0;
     };
-    const view = (s: string) => [vars({ s: `"${s}"` }), arr("result", res, { indexLabels: false, tones: tones([res.length - 1, "success"]) })];
+    const view = (s: string) => [vars({ current: `"${s}"` }), arr("result", res, { indexLabels: false, tones: tones([res.length - 1, "success"]) })];
     const build = (s: string) => {
       if (s.length === 2 * n) {
         if (valid(s)) {
@@ -64,14 +68,26 @@ const backtrack = defineSolution<Input>({
   idea: "Only build valid prefixes: add '(' while fewer than n are open, and add ')' only when it would close an open one.",
   code: code(`
     function generateParenthesis(n: number): string[] {
-      const res: string[] = [], path: string[] = [];
-      function dfs(open: number, close: number) {
-        if (path.length === 2 * n) { res.push(path.join("")); return; } //@done
-        if (open < n) { path.push("("); dfs(open + 1, close); path.pop(); } //@open
-        if (close < open) { path.push(")"); dfs(open, close + 1); path.pop(); } //@close
+      const result: string[] = [];
+      const path: string[] = [];
+      function build(open: number, close: number) {
+        if (path.length === 2 * n) { //@done
+          result.push(path.join(""));
+          return;
+        }
+        if (open < n) { //@open
+          path.push("(");
+          build(open + 1, close);
+          path.pop();
+        }
+        if (close < open) { //@close
+          path.push(")");
+          build(open, close + 1);
+          path.pop();
+        }
       }
-      dfs(0, 0);
-      return res; //@ret
+      build(0, 0);
+      return result; //@ret
     }
   `),
   run({ n }, t) {

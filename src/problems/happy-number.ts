@@ -19,9 +19,19 @@ const hashSet = defineSolution<Input>({
       const seen = new Set<number>(); //@init
       while (n !== 1 && !seen.has(n)) { //@check
         seen.add(n);
-        n = [...String(n)].reduce((s, d) => s + Number(d) ** 2, 0); //@next
+        n = sumOfSquaredDigits(n); //@next
       }
       return n === 1; //@ret
+    }
+
+    function sumOfSquaredDigits(num: number): number {
+      let sum = 0;
+      while (num > 0) {
+        const digit = num % 10;
+        sum += digit * digit;
+        num = Math.floor(num / 10);
+      }
+      return sum;
     }
   `),
   run({ n }, t) {
@@ -49,12 +59,24 @@ const floyd = defineSolution<Input>({
   idea: "The sequence is a linked list of numbers. Move slow one step and fast two steps; they meet inside the cycle. The number is happy exactly when that cycle is 1 → 1.",
   code: code(`
     function isHappy(n: number): boolean {
-      const next = (x: number) => [...String(x)].reduce((s, d) => s + Number(d) ** 2, 0);
-      let slow = n, fast = next(n); //@init
+      let slow = n; //@init
+      let fast = sumOfSquaredDigits(n);
+      // fast moves two steps for every one step of slow. They meet only if there is a loop.
       while (fast !== 1 && slow !== fast) { //@check
-        slow = next(slow); fast = next(next(fast)); //@move
+        slow = sumOfSquaredDigits(slow); //@move
+        fast = sumOfSquaredDigits(sumOfSquaredDigits(fast));
       }
       return fast === 1; //@ret
+    }
+
+    function sumOfSquaredDigits(num: number): number {
+      let sum = 0;
+      while (num > 0) {
+        const digit = num % 10;
+        sum += digit * digit;
+        num = Math.floor(num / 10);
+      }
+      return sum;
     }
   `),
   run({ n }, t) {

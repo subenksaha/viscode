@@ -17,17 +17,20 @@ const memo = defineSolution<Input>({
   code: code(`
     function coinChange(coins: number[], amount: number): number {
       const memo = new Map<number, number>();
-      function best(r: number): number {
-        if (r === 0) return 0; //@zero
-        if (r < 0) return Infinity; //@neg
-        if (memo.has(r)) return memo.get(r)!; //@hit
-        let res = Infinity;
-        for (const c of coins) res = Math.min(res, best(r - c) + 1); //@try
-        memo.set(r, res); //@store
-        return res;
+      // Fewest coins needed to make exactly remaining.
+      function fewestCoins(remaining: number): number {
+        if (remaining === 0) return 0; //@zero
+        if (remaining < 0) return Infinity; //@neg
+        if (memo.has(remaining)) return memo.get(remaining)!; //@hit
+        let result = Infinity;
+        for (const coin of coins) { //@try
+          result = Math.min(result, fewestCoins(remaining - coin) + 1);
+        }
+        memo.set(remaining, result); //@store
+        return result;
       }
-      const ans = best(amount);
-      return ans === Infinity ? -1 : ans; //@ret
+      const answer = fewestCoins(amount);
+      return answer === Infinity ? -1 : answer; //@ret
     }
   `),
   run({ coins, amount }, t) {
@@ -76,11 +79,14 @@ const bottomUp = defineSolution<Input>({
   idea: "dp[a] = fewest coins that make a. For each a, try every coin: dp[a] = min(dp[a], dp[a − c] + 1).",
   code: code(`
     function coinChange(coins: number[], amount: number): number {
+      // dp[total] = fewest coins that add up to total
       const dp = new Array(amount + 1).fill(Infinity);
       dp[0] = 0; //@init
-      for (let a = 1; a <= amount; a++) { //@a
-        for (const c of coins) { //@c
-          if (c <= a) dp[a] = Math.min(dp[a], dp[a - c] + 1); //@relax
+      for (let total = 1; total <= amount; total++) { //@a
+        for (const coin of coins) { //@c
+          if (coin <= total) {
+            dp[total] = Math.min(dp[total], dp[total - coin] + 1); //@relax
+          }
         }
       }
       return dp[amount] === Infinity ? -1 : dp[amount]; //@ret
@@ -120,17 +126,22 @@ const bfs = defineSolution<Input>({
     function coinChange(coins: number[], amount: number): number {
       if (amount === 0) return 0;
       const seen = new Set([amount]);
-      let queue = [amount], depth = 0; //@init
-      while (queue.length) { //@level
-        depth++;
-        const next: number[] = [];
-        for (const r of queue) //@node
-          for (const c of coins) {
-            const rest = r - c;
-            if (rest === 0) return depth; //@found
-            if (rest > 0 && !seen.has(rest)) { seen.add(rest); next.push(rest); } //@push
+      let queue = [amount]; //@init
+      let coinsUsed = 0;
+      while (queue.length > 0) { //@level
+        coinsUsed++;
+        const nextQueue: number[] = [];
+        for (const remaining of queue) { //@node
+          for (const coin of coins) {
+            const left = remaining - coin;
+            if (left === 0) return coinsUsed; //@found
+            if (left > 0 && !seen.has(left)) { //@push
+              seen.add(left);
+              nextQueue.push(left);
+            }
           }
-        queue = next;
+        }
+        queue = nextQueue;
       }
       return -1; //@none
     }
@@ -144,7 +155,7 @@ const bfs = defineSolution<Input>({
     let queue = [amount],
       depth = 0;
     const view = (current?: number, next: number[] = []) => [
-      vars({ depth }),
+      vars({ coinsUsed: depth }),
       arr("queue (this level)", queue, { tones: tones([current, "active"]), indexLabels: false }),
       arr("next level", next, { indexLabels: false }),
       map("seen", seen),

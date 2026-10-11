@@ -88,9 +88,9 @@ const hashSet = defineSolution<Input>({
   code: code(`
     function containsDuplicate(nums: number[]): boolean {
       const seen = new Set<number>(); //@init
-      for (const x of nums) { //@loop
-        if (seen.has(x)) return true; //@found
-        seen.add(x); //@add
+      for (const num of nums) { //@loop
+        if (seen.has(num)) return true; //@found
+        seen.add(num); //@add
       }
       return false; //@ret
     }

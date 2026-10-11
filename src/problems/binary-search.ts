@@ -14,8 +14,9 @@ const linear = defineSolution<Input>({
   idea: "Check every element from left to right. This ignores the fact that the array is sorted.",
   code: code(`
     function search(nums: number[], target: number): number {
-      for (let i = 0; i < nums.length; i++) //@loop
+      for (let i = 0; i < nums.length; i++) { //@loop
         if (nums[i] === target) return i; //@found
+      }
       return -1; //@none
     }
   `),
@@ -38,15 +39,19 @@ const binary = defineSolution<Input>({
   name: "Binary Search",
   time: "O(log n)",
   space: "O(1)",
-  idea: "Keep a window [lo, hi] that must contain the target if it exists. Compare the middle element and throw away the half that cannot hold it.",
+  idea: "Keep a window [left, right] that must contain the target if it exists. Compare the middle element and throw away the half that cannot hold it.",
   code: code(`
     function search(nums: number[], target: number): number {
-      let lo = 0, hi = nums.length - 1; //@init
-      while (lo <= hi) { //@loop
-        const mid = (lo + hi) >> 1; //@mid
+      let left = 0; //@init
+      let right = nums.length - 1;
+      while (left <= right) { //@loop
+        const mid = Math.floor((left + right) / 2); //@mid
         if (nums[mid] === target) return mid; //@found
-        if (nums[mid] < target) lo = mid + 1; //@right
-        else hi = mid - 1; //@left
+        if (nums[mid] < target) {
+          left = mid + 1; //@right
+        } else {
+          right = mid - 1; //@left
+        }
       }
       return -1; //@none
     }
@@ -58,7 +63,7 @@ const binary = defineSolution<Input>({
       vars({ target, "nums[mid]": mid !== undefined ? nums[mid] : undefined }),
       arr("nums", nums, {
         tones: tones(...range(0, lo - 1, "muted"), ...range(hi + 1, nums.length - 1, "muted"), [mid, hit ? "success" : "active"]),
-        pointers: { lo, mid, hi },
+        pointers: { left: lo, mid, right: hi },
         window: lo <= hi ? [lo, hi] : null,
       }),
     ];

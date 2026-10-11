@@ -17,8 +17,9 @@ const linear = defineSolution<Input>({
   code: code(`
     function solution(isBadVersion: (v: number) => boolean) {
       return (n: number): number => {
-        for (let v = 1; v <= n; v++) //@loop
-          if (isBadVersion(v)) return v; //@found
+        for (let version = 1; version <= n; version++) { //@loop
+          if (isBadVersion(version)) return version; //@found
+        }
         return n;
       };
     }
@@ -46,13 +47,17 @@ const binary = defineSolution<Input>({
   code: code(`
     function solution(isBadVersion: (v: number) => boolean) {
       return (n: number): number => {
-        let lo = 1, hi = n; //@init
-        while (lo < hi) { //@loop
-          const mid = lo + ((hi - lo) >> 1); //@mid
-          if (isBadVersion(mid)) hi = mid; //@bad
-          else lo = mid + 1; //@good
+        let left = 1; //@init
+        let right = n;
+        while (left < right) { //@loop
+          const mid = left + Math.floor((right - left) / 2); //@mid
+          if (isBadVersion(mid)) {
+            right = mid; // mid might be the first bad one //@bad
+          } else {
+            left = mid + 1; // the first bad one is after mid //@good
+          }
         }
-        return lo; //@ret
+        return left; //@ret
       };
     }
   `),
@@ -66,7 +71,7 @@ const binary = defineSolution<Input>({
       vars({ calls }),
       arr("versions", vs, {
         tones: tones(...range(0, lo - 2, "muted"), ...range(hi, n - 1, "muted"), ...known, [mid !== undefined ? mid - 1 : null, "active"]),
-        pointers: { lo: lo - 1, hi: hi - 1, mid: mid !== undefined ? mid - 1 : undefined },
+        pointers: { left: lo - 1, right: hi - 1, mid: mid !== undefined ? mid - 1 : undefined },
         window: [lo - 1, hi - 1],
         indexLabels: false,
       }),

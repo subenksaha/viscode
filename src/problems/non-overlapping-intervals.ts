@@ -15,10 +15,14 @@ const greedyEnd = defineSolution<Input>({
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[1] - b[1]); //@sort
-      let end = -Infinity, removed = 0; //@init
-      for (const [s, e] of intervals) { //@loop
-        if (s >= end) end = e; //@keep
-        else removed++; //@remove
+      let end = -Infinity; // end of the last interval we kept //@init
+      let removed = 0;
+      for (const [start, finish] of intervals) { //@loop
+        if (start >= end) {
+          end = finish; // no overlap: keep it //@keep
+        } else {
+          removed++; //@remove
+        }
       }
       return removed; //@ret
     }
@@ -57,11 +61,17 @@ const greedyStart = defineSolution<Input>({
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
-      let end = intervals[0][1], removed = 0; //@init
+      let end = intervals[0][1]; // end of the last interval we kept //@init
+      let removed = 0;
       for (let i = 1; i < intervals.length; i++) { //@loop
-        const [s, e] = intervals[i];
-        if (s >= end) end = e; //@keep
-        else { removed++; end = Math.min(end, e); } //@remove
+        const [start, finish] = intervals[i];
+        if (start >= end) {
+          end = finish; //@keep
+        } else {
+          // Overlap: remove one of them, keeping the one that ends first.
+          removed++; //@remove
+          end = Math.min(end, finish);
+        }
       }
       return removed; //@ret
     }
@@ -99,11 +109,16 @@ const dp = defineSolution<Input>({
   code: code(`
     function eraseOverlapIntervals(intervals: number[][]): number {
       intervals.sort((a, b) => a[0] - b[0]); //@sort
+      // dp[i] = most non-overlapping intervals we can keep, ending with interval i
       const dp = new Array(intervals.length).fill(1);
-      for (let i = 1; i < intervals.length; i++) //@i
-        for (let j = 0; j < i; j++) //@j
-          if (intervals[j][1] <= intervals[i][0]) dp[i] = Math.max(dp[i], dp[j] + 1); //@extend
-      return intervals.length - Math.max(...dp); //@ret
+      for (let i = 1; i < intervals.length; i++) { //@i
+        for (let j = 0; j < i; j++) { //@j
+          const fitsBefore = intervals[j][1] <= intervals[i][0];
+          if (fitsBefore) dp[i] = Math.max(dp[i], dp[j] + 1); //@extend
+        }
+      }
+      const mostKept = Math.max(...dp);
+      return intervals.length - mostKept; //@ret
     }
   `),
   run({ intervals: list }, t) {

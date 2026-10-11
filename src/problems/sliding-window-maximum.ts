@@ -14,13 +14,13 @@ const brute = defineSolution<Input>({
   idea: "For every window of size k, scan its k values and record the largest.",
   code: code(`
     function maxSlidingWindow(nums: number[], k: number): number[] {
-      const res: number[] = [];
-      for (let i = 0; i + k <= nums.length; i++) { //@window
-        let best = nums[i];
-        for (let j = i + 1; j < i + k; j++) best = Math.max(best, nums[j]); //@scan
-        res.push(best); //@push
+      const result: number[] = [];
+      for (let start = 0; start + k <= nums.length; start++) { //@window
+        let best = nums[start];
+        for (let j = start + 1; j < start + k; j++) best = Math.max(best, nums[j]); //@scan
+        result.push(best); //@push
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums, k }, t) {
@@ -53,14 +53,20 @@ const deque = defineSolution<Input>({
   idea: "Keep a deque of indices whose values are strictly decreasing. A new value evicts smaller values from the back (they can never be a max again). The front is the window max; drop it once it slides out.",
   code: code(`
     function maxSlidingWindow(nums: number[], k: number): number[] {
-      const dq: number[] = [], res: number[] = [];
+      // Indices whose values are decreasing from front to back. The front is the window max.
+      const candidates: number[] = [];
+      const result: number[] = [];
       for (let i = 0; i < nums.length; i++) { //@loop
-        while (dq.length && nums[dq.at(-1)!] <= nums[i]) dq.pop(); //@pop
-        dq.push(i); //@push
-        if (dq[0] <= i - k) dq.shift(); //@expire
-        if (i >= k - 1) res.push(nums[dq[0]]); //@record
+        // Smaller values behind nums[i] can never be the max again.
+        while (candidates.length > 0 && nums[candidates[candidates.length - 1]] <= nums[i]) { //@pop
+          candidates.pop();
+        }
+        candidates.push(i); //@push
+        // Drop the front if it slid out of the window.
+        if (candidates[0] <= i - k) candidates.shift(); //@expire
+        if (i >= k - 1) result.push(nums[candidates[0]]); //@record
       }
-      return res; //@ret
+      return result; //@ret
     }
   `),
   run({ nums, k }, t) {
@@ -72,7 +78,7 @@ const deque = defineSolution<Input>({
         tones: tones(...dq.map((d) => [d, "compare"] as [number, "compare"]), [dq[0], "success"], [i, "active"]),
         pointers: { i },
       }),
-      arr("deque (indices, values decreasing)", dq.map((d) => `${d}:${nums[d]}`), { indexLabels: false, tones: tones([0, "success"]) }),
+      arr("candidates (deque of indices, values decreasing)", dq.map((d) => `${d}:${nums[d]}`), { indexLabels: false, tones: tones([0, "success"]) }),
       arr("result", res, { indexLabels: false }),
     ];
     for (let i = 0; i < nums.length; i++) {

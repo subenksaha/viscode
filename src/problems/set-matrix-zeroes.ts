@@ -14,13 +14,18 @@ const copy = defineSolution<Input>({
   idea: "Scan a frozen copy so new zeros do not spread. For every original zero, clear its row and column in the real matrix.",
   code: code(`
     function setZeroes(matrix: number[][]): void {
-      const orig = matrix.map((row) => [...row]); //@copy
-      for (let r = 0; r < orig.length; r++)
-        for (let c = 0; c < orig[0].length; c++) //@scan
-          if (orig[r][c] === 0) { //@zero
-            for (let k = 0; k < orig[0].length; k++) matrix[r][k] = 0;
-            for (let k = 0; k < orig.length; k++) matrix[k][c] = 0; //@clear
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      // Look at a copy so the zeros we write don't trigger more zeros.
+      const original = matrix.map((line) => [...line]); //@copy
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) { //@scan
+          if (original[row][col] === 0) { //@zero
+            for (let c = 0; c < cols; c++) matrix[row][c] = 0;
+            for (let r = 0; r < rows; r++) matrix[r][col] = 0; //@clear
           }
+        }
+      }
     }
   `),
   run({ matrix }, t) {
@@ -54,13 +59,21 @@ const sets = defineSolution<Input>({
   idea: "First pass: record which rows and columns contain a zero. Second pass: zero every cell whose row or column was recorded.",
   code: code(`
     function setZeroes(matrix: number[][]): void {
-      const rows = new Set<number>(), cols = new Set<number>();
-      for (let r = 0; r < matrix.length; r++)
-        for (let c = 0; c < matrix[0].length; c++) //@scan
-          if (matrix[r][c] === 0) { rows.add(r); cols.add(c); } //@mark
-      for (let r = 0; r < matrix.length; r++)
-        for (let c = 0; c < matrix[0].length; c++)
-          if (rows.has(r) || cols.has(c)) matrix[r][c] = 0; //@apply
+      const zeroRows = new Set<number>();
+      const zeroCols = new Set<number>();
+      for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[0].length; col++) { //@scan
+          if (matrix[row][col] === 0) { //@mark
+            zeroRows.add(row);
+            zeroCols.add(col);
+          }
+        }
+      }
+      for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[0].length; col++) {
+          if (zeroRows.has(row) || zeroCols.has(col)) matrix[row][col] = 0; //@apply
+        }
+      }
     }
   `),
   run({ matrix }, t) {
@@ -95,16 +108,30 @@ const inPlace = defineSolution<Input>({
   idea: "Use row 0 and column 0 as the marker sets. Remember separately whether row 0 and column 0 themselves contained a zero, and clear them last.",
   code: code(`
     function setZeroes(matrix: number[][]): void {
-      const m = matrix.length, n = matrix[0].length;
-      const row0 = matrix[0].includes(0), col0 = matrix.some((row) => row[0] === 0); //@flags
-      for (let r = 1; r < m; r++)
-        for (let c = 1; c < n; c++)
-          if (matrix[r][c] === 0) matrix[r][0] = matrix[0][c] = 0; //@mark
-      for (let r = 1; r < m; r++)
-        for (let c = 1; c < n; c++)
-          if (matrix[r][0] === 0 || matrix[0][c] === 0) matrix[r][c] = 0; //@apply
-      if (row0) for (let c = 0; c < n; c++) matrix[0][c] = 0; //@row0
-      if (col0) for (let r = 0; r < m; r++) matrix[r][0] = 0; //@col0
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      // Use the first row and first column as markers. Remember first whether they had zeros themselves.
+      const firstRowHasZero = matrix[0].includes(0); //@flags
+      const firstColHasZero = matrix.some((line) => line[0] === 0);
+      for (let row = 1; row < rows; row++) {
+        for (let col = 1; col < cols; col++) {
+          if (matrix[row][col] === 0) { //@mark
+            matrix[row][0] = 0; // mark this row
+            matrix[0][col] = 0; // mark this column
+          }
+        }
+      }
+      for (let row = 1; row < rows; row++) {
+        for (let col = 1; col < cols; col++) {
+          if (matrix[row][0] === 0 || matrix[0][col] === 0) matrix[row][col] = 0; //@apply
+        }
+      }
+      if (firstRowHasZero) { //@row0
+        for (let col = 0; col < cols; col++) matrix[0][col] = 0;
+      }
+      if (firstColHasZero) { //@col0
+        for (let row = 0; row < rows; row++) matrix[row][0] = 0;
+      }
     }
   `),
   run({ matrix }, t) {
@@ -119,7 +146,7 @@ const inPlace = defineSolution<Input>({
       return tn;
     };
     const view = (cells: [number, number][] = [], tone: Tone = "active") => [
-      vars({ row0, col0 }),
+      vars({ firstRowHasZero: row0, firstColHasZero: col0 }),
       grid("matrix (violet: marker row/column)", matrix, { tones: { ...markerTones(), ...tones(...cells.map(([r, c]) => [rc(r, c), tone] as [string, Tone])) } }),
     ];
     t.step("flags", `Does row 0 have a zero? ${row0}. Does column 0? ${col0}.`, view());
